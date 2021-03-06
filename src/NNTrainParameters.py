@@ -1,39 +1,3 @@
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib as mpl
-import math
-
-from sklearn.model_selection import GridSearchCV
-import time
-import sklearn.preprocessing
-import sklearn.model_selection
-import sklearn.ensemble
-import sklearn.svm
-import sklearn.metrics
-
-# for clustering
-import sklearn.cluster
-
-# for graphs:
-import networkx as nx
-import csv
-from operator import itemgetter
-
-# some statistics
-import statistics
-import seaborn as sns
-
-sns.set()
-
-# for neural networks
-import torch
-import torch.nn as nn
-import torch.utils.data
-import torch.nn.functional as F
-
-
-
 class NNTrainParameters:
 
     def __init__(self, batch_size, learning_rate, epochs, criterion, optimiser):

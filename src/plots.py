@@ -2,16 +2,8 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-from sklearn.model_selection import GridSearchCV
-import time
-import sklearn.preprocessing
-import sklearn.model_selection
-import sklearn.ensemble
-import sklearn.svm
-import sklearn.metrics
-
-# for clustering
-import sklearn.cluster
+from IPython.core.display import display
+from sklearn import metrics
 
 import seaborn as sns
 
@@ -20,7 +12,7 @@ sns.set()
 
 def confusion_matrix_creator(Y, Y_predict_result, labels):
     # we create a raw confusion matrix
-    confusion_matrix = sklearn.metrics.confusion_matrix(Y, Y_predict_result)
+    confusion_matrix = metrics.confusion_matrix(Y, Y_predict_result)
 
     # we get the sum of the lines and reshape it (we re going to use it for the percentage)
     cm_sum = np.sum(confusion_matrix, axis=1).reshape(-1, 1)
@@ -68,11 +60,11 @@ def confusion_matrix_creator(Y, Y_predict_result, labels):
 def result_function(title, data_train_Y, y_pred1, no_classes, data_test_Y=None, y_pred2=None):
     # initialise the parameters for the dataframe
     conclusion_set = ["Training"]
-    conclusion_accuracy = [sklearn.metrics.accuracy_score(data_train_Y, y_pred1)]
+    conclusion_accuracy = [metrics.accuracy_score(data_train_Y, y_pred1)]
 
     if data_test_Y is not None:
         conclusion_set.append("Test")
-        conclusion_accuracy.append(sklearn.metrics.accuracy_score(data_test_Y, y_pred2))
+        conclusion_accuracy.append(metrics.accuracy_score(data_test_Y, y_pred2))
 
     conclusion = pd.DataFrame({'Set': conclusion_set,
                                'Accuracy': conclusion_accuracy})
@@ -87,13 +79,11 @@ def result_function(title, data_train_Y, y_pred1, no_classes, data_test_Y=None, 
 
     target_names = [str(i) for i in range(no_classes)]
     print("report table for train :")
-    print(sklearn.metrics.classification_report(data_train_Y, y_pred1,
-                                                target_names=target_names))
+    print(metrics.classification_report(data_train_Y, y_pred1, target_names=target_names))
 
     if data_test_Y is not None:
         print("report table for test :")
-        print(sklearn.metrics.classification_report(data_test_Y, y_pred2,
-                                                    target_names=target_names))
+        print(metrics.classification_report(data_test_Y, y_pred2, target_names=target_names))
 
 
 # function for plotting the results of the NN

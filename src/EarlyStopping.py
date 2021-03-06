@@ -1,38 +1,9 @@
 from abc import abstractmethod
 
-import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib as mpl
-import math
 
-from sklearn.model_selection import GridSearchCV
-import time
-import sklearn.preprocessing
-import sklearn.model_selection
-import sklearn.ensemble
-import sklearn.svm
-import sklearn.metrics
-
-# for clustering
-import sklearn.cluster
-
-# for graphs:
-import networkx as nx
-import csv
-from operator import itemgetter
-
-# some statistics
-import statistics
-import seaborn as sns
-
-sns.set()
-
-# for neural networks
 import torch
-import torch.nn as nn
 import torch.utils.data
-import torch.nn.functional as F
 
 
 class EarlyStopping:
@@ -66,7 +37,7 @@ class EarlyStopping:
         self.trace_func = trace_func
 
     def __call__(self, neural_network, losses, epoch):
-        #todo make it work without giving validation losses. The function is_early_stop has to be adjusted as well
+        # todo make it work without giving validation losses. The function is_early_stop has to be adjusted as well
         current_loss = losses[epoch]
 
         if self.is_early_stop(current_loss, epoch):
