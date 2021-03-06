@@ -1,3 +1,5 @@
+from abc import abstractmethod
+
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -63,13 +65,11 @@ class EarlyStopping:
         self.path = path
         self.trace_func = trace_func
 
-    def __call__(self, training_losses, validation_losses, current_epoch, neural_network):
+    def __call__(self, neural_network, losses, epoch):
         #todo make it work without giving validation losses. The function is_early_stop has to be adjusted as well
-        current_loss = validation_losses[current_epoch]
-        if self.highest_loss is None:
-            self.highest_loss = current_loss
-            self.save_checkpoint(current_loss, neural_network)
-        elif self.is_early_stop(training_losses, validation_losses, current_epoch):
+        current_loss = losses[epoch]
+
+        if self.is_early_stop(current_loss, epoch):
             self.counter += 1
             if self.verbose:
                 self.trace_func(f'EarlyStopping counter: {self.counter} out of {self.patience}')
@@ -82,19 +82,9 @@ class EarlyStopping:
 
         return False
 
-    def is_early_stop(self, training_loss, val_loss, epoch):
-        cdt1 = self.highest_loss + self.delta < val_loss[epoch]
-        # if the percentage of change of the actual loss wrt to any loss for the 20 previous loss is less than 10%, then stop.
-        cdt2 = epoch > 20 and all(
-            difference_percentage < 0.1 for difference_percentage in
-            [abs(previous_loss - training_loss[epoch]) / previous_loss for previous_loss in
-             training_loss[epoch - 20:epoch]
-             ]
-        )
-        return cdt1 and cdt2
-
-
-
+    @abstractmethod
+    def is_early_stop(self, loss, epoch):
+        pass
 
     def save_checkpoint(self, val_loss, model):
         """
@@ -105,3 +95,32 @@ class EarlyStopping:
                 f'Validation loss decreased ({self.val_loss_min:.6f} --> {val_loss:.6f}).  Saving model ...')
         torch.save(model.state_dict(), self.path)
         self.val_loss_min = val_loss
+
+
+class EarlyStopperTraining(EarlyStopping):
+
+    def __init__(self):
+        super().__init__()
+
+    def is_early_stop(self, training_loss, epoch):
+        # if the percentage of change of the actual loss wrt to any loss for the 20 previous loss is less than 10%, then stop.
+        cdt2 = epoch > 20 and all(
+            difference_percentage < 0.1 for difference_percentage in
+            [abs(previous_loss - training_loss[epoch]) / previous_loss for previous_loss in
+             training_loss[epoch - 20:epoch]
+             ]
+        )
+        return cdt2
+
+
+class EarlyStoppingValidation(EarlyStopping):
+    def __init__(self):
+        super().__init__()
+        self.highest_loss = None
+
+    def is_early_stop(self, val_loss, epoch):
+        if self.highest_loss is None:
+            self.highest_loss = val_loss[epoch]
+            # self.save_checkpoint(val_loss[epoch], neural_network)
+            return False
+        return self.highest_loss + self.delta < val_loss[epoch]
