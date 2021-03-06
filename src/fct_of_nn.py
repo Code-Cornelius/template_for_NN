@@ -1,20 +1,33 @@
+# parameters
+import math
+import numpy as np  # maths functions
+import matplotlib.pyplot as plt  # for plots
+import seaborn as sns  # for the display
+import pandas as pd  # for dataframes
+import time  # computational time
+import scipy.stats as si
+
+# from useful_functions import *
+
+# for neural networks
 import torch
+import torch.nn as nn
+import torch.utils.data
+import torch.nn.functional as F
 
+import sklearn.model_selection
 
-def nn_train(Neural_Network,
-             data_X, data_Y,
-             indices_train_X, indices_train_Y,
-             indices_validation_X = None, indices_validation_Y = None,
-             parameters_for_training = None,
-             early_stop_parameters = None,
-             silent = False):
+def nn_train(neural_network, data_X, data_Y, indices_train_X, indices_train_Y, indices_validation_X=None,
+             indices_validation_Y=None, parameters_for_training=None, early_stopper=None, silent=False):
+
     X = data_X[indices_train_X].values
     y = data_Y[indices_train_Y].values
     validation_X = data_X[indices_validation_X].values
     validation_Y = data_Y[indices_validation_Y].values
+    is_validation_included = (validation_X is not None and validation_Y is not None)
 
     # Prepare Validation set if there is any
-    if vX is not None:
+    if is_validation_included:
         TvX = torch.from_numpy(validation_X).float().to(device)
         Tvy = torch.from_numpy(validation_Y).long().to(device)
 
@@ -26,11 +39,16 @@ def nn_train(Neural_Network,
     Y_train = torch.from_numpy(y).long()
     nn_train = torch.utils.data.TensorDataset(X_train, Y_train)
 
-    loader = torch.utils.data.DataLoader(nn_train, batch_size=batch_size, shuffle=True)
+    loader = torch.utils.data.DataLoader(nn_train, batch_size=parameters_for_training.batch_size, shuffle=True)
     # pick loss function and optimizer
-    criterion = nn.CrossEntropyLoss()
+    criterion = parameters_for_training.criterion
+    # criterion = nn.CrossEntropyLoss()
     # criterion = nn.NLLLoss()
-    sgd = torch.optim.SGD(Neural_Network.parameters(), lr=lr)
+
+    optimiser = parameters_for_training.optimiser
+    # sgd = torch.optim.SGD(Neural_Network.parameters(), lr=parameters_for_training.learning_rate)
+
+
     # prepare for iteration over epochs
     epoch_losses = np.zeros(parameters_for_training.epochs)
     training_acc = np.zeros(parameters_for_training.epochs)
@@ -42,33 +60,33 @@ def nn_train(Neural_Network,
             # get batch
             bX, by = batch
             # set gradients to zero
-            sgd.zero_grad()
+            optimiser.zero_grad()
             # Do forward and backward pass
-            out = Neural_Network(bX)
+            out = neural_network(bX)
             by = by.squeeze_()  # not the good size for the results
             loss = criterion(out, by)
             loss.backward()
             # Optimisation step
-            sgd.step()
+            optimiser.step()
 
             train_loss += loss.item()
         if epoch % 10 == 1 and not silent:
             print(epoch, "Epochs complete")
 
         # Normalize and save the loss over the current epoch
-        epoch_losses[epoch] = train_loss * batch_size / (y.shape[0])
-        training_acc[epoch] = sklearn.metrics.accuracy_score(nn_predict(Neural_Network, X), y)
+        epoch_losses[epoch] = train_loss * parameters_for_training.batch_size / (y.shape[0])
+        training_acc[epoch] = sklearn.metrics.accuracy_score(nn_predict(neural_network, X), y)
+
+
         # Calculate validation loss for the current epoch
-        if vX is not None:
+        if is_validation_included :
             Tvy = Tvy.squeeze_()
-            valid_losses[epoch] = criterion(Neural_Network(TvX), Tvy).item()
-            valid_acc[epoch] = sklearn.metrics.accuracy_score(nn_predict(Neural_Network, vX), vy)
+            valid_losses[epoch] = criterion(neural_network(TvX), Tvy).item()
+            valid_acc[epoch] = sklearn.metrics.accuracy_score(nn_predict(neural_network, validation_X), validation_Y)
             # Calculations to see if it's time to stop early
-            if do_earlystop:
-                if min_loss[0] is -1 or valid_losses[epoch] < min_loss[1]:
-                    min_loss = (epoch, valid_losses[epoch])
-                elif epoch - min_loss[0] >= patience:
-                    break
+            if early_stopper(epoch_losses, valid_losses, epoch, neural_network):
+                break  # get out of epochs.
+
     #### end of the for in epoch.
     if not silent:
         print("Training done after %s epochs ! " % epochs)
@@ -117,8 +135,7 @@ def nn_kfold_train(X, y, vX=None, vy=None, k=5, lr=LEARNING_RATE, batch_size=BAT
     # I add case k=1, for my personal testing phase.
     if k == 1:
         net = NeuralNet(input_size, HIDDEN_SIZE, NUM_CLASSES, dropout_p)
-        res = nn_train(net, X, y, vX, vy, lr=lr, batch_size=batch_size, epochs=epochs, do_earlystop=do_earlystop,
-                       patience=patience, silent=silent)
+        res = nn_train(net, X, y, vX, vy, silent=silent)
         mean_training_acc += res[0]
         mean_valid_acc += res[1]
         mean_train_losses += res[2]
@@ -146,8 +163,7 @@ def nn_kfold_train(X, y, vX=None, vy=None, k=5, lr=LEARNING_RATE, batch_size=BAT
         # Initialize Net with or without dropout
         net = NeuralNet(input_size, HIDDEN_SIZE, NUM_CLASSES, dropout_p).to(device)
         # train network and save results
-        res = nn_train(net, X.iloc[tr], y.iloc[tr], vX=X.iloc[te], vy=y.iloc[te], lr=lr, batch_size=batch_size,
-                       epochs=epochs, do_earlystop=do_earlystop, patience=patience, silent=silent)
+        res = nn_train(net, X.iloc[tr], y.iloc[tr],,
         mean_training_acc += res[0]
         mean_valid_acc += res[1]
         mean_train_losses += res[2]
