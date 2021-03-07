@@ -34,7 +34,7 @@ test_X = pd.DataFrame(test_X.reshape(10000, 28 * 28))
 test_Y = pd.DataFrame(test_y)
 
 input_size = 28 * 28
-hidden_sizes = [1000]
+hidden_sizes = [3000]
 output_size = 10
 biases = [True, True]
 activation_functions = [F.relu]
@@ -44,11 +44,21 @@ dropout = 0.2
 parameters_for_training = NNTrainParameters(batch_size=600, learning_rate=0.01, epochs=10,
                                             criterion=nn.CrossEntropyLoss(), optimiser=1)
 
+train_X = torch.from_numpy(train_X.values).float()
+train_Y = torch.from_numpy(train_Y.values).long()
+test_X = torch.from_numpy(test_X.values).float()
+test_Y = torch.from_numpy(test_Y.values).long()
 nn_kfold_train(train_X, train_Y,
                input_size, hidden_sizes, output_size, biases, activation_functions, dropout,
                parameters_for_training=parameters_for_training,
                early_stopper=None,
-               nb_split=5, shuffle=True, silent=False)
+               nb_split=5, shuffle=True, silent=True)
+
+
+
+
+
+
 
 # analyze_neural_network(data_train_X, data_train_Y, data_test_X, data_test_Y, 5, epochs=30, silent=True)
 #

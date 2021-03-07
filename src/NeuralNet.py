@@ -1,4 +1,5 @@
 # for neural networks
+import torch
 import torch.nn as nn
 
 
@@ -42,6 +43,7 @@ class NeuralNet(nn.Module):
         self.dropout = nn.Dropout(p=dropout)
 
     def forward(self, x):
+        """method that passes through the layers."""
         # pass through the input layer
         out = self.activation_functions[0](self.fcs[0](x))
 
@@ -52,3 +54,8 @@ class NeuralNet(nn.Module):
         # pass through the output layer
         out = self.fcs[-1](out)
         return out
+
+    def prediction(self, out):
+        """returns the class predicted for each element of the tensor."""
+        # gets the class that is max probability
+        return torch.max(out,1)[1]
