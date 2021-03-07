@@ -42,7 +42,7 @@ def confusion_matrix_creator(Y, Y_predict_result, labels):
                 annot[i, j] = '%.1f%%\n%d' % (p, c)
 
     # we set the frame
-    fig, ax = plt.subplots(figsize=(15, 15))
+    fig, ax = plt.subplots()
 
     # using heatmap and setting some parameter for the confusion matrix.
     sns.heatmap(confusion_matrix, annot=annot, fmt='', ax=ax, linewidths=.5, cmap="coolwarm")
@@ -87,8 +87,8 @@ def result_function(title, data_train_Y, y_pred1, no_classes, data_test_Y=None, 
 
 
 # function for plotting the results of the NN
-def nn_plot(mean_training_acc, mean_train_losses, mean_valid_acc=None, mean_valid_losses=None):
-    fig = plt.figure(figsize=(15, 8))
+def nn_plot(mean_training_acc, mean_train_losses, mean_valid_acc=None, mean_valid_losses=None, log_axis_for_loss = True):
+    fig = plt.figure()
     plt.grid(True)
     fig.tight_layout  # for the display
     ax = plt.axes()
@@ -116,5 +116,7 @@ def nn_plot(mean_training_acc, mean_train_losses, mean_valid_acc=None, mean_vali
     # here we set the legend as it has to be.
     labs = [l.get_label() for l in lns]
     ax.legend(lns, labs, loc="center right")
+    if log_axis_for_loss:
+        ax.set_yscale('log')
     plt.suptitle("Training of a Neural Network, presentation of the evolution of the accuracy and of the loss", y=0.94,
                  fontsize=20)

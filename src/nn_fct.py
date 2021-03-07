@@ -24,7 +24,7 @@ from src.kfold import *
 from src.EarlyStopping import *
 from tqdm import tqdm
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-device = torch.device("cpu") #forces the usage of cpu
+# device = torch.device("cpu") #forces the usage of cpu
 
 def nn_train(net, data_X, data_Y, indices_train_X, indices_train_Y, indices_validation_X=None,
              indices_validation_Y=None, parameters_for_training=None, early_stopper=None, silent=False):
@@ -53,7 +53,10 @@ def nn_train(net, data_X, data_Y, indices_train_X, indices_train_Y, indices_vali
     Y_train_on_device = Y_train.to(device)
 
     data_training = torch.utils.data.TensorDataset(X_train_on_device, Y_train_on_device)
-    loader = torch.utils.data.DataLoader(data_training, batch_size=parameters_for_training.batch_size, shuffle=True)
+    loader = torch.utils.data.DataLoader(data_training,
+                                         batch_size=parameters_for_training.batch_size,
+                                         shuffle=True,
+                                         num_workers= 0) #num_workers can be increased
 
     # condition if we use validation set.
     is_validation_included = (indices_validation_X is not None and indices_validation_Y is not None)
@@ -75,31 +78,33 @@ def nn_train(net, data_X, data_Y, indices_train_X, indices_train_Y, indices_vali
     # criterion = nn.CrossEntropyLoss()
     # criterion = nn.NLLLoss()
 
-    optimiser = torch.optim.SGD(net.parameters(), lr=0.01) #parameters_for_training.optimiser
-    # sgd = torch.optim.SGD(Neural_Network.parameters(), lr=parameters_for_training.learning_rate)
+    optimiser = parameters_for_training.optimiser(net.parameters(), lr= parameters_for_training.learning_rate )
+
 
     for epoch in tqdm(range(parameters_for_training.epochs), disable = silent):
         train_loss = 0
-        for i, batch in enumerate(loader, 0):
+        for i, (batch_X, batch_y) in enumerate(loader, 0):
             # get batch
-            batch_X, batch_y = batch
-            batch_X, batch_y = batch_X.to(device), batch_y.to(device)
+            # squeeze batch y in order to have the right format. not the good size for the results
+            batch_X, batch_y = batch_X.to(device), batch_y.to(device).squeeze_()
+
             # set gradients to zero
             optimiser.zero_grad()
+
             # Do forward and backward pass
-            batch_y = batch_y.squeeze_()  # not the good size for the results
             loss = criterion(net(batch_X), batch_y)
             loss.backward()
+
             # Optimisation step
             optimiser.step()
 
+            train_loss += loss.item() * batch_X.shape[0] # weight the loss accordingly
 
-            train_loss += loss.item()
         # if epoch % 10 == 1 and not silent:
         #     print(epoch, "Epochs complete")
 
         # Normalize and save the loss over the current epoch
-        training_losses[epoch] = train_loss * parameters_for_training.batch_size / (Y_train_on_device.shape[0])
+        training_losses[epoch] = train_loss  / (Y_train_on_device.shape[0])
         training_accuracy[epoch] = sklearn.metrics.accuracy_score(nn_predict(net, X_train_on_device), Y_train)  # sklearn can't access data on gpu.
 
         # Calculate validation loss for the current epoch
@@ -117,14 +122,20 @@ def nn_train(net, data_X, data_Y, indices_train_X, indices_train_Y, indices_vali
     # return loss over epochs and accuracy
     if is_validation_included:
         if early_stopper is not None:
-            return training_accuracy, validation_accuracy, training_losses, validation_losses, epoch
+            return (training_accuracy, validation_accuracy,
+                    training_losses, validation_losses,
+                    epoch)
         else:
-            return training_accuracy, validation_accuracy, training_losses, validation_losses, parameters_for_training.epochs
+            return (training_accuracy, validation_accuracy,
+                   training_losses, validation_losses,
+                    parameters_for_training.epochs - 1) # the -1 is because epochs start at 0.
     else:
         if early_stopper is not None:
             return training_accuracy, training_losses, epoch
         else:
-            return training_accuracy, training_losses, parameters_for_training.epochs
+            return (training_accuracy,
+                    training_losses,
+                    parameters_for_training.epochs -1)  # the -1 is because epochs start at 0.
 
 
 def nn_predict(net, data_to_predict):
@@ -169,30 +180,29 @@ def nn_kfold_train(
     Returns:
 
     """
-    mean_training_accuracy = np.zeros(parameters_for_training.epochs)
-    mean_valid_accuracy = np.zeros(parameters_for_training.epochs)
-    mean_train_losses = np.zeros(parameters_for_training.epochs)
-    mean_valid_losses = np.zeros(parameters_for_training.epochs)
+    mean_training_accuracy = np.zeros((nb_split, parameters_for_training.epochs))
+    mean_validation_accuracy = np.zeros((nb_split, parameters_for_training.epochs))
+    mean_training_losses = np.zeros((nb_split, parameters_for_training.epochs))
+    mean_validation_losses = np.zeros((nb_split, parameters_for_training.epochs))
 
     # The case nb_split = 1: we use the whole dataset for training, without validation.
     if nb_split == 1:
         neural_network = NeuralNet(input_size, hidden_sizes, output_size, biases, activation_functions, p).to(device)
         res = nn_train(neural_network,
                        data_X=data_training_X, data_Y=data_training_Y,
-                       #wip
                        indices_train_X=range(data_training_X.shape[0]),
                        indices_train_Y=range(data_training_Y.shape[0]), parameters_for_training=parameters_for_training, early_stopper=early_stopper,
                        silent=silent)
 
 
         mean_training_accuracy += res[0]
-        mean_train_losses += res[1]
+        mean_training_losses += res[1]
         nb_of_epochs_through = res[2]  # this number is how many epochs the NN has been trained over.
         # with such quantity, one does not return a vector full of 0, but only the meaningful data.
 
         return (neural_network,
-                mean_training_accuracy[:nb_of_epochs_through], mean_valid_accuracy[:nb_of_epochs_through],
-                mean_train_losses[:nb_of_epochs_through], mean_valid_losses[:nb_of_epochs_through])
+                mean_training_accuracy[:nb_of_epochs_through],
+                mean_training_losses[:nb_of_epochs_through])
 
     # Kfold
     skfold = sklearn.model_selection.StratifiedKFold(n_splits=nb_split, shuffle=shuffle, random_state=0)
@@ -212,10 +222,10 @@ def nn_kfold_train(
                        indices_train_Y=tr, indices_validation_X=te, indices_validation_Y=te,
                        parameters_for_training=parameters_for_training, early_stopper=early_stopper, silent=silent)
 
-        mean_training_accuracy += res[0]
-        mean_valid_accuracy += res[1]
-        mean_train_losses += res[2]
-        mean_valid_losses += res[3]
+        mean_training_accuracy[i,:] += res[0]
+        mean_validation_accuracy[i, :] += res[1]
+        mean_training_losses[i, :] += res[2]
+        mean_validation_losses[i, :] += res[3]
         nb_of_epochs_through = res[4]
 
         #storing the best network.
@@ -229,11 +239,6 @@ def nn_kfold_train(
         if nb_of_epochs_through > nb_max_epochs_through:
             nb_max_epochs_through = nb_of_epochs_through
 
-    # Average and return results
-    mean_training_accuracy /= nb_split
-    mean_valid_accuracy /= nb_split
-    mean_train_losses /= nb_split
-    mean_valid_losses /= nb_split
     return (best_net,
-            mean_training_accuracy[:nb_max_epochs_through], mean_valid_accuracy[:nb_max_epochs_through],
-            mean_train_losses[:nb_max_epochs_through], mean_valid_losses[:nb_max_epochs_through])
+            mean_training_accuracy[:, :nb_max_epochs_through], mean_validation_accuracy[:,:nb_max_epochs_through],
+            mean_training_losses[:,:nb_max_epochs_through], mean_validation_losses[:,:nb_max_epochs_through])

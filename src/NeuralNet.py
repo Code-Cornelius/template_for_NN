@@ -30,14 +30,14 @@ class NeuralNet(nn.Module):
         self.fcs = nn.ModuleList()
 
         # initialise the input layer
-        self.fcs.append(nn.Linear(self.input_size, self.list_hidden_sizes[0], self.list_biases[0]))#.cuda())
+        self.fcs.append(nn.Linear(self.input_size, self.list_hidden_sizes[0], self.list_biases[0]))
 
         # initialise the hidden layers
         for i in range(len(hidden_sizes) - 1):
-            self.fcs.append(nn.Linear(hidden_sizes[i], hidden_sizes[i + 1], self.list_biases[i + 1]))#.cuda())
+            self.fcs.append(nn.Linear(hidden_sizes[i], hidden_sizes[i + 1], self.list_biases[i + 1]))
 
         # initialise the output layer
-        self.fcs.append(nn.Linear(self.list_hidden_sizes[-1], self.output_size, self.list_biases[-1]))#.cuda())
+        self.fcs.append(nn.Linear(self.list_hidden_sizes[-1], self.output_size, self.list_biases[-1]))
 
         # initialise dropout
         self.dropout = nn.Dropout(p=dropout)

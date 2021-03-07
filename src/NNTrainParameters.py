@@ -7,6 +7,9 @@ class NNTrainParameters:
         self.criterion = criterion
         self.optimiser = optimiser
 
+        #todo make this work
+        self.dict_parameters_optimiser = {}
+
     @property
     def batch_size(self):
         return self._batch_size
