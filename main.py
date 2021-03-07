@@ -20,7 +20,7 @@ import torchvision
 from torchvision import transforms
 
 from src.plots import *
-from src.nn_fct import  *
+from src.nn_fct import *
 from src.NNTrainParameters import *
 from src.NeuralNet import *
 
@@ -33,23 +33,37 @@ train_Y = pd.DataFrame(train_y)
 test_X = pd.DataFrame(test_X.reshape(10000, 28 * 28))
 test_Y = pd.DataFrame(test_y)
 
+input_size = 28 * 28
+hidden_sizes = [1000]
+output_size = 10
+biases = [True, True]
+activation_functions = [F.relu]
+dropout = 0.2
+# WIP
+# optimiser =
+parameters_for_training = NNTrainParameters(batch_size=600, learning_rate=0.01, epochs=10,
+                                            criterion=nn.CrossEntropyLoss(), optimiser=1)
 
+nn_kfold_train(train_X, train_Y,
+               input_size, hidden_sizes, output_size, biases, activation_functions, dropout,
+               parameters_for_training=parameters_for_training,
+               early_stopper=None,
+               nb_split=5, shuffle=True, silent=False)
 
-
-analyze_neural_network(data_train_X, data_train_Y, data_test_X, data_test_Y, 5, epochs=30, silent=True)
-
-# Activation Function
-batch_size = 128
-learning_rate = 0.005
-epochs = 30
-hidden_size = 16
-num_layers = 2
-dropout = 0
-norm = False
-activ_function = "tanh"
-version = 0
-optim = "sgd"
-
-analyze_convolution_neural_network(data_train_X, data_train_Y, data_test_X, data_test_Y, 5,
-                                   batch_size, learning_rate, epochs,
-                                   hidden_size, num_layers, dropout, norm, activ_function, version, optim, True)
+# analyze_neural_network(data_train_X, data_train_Y, data_test_X, data_test_Y, 5, epochs=30, silent=True)
+#
+# # Activation Function
+# batch_size = 128
+# learning_rate = 0.005
+# epochs = 30
+# hidden_size = 16
+# num_layers = 2
+# dropout = 0
+# norm = False
+# activ_function = "tanh"
+# version = 0
+# optim = "sgd"
+#
+# analyze_convolution_neural_network(data_train_X, data_train_Y, data_test_X, data_test_Y, 5,
+#                                    batch_size, learning_rate, epochs,
+#                                    hidden_size, num_layers, dropout, norm, activ_function, version, optim, True)

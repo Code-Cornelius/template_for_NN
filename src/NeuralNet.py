@@ -26,17 +26,17 @@ class NeuralNet(nn.Module):
         self.activation_functions = activation_functions
 
         # array of fully connected layers
-        self.fcs = []
+        self.fcs = nn.ModuleList()
 
         # initialise the input layer
-        self.fcs.append(nn.Linear(self.input_size, self.list_hidden_sizes[0], self.list_biases[0]))
+        self.fcs.append(nn.Linear(self.input_size, self.list_hidden_sizes[0], self.list_biases[0]))#.cuda())
 
         # initialise the hidden layers
         for i in range(len(hidden_sizes) - 1):
-            self.fcs.append(nn.Linear(hidden_sizes[i], hidden_sizes[i + 1], self.list_biases[i + 1]))
+            self.fcs.append(nn.Linear(hidden_sizes[i], hidden_sizes[i + 1], self.list_biases[i + 1]))#.cuda())
 
         # initialise the output layer
-        self.fc4 = nn.Linear(self.list_hidden_sizes[-1], self.output_size, self.list_biases[-1])
+        self.fcs.append(nn.Linear(self.list_hidden_sizes[-1], self.output_size, self.list_biases[-1]))#.cuda())
 
         # initialise dropout
         self.dropout = nn.Dropout(p=dropout)
