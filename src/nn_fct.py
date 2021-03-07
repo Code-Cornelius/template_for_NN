@@ -22,6 +22,8 @@ from src.NNTrainParameters import *
 from src.plots import *
 from src.kfold import *
 from src.EarlyStopping import *
+from tqdm import tqdm
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
 def nn_train(neural_network,
@@ -51,9 +53,9 @@ def nn_train(neural_network,
     # Prepare Training set and create data loader
     X_train = torch.from_numpy(X).float()
     Y_train = torch.from_numpy(y).long()
-    nn_train = torch.utils.data.TensorDataset(X_train, Y_train)
+    data_training = torch.utils.data.TensorDataset(X_train, Y_train)
 
-    loader = torch.utils.data.DataLoader(nn_train, batch_size=parameters_for_training.batch_size, shuffle=True)
+    loader = torch.utils.data.DataLoader(data_training, batch_size=parameters_for_training.batch_size, shuffle=True)
     # pick loss function and optimizer
     criterion = parameters_for_training.criterion
     # criterion = nn.CrossEntropyLoss()
@@ -62,11 +64,12 @@ def nn_train(neural_network,
     optimiser = parameters_for_training.optimiser
     # sgd = torch.optim.SGD(Neural_Network.parameters(), lr=parameters_for_training.learning_rate)
 
-    for epoch in range(parameters_for_training.epochs):
+    for epoch in tqdm(range(parameters_for_training.epochs)):
         train_loss = 0
         for i, batch in enumerate(loader, 0):
             # get batch
             batch_X, batch_y = batch
+            batch_X, batch_y = batch_X.to(device), batch_y.to(device)
             # set gradients to zero
             optimiser.zero_grad()
             # Do forward and backward pass
@@ -117,12 +120,9 @@ def nn_predict(NeuralNetwork, data_to_predict):
     # do a single predictive forward pass on pnet (takes & returns numpy arrays)
     # Disable dropout:
     NeuralNetwork.train(mode=False)
-    # forward pass
-    data_predicted = NeuralNetwork(data_to_predict).float().detach().numpy()
 
-    # WIP
-    # yhat = pnet(torch.from_numpy(pX.values).float().to(device)).argmax(dim=1).cpu().numpy()
-    # WIP
+    # forward pass
+    data_predicted = NeuralNetwork(data_to_predict.to(device)).float().detach().numpy()
 
     # Reable dropout:
     NeuralNetwork.train(mode=True)
@@ -153,7 +153,7 @@ def nn_kfold_train(
 
         mean_training_accuracy += res[0]
         mean_train_losses += res[1]
-        nb_of_epochs_through = res[2] # this number is how many epochs the NN has been trained over.
+        nb_of_epochs_through = res[2]  # this number is how many epochs the NN has been trained over.
         # with such quantity, one does not return a vector full of 0, but only the meaningful data.
 
         return (neural_network,
@@ -205,5 +205,5 @@ def nn_kfold_train(
     mean_train_losses /= nb_split
     mean_valid_losses /= nb_split
     return (best_net,
-           mean_training_accuracy[:nb_max_epochs_through], mean_valid_accuracy[:nb_max_epochs_through],
-           mean_train_losses[:nb_max_epochs_through], mean_valid_losses[:nb_max_epochs_through])
+            mean_training_accuracy[:nb_max_epochs_through], mean_valid_accuracy[:nb_max_epochs_through],
+            mean_train_losses[:nb_max_epochs_through], mean_valid_losses[:nb_max_epochs_through])

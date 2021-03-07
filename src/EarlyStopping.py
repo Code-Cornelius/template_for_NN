@@ -37,7 +37,6 @@ class EarlyStopping:
         self.trace_func = trace_func
 
     def __call__(self, neural_network, losses, epoch):
-        # todo make it work without giving validation losses. The function is_early_stop has to be adjusted as well
         current_loss = losses[epoch]
 
         if self.is_early_stop(current_loss, epoch):
@@ -73,15 +72,16 @@ class EarlyStopperTraining(EarlyStopping):
     def __init__(self):
         super().__init__()
 
-    def is_early_stop(self, training_loss, epoch):
-        # if the percentage of change of the actual loss wrt to any loss for the 20 previous loss is less than 10%, then stop.
-        cdt2 = epoch > 20 and all(
+    def is_early_stop(self, training_losses, epoch):
+        # if the percentage of change of the actual loss wrt to any loss
+        # for the 20 previous loss is less than 10%, then stop.
+        cdt = epoch > 20 and all(
             difference_percentage < 0.1 for difference_percentage in
-            [abs(previous_loss - training_loss[epoch]) / previous_loss for previous_loss in
-             training_loss[epoch - 20:epoch]
+            [abs(previous_loss - training_losses[epoch]) / previous_loss for previous_loss in
+             training_losses[epoch - 20:epoch]
              ]
         )
-        return cdt2
+        return cdt
 
 
 class EarlyStoppingValidation(EarlyStopping):
@@ -89,9 +89,9 @@ class EarlyStoppingValidation(EarlyStopping):
         super().__init__()
         self.highest_loss = None
 
-    def is_early_stop(self, val_loss, epoch):
+    def is_early_stop(self, validation_losses, epoch):
         if self.highest_loss is None:
-            self.highest_loss = val_loss[epoch]
+            self.highest_loss = validation_losses[epoch]
             # self.save_checkpoint(val_loss[epoch], neural_network)
             return False
-        return self.highest_loss + self.delta < val_loss[epoch]
+        return self.highest_loss + self.delta < validation_losses[epoch]
