@@ -7,7 +7,7 @@ class NNTrainParameters:
         self.criterion = criterion
         self.optimiser = optimiser
 
-        #todo make this work
+        # todo make this work
         self.dict_parameters_optimiser = {}
 
     @property
@@ -58,4 +58,3 @@ class NNTrainParameters:
     @optimiser.setter
     def optimiser(self, new_optimiser):
         self._optimiser = new_optimiser
-

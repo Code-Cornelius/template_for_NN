@@ -87,10 +87,10 @@ def result_function(title, data_train_Y, y_pred1, no_classes, data_test_Y=None, 
 
 
 # function for plotting the results of the NN
-def nn_plot(mean_training_acc, mean_train_losses, mean_valid_acc=None, mean_valid_losses=None, log_axis_for_loss = True):
+def nn_plot(mean_training_acc, mean_train_losses, mean_valid_acc=None, mean_valid_losses=None, log_axis_for_loss=True):
     fig = plt.figure()
     plt.grid(True)
-    fig.tight_layout  # for the display
+    fig.tight_layout()  # for the display
     ax = plt.axes()
     ax_bis = ax.twinx()
     ax.set_xlabel("Epochs")

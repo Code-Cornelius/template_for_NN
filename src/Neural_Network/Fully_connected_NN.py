@@ -4,20 +4,21 @@ import torch.nn as nn
 
 
 # the class of NN
-class NeuralNet(nn.Module):
+class Fully_connected_NN(nn.Module):
 
     def __init__(self, list_hidden_sizes, hidden_sizes, output_size, list_biases, activation_functions, dropout=0):
         """
         Constructor for Neural Network
+
         Args:
-            list_hidden_sizes: the size of the input layer
-            hidden_sizes: the input sizes for each hidden layer + output of last hidden layer
-            output_size: the output size of the neural network
-            list_biases: list of booleans for specifying which layers use biases
-            activation_functions: list of activation functions for each layer
-            dropout: dropout rate
+            list_hidden_sizes: the size of the input layer.
+            hidden_sizes: the input sizes for each hidden layer + output of last hidden layer.
+            output_size: the output size of the neural network.
+            list_biases: list of booleans for specifying which layers use biases.
+            activation_functions: list of activation functions for each layer.
+            dropout: dropout rate for all layers. We do not dropout the first and last layer (input and output layer).
         """
-        super(NeuralNet, self).__init__()
+        super().__init__()
         # check the inputs
         assert len(list_biases) == len(hidden_sizes) + 1
         self.input_size = list_hidden_sizes
@@ -43,7 +44,6 @@ class NeuralNet(nn.Module):
         self.dropout = nn.Dropout(p=dropout)
 
     def forward(self, x):
-        """method that passes through the layers."""
         # pass through the input layer
         out = self.activation_functions[0](self.fcs[0](x))
 
@@ -58,4 +58,4 @@ class NeuralNet(nn.Module):
     def prediction(self, out):
         """returns the class predicted for each element of the tensor."""
         # gets the class that is max probability
-        return torch.max(out,1)[1]
+        return torch.max(out, 1)[1]

@@ -26,10 +26,10 @@ import sklearn.model_selection
 import torchvision
 from torchvision import transforms
 
-from src.plots import *
+from src.NN_plots import *
 from src.nn_fct import *
 from src.NNTrainParameters import *
-from src.NeuralNet import *
+from src.Neural_Network.Fully_connected_NN import *
 
 # set seed for pytorch.
 torch.manual_seed(42)
@@ -55,6 +55,8 @@ epochs = 10
 batch_size = 2000
 # WIP
 optimiser = torch.optim.SGD
+
+pytorch_device_setting()
 parameters_for_training = NNTrainParameters(batch_size=batch_size, learning_rate=0.001, epochs=epochs,
                                             criterion=nn.CrossEntropyLoss(), optimiser=optimiser)
 
@@ -65,11 +67,9 @@ test_Y = torch.from_numpy(test_Y.values).long()
 
 if __name__ == '__main__':
     net, mean_training_accuracy, mean_validation_accuracy, mean_training_losses, mean_validation_losses = \
-        nn_kfold_train(train_X, train_Y,
-                       input_size, hidden_sizes, output_size, biases, activation_functions, dropout,
-                       parameters_for_training=parameters_for_training,
-                       early_stopper=None,
-                       nb_split=3, shuffle=True, silent=False)
+        nn_kfold_train(train_X, train_Y, input_size, hidden_sizes, output_size, biases, activation_functions, dropout,
+                       parameters_for_training=parameters_for_training, early_stopper_validation=None, nb_split=3,
+                       shuffle=True, silent=False)
 
     nn_plot(mean_training_accuracy[0,:], mean_training_losses[0,:], mean_valid_acc=mean_validation_accuracy[0,:], mean_valid_losses=mean_validation_losses[0,:])
     confusion_matrix_creator(train_Y, nn_predict(net, train_X), range(10))
