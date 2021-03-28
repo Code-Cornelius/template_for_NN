@@ -18,102 +18,76 @@ import torch.nn.functional as F
 import sklearn.model_selection
 
 from src.Neural_Network.Fully_connected_NN import *
-from src.NNTrainParameters import *
-from src.NN_plots import *
+from src.Neural_Network.NNTrainParameters import *
+from src.Neural_Network.NN_plots import *
 from src.kfold import *
 from src.Early_stopper import *
 from tqdm import tqdm
 
-
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
-def nn_train(net, data_X, data_Y, parameters_for_training, indices_train_X, indices_train_Y, indices_validation_X=None,
-             indices_validation_Y=None, early_stopper_training=None, early_stopper_validation=None, silent=False):
-    """
-    Semantics : Given the net, we train it upon data. For optimisation reasons, we pass the indices.
-    Args:
-        net:
-        data_X:  tensor
-        data_Y:  tensor
-        indices_train_X:
-        indices_train_Y:
-        indices_validation_X:
-        indices_validation_Y:
-        parameters_for_training:
-        early_stopper_training: early_stopper_training type,
-        early_stopper_validation: early_stopper_validation type,
-        silent:
+# todo refactor name parameters
+def nn_fit(net,
+           X_train_on_device, Y_train_on_device, Y_train,
+           parameters_for_training,
+           training_losses, training_accuracy,
+           X_val_on_device=None, Y_val_on_device=None, Y_val=None,
+           validation_losses=None, validation_accuracy=None,
+           max_through_epoch=None,
+           early_stopper_training=None, early_stopper_validation=None,
+           silent=False):
+    # condition if we use validation set.
+    is_validation_included = (X_val_on_device is not None and Y_val_on_device is not None and
+                              Y_val is not None and
+                              validation_losses is not None and validation_accuracy is not None)
+    # todo write a function that takes some parameters, check if there are none, if one is none, then return the name of it and raises an error.
 
-    Returns: Trained net.
-
-    """
-    # Prepare Training set and create data loader
-
-    X_train_on_device = data_X[indices_train_X].to(device)
-    Y_train = data_Y[indices_train_Y]  # useful for using it in order to compute accuracy.
-    Y_train_on_device = Y_train.to(device)
-
-    data_training = torch.utils.data.TensorDataset(X_train_on_device, Y_train_on_device)
-    loader = torch.utils.data.DataLoader(data_training,
+    # create data loader
+    loader = torch.utils.data.DataLoader(torch.utils.data.TensorDataset(X_train_on_device, Y_train_on_device),
                                          batch_size=parameters_for_training.batch_size,
                                          shuffle=True,
                                          num_workers=0)  # num_workers can be increased
 
-    # condition if we use validation set.
-    is_validation_included = (indices_validation_X is not None and indices_validation_Y is not None)
-    # Prepare Validation set if there is any
-    if is_validation_included:
-        X_val_on_device = data_X[indices_validation_X].to(device)
-        Y_val = data_Y[indices_validation_Y]  # useful for using it in order to compute accuracy.
-        Y_val_on_device = Y_val.to(device)
-        validation_losses = np.zeros(parameters_for_training.epochs)
-        validation_accuracy = np.zeros(parameters_for_training.epochs)
-
-    # prepare for iteration over epochs
-    training_losses = np.zeros(parameters_for_training.epochs)
-    training_accuracy = np.zeros(parameters_for_training.epochs)
-
     # pick loss function and optimizer
     criterion = parameters_for_training.criterion
-    # criterion = nn.CrossEntropyLoss()
-    # criterion = nn.NLLLoss()
-
     optimiser = parameters_for_training.optimiser(net.parameters(), lr=parameters_for_training.learning_rate)
 
-    for epoch in tqdm(range(parameters_for_training.epochs), disable=silent):
+    for epoch in tqdm(range(parameters_for_training.epochs), disable=silent):  # disable unable the print.
         train_loss = 0
         for i, (batch_X, batch_y) in enumerate(loader, 0):
+            # closure needed for some algorithm.
+
             # get batch
             # squeeze batch y in order to have the right format. not the good size for the results
             batch_X, batch_y = batch_X.to(device), batch_y.to(device).squeeze_()
 
-            # set gradients to zero
-            optimiser.zero_grad()
+            def closure():
+                # set gradients to zero
+                optimiser.zero_grad()
 
-            # Do forward and backward pass
-            loss = criterion(net(batch_X), batch_y)
-            loss.backward()
+                # Do forward and backward pass
+                loss = criterion(net(batch_X), batch_y)
+                loss.backward()
+                return loss
 
             # Optimisation step
-            optimiser.step()
+            optimiser.step(closure=closure)
 
-            train_loss += loss.item() * batch_X.shape[0]  # weight the loss accordingly
-
-        # if epoch % 10 == 1 and not silent:
-        #     print(epoch, "Epochs complete")
+            # you need to call again criterion unless you do not need the closure.
+            train_loss += criterion(net(batch_X), batch_y).item() * batch_X.shape[0]  # weight the loss accordingly
 
         # Normalize and save the loss over the current epoch
         training_losses[epoch] = train_loss / (Y_train_on_device.shape[0])
         training_accuracy[epoch] = sklearn.metrics.accuracy_score(nn_predict(net, X_train_on_device),
-                                                                  Y_train)  # sklearn can't access data on gpu.
+                                                                              Y_train)  # sklearn can't access data on gpu.
 
         # Calculate validation loss for the current epoch
         if is_validation_included:
             # Y_val_on_device = Y_val_on_device.squeeze_()
             validation_losses[epoch] = criterion(net(X_val_on_device), Y_val_on_device.squeeze_()).item()
             validation_accuracy[epoch] = sklearn.metrics.accuracy_score(nn_predict(net, X_val_on_device),
-                                                                        Y_val)  # sklearn can't access data on gpu.
+                                                                                    Y_val)  # sklearn can't access data on gpu.
 
             # Calculations to see if it's time to stop early
             if early_stopper_validation is not None:
@@ -122,10 +96,65 @@ def nn_train(net, data_X, data_Y, parameters_for_training, indices_train_X, indi
         if early_stopper_training is not None:
             if early_stopper_training(training_losses, epoch, net):
                 break  # get out of epochs.
-    #### end of the for in epoch.
 
-    # return loss over epochs and accuracy
+    #### end of the for in epoch.
+    max_through_epoch = epoch
+
+
+def nn_train(net, data_X, data_Y,
+             parameters_for_training,
+             indices_train_X, indices_train_Y,
+             indices_validation_X=None, indices_validation_Y=None,
+             early_stopper_training=None, early_stopper_validation=None,
+             silent=False):
+    """
+    Semantics : Given the net, we train it upon data. For optimisation reasons, we pass the indices.
+    Args:
+        net:
+        data_X:  tensor
+        data_Y:  tensor
+        parameters_for_training:
+        indices_train_X:
+        indices_train_Y:
+        indices_validation_X:
+        indices_validation_Y:
+        early_stopper_training: early_stopper_training type,
+        early_stopper_validation: early_stopper_validation type,
+        silent:
+
+    Returns: Trained net.
+
+    """
+    epoch = 0 # nb of epochs that the NN has back propagated over.
+
+    # Prepare Training set
+    X_train_on_device = data_X[indices_train_X].to(device)
+    Y_train = data_Y[indices_train_Y]  # useful for using it in order to compute accuracy.
+    Y_train_on_device = Y_train.to(device)
+
+    # prepare for iteration over epochs
+    training_losses = np.zeros(parameters_for_training.epochs)
+    training_accuracy = np.zeros(parameters_for_training.epochs)
+
+    # condition if we use validation set.
+    is_validation_included = (indices_validation_X is not None and indices_validation_Y is not None)
+    # todo write a function that takes some parameters, check if there are none, if one is none, then return the name of it and raises an error.
+
+    # Prepare Validation set if there is any
     if is_validation_included:
+        X_val_on_device = data_X[indices_validation_X].to(device)
+        Y_val = data_Y[indices_validation_Y]  # useful for using it in order to compute accuracy.
+        Y_val_on_device = Y_val.to(device)
+        validation_losses = np.zeros(parameters_for_training.epochs)
+        validation_accuracy = np.zeros(parameters_for_training.epochs)
+
+        nn_fit(net, X_train_on_device, Y_train_on_device, Y_train, parameters_for_training, training_losses,
+               training_accuracy, X_val_on_device=X_val_on_device, Y_val_on_device=Y_val_on_device, Y_val=Y_val,
+               validation_losses=validation_losses, validation_accuracy=validation_accuracy, max_through_epoch=epoch,
+               early_stopper_training=early_stopper_training, early_stopper_validation=early_stopper_validation,
+               silent=silent)
+
+        # return loss over epochs and accuracy
         if early_stopper_validation is not None or early_stopper_training is not None:
             return (training_accuracy, validation_accuracy,
                     training_losses, validation_losses,
@@ -133,8 +162,13 @@ def nn_train(net, data_X, data_Y, parameters_for_training, indices_train_X, indi
         else:
             return (training_accuracy, validation_accuracy,
                     training_losses, validation_losses,
-                    parameters_for_training.epochs - 1)  # the -1 is because epochs start at 0.
+                    epoch)
+
     else:
+        nn_fit(net, X_train_on_device, Y_train_on_device, Y_train, parameters_for_training, training_losses,
+               training_accuracy, max_through_epoch=epoch, early_stopper_training=early_stopper_training,
+               early_stopper_validation=early_stopper_validation, silent=silent)
+        # return loss over epochs and accuracy
         if early_stopper_validation is not None or early_stopper_training is not None:
             return (training_accuracy,
                     training_losses,
@@ -142,7 +176,8 @@ def nn_train(net, data_X, data_Y, parameters_for_training, indices_train_X, indi
         else:
             return (training_accuracy,
                     training_losses,
-                    parameters_for_training.epochs - 1)  # the -1 is because epochs start at 0.
+                    epoch)
+
 
 
 def nn_predict(net, data_to_predict):

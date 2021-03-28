@@ -26,9 +26,9 @@ import sklearn.model_selection
 import torchvision
 from torchvision import transforms
 
-from src.NN_plots import *
-from src.nn_fct import *
-from src.NNTrainParameters import *
+from src.Neural_Network.NN_plots import *
+from src.Neural_Network.NN_fct import *
+from src.Neural_Network.NNTrainParameters import *
 from src.Neural_Network.Fully_connected_NN import *
 
 # set seed for pytorch.
@@ -55,10 +55,12 @@ epochs = 10
 batch_size = 2000
 # WIP
 optimiser = torch.optim.SGD
+criterion = nn.CrossEntropyLoss(), # criterion = nn.CrossEntropyLoss() # criterion = nn.NLLLoss()
+
 
 pytorch_device_setting()
 parameters_for_training = NNTrainParameters(batch_size=batch_size, learning_rate=0.001, epochs=epochs,
-                                            criterion=nn.CrossEntropyLoss(), optimiser=optimiser)
+                                            criterion=criterion , optimiser=optimiser)
 
 train_X = torch.from_numpy(train_X.values).float()
 train_Y = torch.from_numpy(train_Y.values).long()
