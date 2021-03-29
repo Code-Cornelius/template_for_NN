@@ -1,15 +1,14 @@
 class NNTrainParameters:
 
-    def __init__(self, batch_size, learning_rate, epochs, criterion, optimiser):
+    def __init__(self, batch_size, epochs, criterion, optimiser, dict_params_optimiser=None):
         self.batch_size = batch_size
-        self.learning_rate = learning_rate
         self.epochs = epochs
         self.criterion = criterion
         self.optimiser = optimiser
 
-        # todo make this work
-        self.dict_parameters_optimiser = {}
+        self.dict_params_optimiser = dict_params_optimiser
 
+    # SETTERS GETTERS
     @property
     def batch_size(self):
         return self._batch_size
@@ -19,7 +18,7 @@ class NNTrainParameters:
         if isinstance(new_batch_size, int) and new_batch_size >= 0:
             self._batch_size = new_batch_size
         else:
-            raise TypeError(f'Argument is not an {str()}.')
+            raise TypeError(f"Argument is not an unsigned int.")
 
     @property
     def learning_rate(self):
@@ -30,7 +29,7 @@ class NNTrainParameters:
         if isinstance(new_learning_rate, float):
             self._learning_rate = new_learning_rate
         else:
-            raise TypeError(f'Argument is not an {str()}.')
+            raise TypeError(f"Argument is not an float.")
 
     @property
     def epochs(self):
@@ -41,7 +40,7 @@ class NNTrainParameters:
         if isinstance(new_epochs, int) and new_epochs >= 0:
             self._epochs = new_epochs
         else:
-            raise TypeError(f'Argument is not an {str()}.')
+            raise TypeError(f"Argument is not an unsigned int.")
 
     @property
     def criterion(self):

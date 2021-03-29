@@ -59,8 +59,10 @@ criterion = nn.CrossEntropyLoss(), # criterion = nn.CrossEntropyLoss() # criteri
 
 
 pytorch_device_setting()
-parameters_for_training = NNTrainParameters(batch_size=batch_size, learning_rate=0.001, epochs=epochs,
-                                            criterion=criterion , optimiser=optimiser)
+dict_optimiser = {"lr": 0.001, "weight_decay" : True}
+parameters_for_training = NNTrainParameters(batch_size=batch_size, epochs=epochs,
+                                            criterion=criterion , optimiser=optimiser,
+                                            dict_params_optimiser = dict_optimiser)
 
 train_X = torch.from_numpy(train_X.values).float()
 train_Y = torch.from_numpy(train_Y.values).long()

@@ -1,28 +1,3 @@
-# todo depends on activation function
-# section ######################################################################
-#  #############################################################################
-#
-
-def init_xavier(model, retrain_seed):
-    torch.manual_seed(retrain_seed)
-
-    def init_weights(m):
-        if type(m) == nn.Linear and m.weight.requires_grad and m.bias.requires_grad:
-            g = nn.init.calculate_gain('tanh')
-            torch.nn.init.xavier_uniform_(m.weight, gain=g)
-            # torch.nn.init.xavier_normal_(m.weight, gain=g)
-            m.bias.data.fill_(0)
-
-    model.apply(init_weights)
-
-def regularization(model, p):
-    reg_loss = 0
-    for name, param in model.named_parameters():
-        if 'weight' in name:
-            reg_loss = reg_loss + torch.norm(param, p)
-    return reg_loss
-
-
 # section ######################################################################
 #  #############################################################################
 #
