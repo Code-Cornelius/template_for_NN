@@ -1,60 +1,26 @@
 # parameters
-import math
-import numpy as np  # maths functions
-import matplotlib.pyplot as plt  # for plots
-import seaborn as sns  # for the display
-import pandas as pd  # for dataframes
-import time  # computational time
-import scipy.stats as si
 
 # from useful_functions import *
 
 # for neural networks
-import torch
-import torch.nn as nn
 import torch.utils.data
-import torch.nn.functional as F
 
 import sklearn.model_selection
 
 from src.Neural_Network.Fully_connected_NN import *
-from src.Neural_Network.NNTrainParameters import *
-from src.Neural_Network.NN_plots import *
+from src.Neural_Network.NN_fcts import device, are_at_least_one_None, raise_if_not_all_None, nn_predict
 from src.kfold import *
-from src.Early_stopper import *
 from tqdm import tqdm
-
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
-
-def is_None(parameter):
-    return parameter is None
-
-
-def are_at_least_one_None(list_parameters):
-    """returns list_parameters.at least one.is_None"""
-    for parameter in list_parameters:
-        if is_None(parameter):
-            return True
-        else:
-            continue
-    return False
-
-
-def raise_if_not_all_None(list_parameters):
-    """ if one is not None, throws an error"""
-    for parameter in list_parameters:
-        if not is_None(parameter):
-            raise ValueError(str(parameter))  # wip is it raising the way it should?
-    return
 
 
 def nn_fit(net, X_train_on_device, Y_train_on_device, Y_train,
-           params_training, training_losses, training_accuracy,
+           params_training,
+           training_losses, training_accuracy,
            X_val_on_device=None, Y_val_on_device=None, Y_val=None,
            validation_losses=None, validation_accuracy=None,
            max_through_epoch=None,
-           early_stopper_training=None, early_stopper_validation=None, silent=False):
+           early_stopper_training=None, early_stopper_validation=None,
+           silent=False):
     # condition if we use validation set.
     list_params_validation = [X_val_on_device, Y_val_on_device,
                               Y_val, validation_losses,
@@ -107,7 +73,6 @@ def nn_fit(net, X_train_on_device, Y_train_on_device, Y_train,
 
         # Calculate validation loss for the current epoch
         if is_validation_included:
-            # Y_val_on_device = Y_val_on_device.squeeze_()
             validation_losses[epoch] = criterion(net(X_val_on_device), Y_val_on_device.squeeze_()).item()
             validation_accuracy[epoch] = sklearn.metrics.accuracy_score(nn_predict(net, X_val_on_device),
                                                                         Y_val)  # sklearn can't access data on gpu.
@@ -129,7 +94,7 @@ def nn_fit(net, X_train_on_device, Y_train_on_device, Y_train,
 def nn_train(net, data_X, data_Y,
              params_training,
              indic_train_X, indic_train_Y,
-             indices_validation_X=None, indices_validation_Y=None,
+             indic_validation_X=None, indic_validation_Y=None,
              early_stopper_training=None, early_stopper_validation=None,
              silent=False):
     """
@@ -142,8 +107,8 @@ def nn_train(net, data_X, data_Y,
         params_training:
         indic_train_X:
         indic_train_Y:
-        indices_validation_X:
-        indices_validation_Y:
+        indic_validation_X:
+        indic_validation_Y:
         early_stopper_training: early_stopper_training type,
         early_stopper_validation: early_stopper_validation type,
         silent:
@@ -163,15 +128,15 @@ def nn_train(net, data_X, data_Y,
     training_accuracy = np.zeros(params_training.epochs)
 
     # condition if we use validation set:
-    list_params_validation = [indices_validation_X, indices_validation_Y]
+    list_params_validation = [indic_validation_X, indic_validation_Y]
     is_validation_included = not are_at_least_one_None(list_params_validation)  #: equivalent to are all not None ?
     if not is_validation_included:
         raise_if_not_all_None(list_params_validation)
 
     # Prepare Validation set if there is any:
     if is_validation_included:
-        X_val_on_device = data_X[indices_validation_X].to(device)
-        Y_val = data_Y[indices_validation_Y]  # :useful for using it in order to compute accuracy.
+        X_val_on_device = data_X[indic_validation_X].to(device)
+        Y_val = data_Y[indic_validation_Y]  # :useful for using it in order to compute accuracy.
         Y_val_on_device = Y_val.to(device)
         validation_losses = np.zeros(params_training.epochs)
         validation_accuracy = np.zeros(params_training.epochs)
@@ -210,31 +175,9 @@ def nn_train(net, data_X, data_Y,
                     max_through_epoch)
 
 
-def nn_predict(net, data_to_predict):
-    """
-    Semantics : pass data_to_predict through the neural network and returns its prediction.
-
-    Condition: net has the method prediction.
-
-    Args:
-        net:
-        data_to_predict:
-
-    Returns:
-
-    """
-    # do a single predictive forward pass on net (takes & returns numpy arrays)
-    net.train(mode=False)  # Disable dropout
-
-    # to device for optimal speed, though we take the data back with .cpu().
-    data_predicted = net.prediction(net(data_to_predict.to(device))).detach().cpu()  # forward pass
-
-    net.train(mode=True)  # Re-able dropout
-    return data_predicted
-
-
 # create main cross validation method
-# it returns the score during training, but also the best out of the k models, with respect to the accuracy over the whole set.
+# it returns the score during training,
+# but also the best out of the k models, with respect to the accuracy over the whole set.
 def nn_kfold_train(data_training_X, data_training_Y, input_size, hidden_sizes, output_size, biases,
                    activation_functions, p, parameters_for_training=None, early_stopper_validation=None,
                    early_stopper_training=None, nb_split=5, shuffle=True, silent=False):
@@ -299,12 +242,12 @@ def nn_kfold_train(data_training_X, data_training_Y, input_size, hidden_sizes, o
         if not silent:
             print(f"{i + 1}-th Fold out of {nb_split} Folds.")
 
-        neural_network = Fully_connected_NN(input_size, hidden_sizes, output_size, biases, activation_functions, p).to(
-            device)
+        neural_network = Fully_connected_NN(input_size, hidden_sizes,
+                                            output_size, biases, activation_functions, p).to(device)
         # train network and save results
         res = nn_train(neural_network, data_X=data_training_X, data_Y=data_training_Y,
                        params_training=parameters_for_training, indic_train_X=tr, indic_train_Y=tr,
-                       indices_validation_X=te, indices_validation_Y=te, early_stopper_training=early_stopper_training,
+                       indic_validation_X=te, indic_validation_Y=te, early_stopper_training=early_stopper_training,
                        early_stopper_validation=early_stopper_validation, silent=silent)
 
         mean_training_accuracy[i, :] += res[0]
@@ -327,18 +270,3 @@ def nn_kfold_train(data_training_X, data_training_Y, input_size, hidden_sizes, o
     return (best_net,
             mean_training_accuracy[:, :nb_max_epochs_through], mean_validation_accuracy[:, :nb_max_epochs_through],
             mean_training_losses[:, :nb_max_epochs_through], mean_validation_losses[:, :nb_max_epochs_through])
-
-
-def pytorch_device_setting(type="cpu"):
-    """
-    Semantics : sets the device for NeuralNetwork computations.
-    Put nothing for automatic choice.
-    Args:
-        type:
-
-    Returns:
-
-    """
-    device = torch_device("cpu") if type == "cpu" else device = torch.device(
-        "cuda:0" if torch.cuda.is_available() else "cpu")
-    return device

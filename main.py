@@ -6,28 +6,14 @@
 
 
 # parameters
-import math
-import numpy as np  # maths functions
-import matplotlib.pyplot as plt  # for plots
-import seaborn as sns  # for the display
-import pandas as pd  # for dataframes
-import time  # computational time
-import scipy.stats as si
 
 # from useful_functions import *
 
 # for neural networks
-import torch
-import torch.nn as nn
-import torch.utils.data
-import torch.nn.functional as F
 
-import sklearn.model_selection
-import torchvision
-from torchvision import transforms
-
+from src.Neural_Network.NN_fcts import pytorch_device_setting
 from src.Neural_Network.NN_plots import *
-from src.Neural_Network.NN_fct import *
+from src.Neural_Network.NN_training import *
 from src.Neural_Network.NNTrainParameters import *
 from src.Neural_Network.Fully_connected_NN import *
 
