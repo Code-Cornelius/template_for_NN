@@ -28,20 +28,26 @@ from keras.datasets import mnist
 train_X = pd.DataFrame(train_X.reshape(60000, 28 * 28))
 train_Y = pd.DataFrame(train_y)
 
+
 test_X = pd.DataFrame(test_X.reshape(10000, 28 * 28))
 test_Y = pd.DataFrame(test_y)
 
+train_X = train_X[:10000]
+train_Y = train_Y[:10000]
+test_X = test_X[:1000]
+test_Y = test_Y[:1000]
+
 input_size = 28 * 28
-hidden_sizes = [1000, 1000]
+hidden_sizes = [200, 200]
 output_size = 10
 biases = [True, True, True]
 activation_functions = [F.relu, F.relu]
 dropout = 0.4
-epochs = 10
+epochs = 20
 batch_size = 2000
 # WIP
 optimiser = torch.optim.SGD
-criterion = nn.CrossEntropyLoss(), # criterion = nn.CrossEntropyLoss() # criterion = nn.NLLLoss()
+criterion = nn.CrossEntropyLoss() # criterion = nn.CrossEntropyLoss() # criterion = nn.NLLLoss()
 
 
 pytorch_device_setting()
@@ -62,11 +68,9 @@ if __name__ == '__main__':
      mean_training_losses) = \
         nn_kfold_train(train_X, train_Y, input_size, hidden_sizes, output_size, biases, activation_functions, dropout,
                        parameters_for_training=parameters_for_training, early_stopper_validation=None, nb_split=1,
-                       shuffle=True, silent=False)
+                       shuffle_kfold=True, compute_accuracy=True, silent=False)
 
     nn_plot(mean_training_accuracy, mean_training_losses)
-    confusion_matrix_creator(train_Y, nn_predict(net, train_X), range(10))
-    confusion_matrix_creator(test_Y, nn_predict(net, test_X), range(10))
 
 
 
@@ -75,11 +79,13 @@ if __name__ == '__main__':
     # mean_training_losses, mean_validation_losses) = \
     #     nn_kfold_train(train_X, train_Y, input_size, hidden_sizes, output_size, biases, activation_functions, dropout,
     #                    parameters_for_training=parameters_for_training, early_stopper_validation=None, nb_split=3,
-    #                    shuffle=True, silent=False)
+    #                    shuffle_kfold=True, compute_accuracy= True, silent=False)
     #
     # nn_plot(mean_training_accuracy, mean_training_losses, mean_valid_acc=mean_validation_accuracy, mean_valid_losses=mean_validation_losses)
-    # confusion_matrix_creator(train_Y, nn_predict(net, train_X), range(10))
-    # confusion_matrix_creator(test_Y, nn_predict(net, test_X), range(10))
+
+
+    confusion_matrix_creator(train_Y, nn_predict(net, train_X), range(10))
+    confusion_matrix_creator(test_Y, nn_predict(net, test_X), range(10))
 
     plt.show()
 
