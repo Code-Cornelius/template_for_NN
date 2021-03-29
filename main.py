@@ -45,7 +45,8 @@ criterion = nn.CrossEntropyLoss(), # criterion = nn.CrossEntropyLoss() # criteri
 
 
 pytorch_device_setting()
-dict_optimiser = {"lr": 0.001, "weight_decay" : True}
+dict_optimiser = {"lr": 0.001, "weight_decay" : 0.01}
+
 parameters_for_training = NNTrainParameters(batch_size=batch_size, epochs=epochs,
                                             criterion=criterion , optimiser=optimiser,
                                             dict_params_optimiser = dict_optimiser)
@@ -56,14 +57,29 @@ test_X = torch.from_numpy(test_X.values).float()
 test_Y = torch.from_numpy(test_Y.values).long()
 
 if __name__ == '__main__':
-    net, mean_training_accuracy, mean_validation_accuracy, mean_training_losses, mean_validation_losses = \
+    (net,
+     mean_training_accuracy,
+     mean_training_losses) = \
         nn_kfold_train(train_X, train_Y, input_size, hidden_sizes, output_size, biases, activation_functions, dropout,
-                       parameters_for_training=parameters_for_training, early_stopper_validation=None, nb_split=3,
+                       parameters_for_training=parameters_for_training, early_stopper_validation=None, nb_split=1,
                        shuffle=True, silent=False)
 
-    nn_plot(mean_training_accuracy[0,:], mean_training_losses[0,:], mean_valid_acc=mean_validation_accuracy[0,:], mean_valid_losses=mean_validation_losses[0,:])
+    nn_plot(mean_training_accuracy, mean_training_losses)
     confusion_matrix_creator(train_Y, nn_predict(net, train_X), range(10))
     confusion_matrix_creator(test_Y, nn_predict(net, test_X), range(10))
+
+
+
+    # (net,
+    # mean_training_accuracy, mean_validation_accuracy,
+    # mean_training_losses, mean_validation_losses) = \
+    #     nn_kfold_train(train_X, train_Y, input_size, hidden_sizes, output_size, biases, activation_functions, dropout,
+    #                    parameters_for_training=parameters_for_training, early_stopper_validation=None, nb_split=3,
+    #                    shuffle=True, silent=False)
+    #
+    # nn_plot(mean_training_accuracy, mean_training_losses, mean_valid_acc=mean_validation_accuracy, mean_valid_losses=mean_validation_losses)
+    # confusion_matrix_creator(train_Y, nn_predict(net, train_X), range(10))
+    # confusion_matrix_creator(test_Y, nn_predict(net, test_X), range(10))
 
     plt.show()
 

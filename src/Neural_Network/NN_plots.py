@@ -45,7 +45,9 @@ def confusion_matrix_creator(Y, Y_predict_result, labels):
     fig, ax = plt.subplots()
 
     # using heatmap and setting some parameter for the confusion matrix.
+    sns.set(font_scale=0.6)
     sns.heatmap(confusion_matrix, annot=annot, fmt='', ax=ax, linewidths=.5, cmap="coolwarm")
+    sns.set(font_scale=1)
 
     # here this line and the next is for putting the meaning of the cases
     ax.set_xlabel('Predicted')
@@ -88,6 +90,7 @@ def result_function(title, data_train_Y, y_pred1, no_classes, data_test_Y=None, 
 
 # function for plotting the results of the NN
 def nn_plot(mean_training_acc, mean_train_losses, mean_valid_acc=None, mean_valid_losses=None, log_axis_for_loss=True):
+    """ list of lists. """
     fig = plt.figure()
     plt.grid(True)
     fig.tight_layout()  # for the display
@@ -97,11 +100,13 @@ def nn_plot(mean_training_acc, mean_train_losses, mean_valid_acc=None, mean_vali
     ax_bis.set_ylabel("Accuracy")
     ax.set_ylabel("Loss")
 
-    x = range(len(mean_training_acc))
+    nb_of_training, nb_of_epoch = mean_training_acc.shape
+
+    x = np.repeat(np.array(range(1, nb_of_epoch + 1))[None, :], nb_of_training, axis=0)
     y1 = mean_training_acc
     z1 = mean_train_losses
-    alpha = ax_bis.plot(x, y1, 'bo-', markersize=3, label="Training Accuracy")
-    gamma = ax.plot(x, z1, 'ro-', markersize=3, label="Training Loss")
+    alpha = ax_bis.plot(x.transpose(), y1.transpose(), 'bo-',  markersize=3, label="Training Accuracy")
+    gamma = ax.plot(x.transpose(), z1.transpose(), 'ro-', markersize=3, label="Training Loss")
 
     # lns is for the labels.
     lns = alpha + gamma
@@ -109,8 +114,8 @@ def nn_plot(mean_training_acc, mean_train_losses, mean_valid_acc=None, mean_vali
     if mean_valid_acc is not None:
         y2 = mean_valid_acc
         z2 = mean_valid_losses
-        beta = ax_bis.plot(x, y2, 'co-', markersize=3, label="Validation Accuracy")
-        delta = ax.plot(x, z2, 'mo-', markersize=3, label="Validation Loss")
+        beta = ax_bis.plot(x.transpose(), y2.transpose(), 'co-', markersize=3, label="Validation Accuracy")
+        delta = ax.plot(x.transpose(), z2.transpose(), 'mo-', markersize=3, label="Validation Loss")
         lns += beta + delta
 
     # here we set the legend as it has to be.
@@ -119,4 +124,4 @@ def nn_plot(mean_training_acc, mean_train_losses, mean_valid_acc=None, mean_vali
     if log_axis_for_loss:
         ax.set_yscale('log')
     plt.suptitle("Training of a Neural Network, presentation of the evolution of the accuracy and of the loss", y=0.94,
-                 fontsize=20)
+                 fontsize=13)

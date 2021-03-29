@@ -56,7 +56,8 @@ def nn_fit(net, X_train_on_device, Y_train_on_device, Y_train,
                 optimiser.zero_grad()
 
                 # Do forward and backward pass
-                loss = criterion(net(batch_X), batch_y)
+                #wip why cant use the parameter
+                loss = params_training.criterion(net(batch_X), batch_y)
                 loss.backward()
                 return loss
 
@@ -88,7 +89,7 @@ def nn_fit(net, X_train_on_device, Y_train_on_device, Y_train,
     #### end of the for in epoch.
     # we change the value of max_through_epoch:
     # wip
-    max_through_epoch = epoch
+    max_through_epoch[0] = epoch +1 #: +1 because it starts at zero so the real value is shifted.
 
 
 def nn_train(net, data_X, data_Y,
@@ -116,7 +117,8 @@ def nn_train(net, data_X, data_Y,
     Returns: Trained net.
 
     """
-    max_through_epoch = 0  # : nb of epochs that the NN has back propagated over.
+    max_through_epoch = [0]  # : nb of epochs that the NN has back propagated over.
+    #: we need to use a container because 0 is immutable, and we want that value to change inside of fit.
 
     # Prepare Training set
     X_train_on_device = data_X[indic_train_X].to(device)
@@ -154,11 +156,11 @@ def nn_train(net, data_X, data_Y,
         if early_stopper_validation is not None or early_stopper_training is not None:
             return (training_accuracy, validation_accuracy,
                     training_losses, validation_losses,
-                    max_through_epoch)
+                    max_through_epoch[0])
         else:
             return (training_accuracy, validation_accuracy,
                     training_losses, validation_losses,
-                    max_through_epoch)
+                    max_through_epoch[0])
 
     else:
         nn_fit(net, X_train_on_device, Y_train_on_device, Y_train, params_training, training_losses,
@@ -168,11 +170,11 @@ def nn_train(net, data_X, data_Y,
         if early_stopper_validation is not None or early_stopper_training is not None:
             return (training_accuracy,
                     training_losses,
-                    max_through_epoch)
+                    max_through_epoch[0])
         else:
             return (training_accuracy,
                     training_losses,
-                    max_through_epoch)
+                    max_through_epoch[0])
 
 
 # create main cross validation method
