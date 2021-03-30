@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from IPython.core.display import display
+from priv_lib_plot import APlot
 from sklearn import metrics
 
 import seaborn as sns
@@ -10,7 +11,7 @@ import seaborn as sns
 sns.set()
 
 
-def confusion_matrix_creator(Y, Y_predict_result, labels):
+def confusion_matrix_creator(Y, Y_predict_result, labels, title = ""):
     # we create a raw confusion matrix
     confusion_matrix = metrics.confusion_matrix(Y, Y_predict_result)
 
@@ -50,9 +51,9 @@ def confusion_matrix_creator(Y, Y_predict_result, labels):
     sns.set(font_scale=1)
 
     # here this line and the next is for putting the meaning of the cases
-    ax.set_xlabel('Predicted')
-    ax.set_ylabel('True')
-    ax.set_title('Confusion Matrix')  # title
+    ax.set_xlabel("Predicted")
+    ax.set_ylabel("True")
+    ax.set_title(f"Confusion Matrix {title}")  # title
     ax.xaxis.set_ticklabels(labels)  # putting the meaning of each column and row
     ax.yaxis.set_ticklabels(labels)
     ax.set_ylim(n_rows + 0.1, -0.1)  # expanding the graph... without it, the squares are cut in the middle.
@@ -68,8 +69,8 @@ def result_function(title, data_train_Y, y_pred1, no_classes, data_test_Y=None, 
         conclusion_set.append("Test")
         conclusion_accuracy.append(metrics.accuracy_score(data_test_Y, y_pred2))
 
-    conclusion = pd.DataFrame({'Set': conclusion_set,
-                               'Accuracy': conclusion_accuracy})
+    conclusion = pd.DataFrame({"Set": conclusion_set,
+                               "Accuracy": conclusion_accuracy})
     display(conclusion)
 
     print("Confusion matrix for the train data set with " + title + ".")
@@ -88,40 +89,66 @@ def result_function(title, data_train_Y, y_pred1, no_classes, data_test_Y=None, 
         print(metrics.classification_report(data_test_Y, y_pred2, target_names=target_names))
 
 
-# function for plotting the results of the NN
-def nn_plot(mean_training_acc, mean_train_losses, mean_valid_acc=None, mean_valid_losses=None, log_axis_for_loss=True):
-    """ list of lists. """
-    fig = plt.figure()
-    plt.grid(True)
-    fig.tight_layout()  # for the display
-    ax = plt.axes()
-    ax_bis = ax.twinx()
-    ax.set_xlabel("Epochs")
-    ax_bis.set_ylabel("Accuracy")
-    ax.set_ylabel("Loss")
+def nn_plot(training_loss, validation_loss=None, training_acc=None, validation_acc=None, log_axis_for_loss=True):
+    if training_acc is not None:
+        aplot = APlot(how=(1, 1), sharex=True)
+    else:
+        aplot = APlot(how=(1, 1), sharex=False)
+    nb_of_epoch = training_acc.shape[1]
+    nb_trials = training_acc.shape[0]
+    xx = range(nb_of_epoch)
 
-    nb_of_training, nb_of_epoch = mean_training_acc.shape
+    Blues = plt.get_cmap('Blues')
+    color_plot_blue = Blues(np.linspace(0.3, 1, nb_trials))  # color map for plot
 
-    x = np.repeat(np.array(range(1, nb_of_epoch + 1))[None, :], nb_of_training, axis=0)
-    y1 = mean_training_acc
-    z1 = mean_train_losses
-    alpha = ax_bis.plot(x.transpose(), y1.transpose(), 'bo-',  markersize=3, label="Training Accuracy")
-    gamma = ax.plot(x.transpose(), z1.transpose(), 'ro-', markersize=3, label="Training Loss")
+    Greens = plt.get_cmap('Greens')
+    color_plot_green = Greens(np.linspace(0.3, 1, nb_trials))  # color map for plot
 
-    # lns is for the labels.
-    lns = alpha + gamma
-    # depending on if there is a validation set in the previous computations
-    if mean_valid_acc is not None:
-        y2 = mean_valid_acc
-        z2 = mean_valid_losses
-        beta = ax_bis.plot(x.transpose(), y2.transpose(), 'co-', markersize=3, label="Validation Accuracy")
-        delta = ax.plot(x.transpose(), z2.transpose(), 'mo-', markersize=3, label="Validation Loss")
-        lns += beta + delta
+    Reds = plt.get_cmap('Reds')
+    color_plot_red = Reds(np.linspace(0.3, 1, nb_trials))  # color map for plot
 
-    # here we set the legend as it has to be.
-    labs = [l.get_label() for l in lns]
-    ax.legend(lns, labs, loc="center right")
+    Oranges = plt.get_cmap('Oranges')
+    color_plot_orange = Oranges(np.linspace(0.3, 1, nb_trials))  # color map for plot
+
     if log_axis_for_loss:
-        ax.set_yscale('log')
-    plt.suptitle("Training of a Neural Network, presentation of the evolution of the accuracy and of the loss", y=0.94,
-                 fontsize=13)
+        yscale = "log"
+    else:
+        yscale = "linear"
+
+    for i in range(nb_trials):
+        dict_plot_param_loss_training = {"color": color_plot_green[i],
+                                         "linewidth": 1,
+                                         "label": f"Loss for Training nb {i}"
+                                         }
+        aplot.uni_plot(nb_ax=0, xx=xx, yy=training_loss[i, :],
+                       dict_plot_param=dict_plot_param_loss_training,
+                       dict_ax={'title': "Training of a Neural Network, evolution wrt epochs.",
+                                'xlabel': "Epochs", 'ylabel': "Loss",
+                                'xscale': 'linear', 'yscale': yscale,
+                                'basey': 10})
+        if training_acc is not None:
+            dict_plot_param_accuracy_training = {"color": color_plot_blue[i],
+                                                 "linewidth": 1,
+                                                 "label": f"Accuracy for Training nb {i}"
+                                                 }
+            aplot.uni_plot_ax_bis(nb_ax=0, xx=xx, yy=training_acc[i, :],
+                                  dict_plot_param=dict_plot_param_accuracy_training)
+
+    if validation_loss is not None:
+        for i in range(nb_trials):
+            dict_plot_param_loss_validation = {"color": color_plot_orange[i],
+                                               "linewidth": 1,
+                                               "label": f"Loss for Validation nb {i}"
+                                               }
+            aplot.uni_plot(nb_ax=0, xx=xx, yy=validation_loss[i, :], dict_plot_param=dict_plot_param_loss_validation)
+            if validation_acc is not None:
+                dict_plot_param_accuracy_validation = {"color": color_plot_red[i],
+                                                       "linewidth": 1,
+                                                       "label": f"Accuracy for Validation nb {i}"
+                                                       }
+                aplot.uni_plot_ax_bis(nb_ax=0, xx=xx, yy=validation_acc[i, :],
+                                      dict_plot_param=dict_plot_param_accuracy_validation)
+
+    aplot.show_legend()
+    aplot._axs[0].grid(True)
+    aplot._axs_bis[0].grid(True)
