@@ -94,8 +94,8 @@ def nn_plot(training_loss, validation_loss=None, training_acc=None, validation_a
         aplot = APlot(how=(1, 1), sharex=True)
     else:
         aplot = APlot(how=(1, 1), sharex=False)
-    nb_of_epoch = training_acc.shape[1]
-    nb_trials = training_acc.shape[0]
+    nb_of_epoch = training_loss.shape[1]
+    nb_trials = training_loss.shape[0]
     xx = range(nb_of_epoch)
 
     Blues = plt.get_cmap('Blues')
@@ -151,4 +151,5 @@ def nn_plot(training_loss, validation_loss=None, training_acc=None, validation_a
 
     aplot.show_legend()
     aplot._axs[0].grid(True)
-    aplot._axs_bis[0].grid(True)
+    if training_acc is not None:
+        aplot._axs_bis[0].grid(True)
