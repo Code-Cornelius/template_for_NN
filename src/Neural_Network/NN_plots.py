@@ -14,7 +14,7 @@ from src.Neural_Network.NN_fcts import nn_predict
 sns.set()
 
 
-def confusion_matrix_creator(Y, Y_predict_result, labels, title = ""):
+def confusion_matrix_creator(Y, Y_predict_result, labels, title=""):
     # we create a raw confusion matrix
     confusion_matrix = metrics.confusion_matrix(Y, Y_predict_result)
 
@@ -92,7 +92,8 @@ def result_function(title, data_train_Y, y_pred1, no_classes, data_test_Y=None, 
         print(metrics.classification_report(data_test_Y, y_pred2, target_names=target_names))
 
 
-def nn_plot_train_loss_acc(training_loss, validation_loss=None, training_acc=None, validation_acc=None, log_axis_for_loss=True):
+def nn_plot_train_loss_acc(training_loss, validation_loss=None, training_acc=None, validation_acc=None,
+                           log_axis_for_loss=True):
     if training_acc is not None:
         aplot = APlot(how=(1, 1), sharex=True)
     else:
@@ -117,7 +118,7 @@ def nn_plot_train_loss_acc(training_loss, validation_loss=None, training_acc=Non
         yscale = "log"
     else:
         yscale = "linear"
-    #adjusting the linewidth depending on nb of plots:
+    # adjusting the linewidth depending on nb of plots:
     if nb_trials < 3:
         linewidth = 2
     else:
@@ -164,21 +165,29 @@ def nn_plot_train_loss_acc(training_loss, validation_loss=None, training_acc=Non
     return
 
 
-
-def nn_plot_prediction_vs_true(net,plot_xx, plot_yy):
+def nn_plot_prediction_vs_true(net, plot_xx, plot_yy, plot_yy_noisy):
     aplot = APlot(how=(1, 1))
     plot_yy_pred = nn_predict(net, plot_xx)
+
+    aplot.uni_plot(nb_ax=0, xx=plot_xx, yy=plot_yy_noisy, dict_plot_param={"color": "black",
+                                                                           "linestyle": "--",
+                                                                           "linewidth": 0.3,
+                                                                           "markersize": 0,
+                                                                           "label": "Noisy Trained over Solution"
+                                                                           })
+
     aplot.uni_plot(nb_ax=0, xx=plot_xx, yy=plot_yy, dict_plot_param={"color": "orange",
                                                                      "linewidth": 1,
                                                                      "label": "Solution"
                                                                      })
+
+
 
     aplot.uni_plot(nb_ax=0, xx=plot_xx, yy=plot_yy_pred, dict_plot_param={"color": "c",
                                                                           "linewidth": 2,
                                                                           "label": "Predicted Data used for Training"
                                                                           })
     aplot.show_legend()
-    APlot.show_plot()
     return
 
 
