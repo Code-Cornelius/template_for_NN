@@ -76,7 +76,7 @@ def nn_fit(net, X_train_on_device, Y_train_on_device, Y_train,
 
             # get batch
             # squeeze batch y in order to have the right format. not the good size for the results
-            batch_X, batch_y = batch_X.to(device), batch_y.to(device)
+            batch_X, batch_y = batch_X.to(device), batch_y.to(device)  # WIP THERE WAS A SQUEEZE HERE ON Y
 
             def closure():
                 # set gradients to zero
@@ -101,7 +101,7 @@ def nn_fit(net, X_train_on_device, Y_train_on_device, Y_train,
 
         # Calculate validation loss for the current epoch
         if is_validation_included:
-            validation_losses[epoch] = criterion(net(X_val_on_device), Y_val_on_device.squeeze_()).item()
+            validation_losses[epoch] = criterion(net(X_val_on_device), Y_val_on_device).item()  # WIP THERE WAS A SQUEEZE HERE ON Y
             if compute_accuracy:
                 validation_accuracy[epoch] = sklearn.metrics.accuracy_score(nn_predict(net, X_val_on_device), Y_val)
                 # :sklearn can't access data on gpu.
