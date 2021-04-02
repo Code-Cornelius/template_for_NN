@@ -117,10 +117,14 @@ def nn_plot_train_loss_acc(training_loss, validation_loss=None, training_acc=Non
         yscale = "log"
     else:
         yscale = "linear"
-
+    #adjusting the linewidth depending on nb of plots:
+    if nb_trials < 3:
+        linewidth = 2
+    else:
+        linewidth = 1
     for i in range(nb_trials):
         dict_plot_param_loss_training = {"color": color_plot_green[i],
-                                         "linewidth": 1,
+                                         "linewidth": linewidth,
                                          "label": f"Loss for Training nb {i}"
                                          }
         aplot.uni_plot(nb_ax=0, xx=xx, yy=training_loss[i, :],
@@ -131,7 +135,7 @@ def nn_plot_train_loss_acc(training_loss, validation_loss=None, training_acc=Non
                                 'basey': 10})
         if training_acc is not None:
             dict_plot_param_accuracy_training = {"color": color_plot_blue[i],
-                                                 "linewidth": 1,
+                                                 "linewidth": linewidth,
                                                  "label": f"Accuracy for Training nb {i}"
                                                  }
             aplot.uni_plot_ax_bis(nb_ax=0, xx=xx, yy=training_acc[i, :],
@@ -140,13 +144,13 @@ def nn_plot_train_loss_acc(training_loss, validation_loss=None, training_acc=Non
     if validation_loss is not None:
         for i in range(nb_trials):
             dict_plot_param_loss_validation = {"color": color_plot_orange[i],
-                                               "linewidth": 1,
+                                               "linewidth": linewidth,
                                                "label": f"Loss for Validation nb {i}"
                                                }
             aplot.uni_plot(nb_ax=0, xx=xx, yy=validation_loss[i, :], dict_plot_param=dict_plot_param_loss_validation)
             if validation_acc is not None:
                 dict_plot_param_accuracy_validation = {"color": color_plot_red[i],
-                                                       "linewidth": 1,
+                                                       "linewidth": linewidth,
                                                        "label": f"Accuracy for Validation nb {i}"
                                                        }
                 aplot.uni_plot_ax_bis(nb_ax=0, xx=xx, yy=validation_acc[i, :],
