@@ -1,12 +1,15 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import torch
 
 from IPython.core.display import display
 from priv_lib_plot import APlot
 from sklearn import metrics
 
 import seaborn as sns
+
+from src.Neural_Network.NN_fcts import nn_predict
 
 sns.set()
 
@@ -89,7 +92,7 @@ def result_function(title, data_train_Y, y_pred1, no_classes, data_test_Y=None, 
         print(metrics.classification_report(data_test_Y, y_pred2, target_names=target_names))
 
 
-def nn_plot(training_loss, validation_loss=None, training_acc=None, validation_acc=None, log_axis_for_loss=True):
+def nn_plot_train_loss_acc(training_loss, validation_loss=None, training_acc=None, validation_acc=None, log_axis_for_loss=True):
     if training_acc is not None:
         aplot = APlot(how=(1, 1), sharex=True)
     else:
@@ -153,3 +156,38 @@ def nn_plot(training_loss, validation_loss=None, training_acc=None, validation_a
     aplot._axs[0].grid(True)
     if training_acc is not None:
         aplot._axs_bis[0].grid(True)
+
+    return
+
+
+
+def nn_plot_prediction_vs_true(net,plot_xx, plot_yy):
+    aplot = APlot(how=(1, 1))
+    plot_yy_pred = nn_predict(net, plot_xx)
+    aplot.uni_plot(nb_ax=0, xx=plot_xx, yy=plot_yy, dict_plot_param={"color": "orange",
+                                                                     "linewidth": 1,
+                                                                     "label": "Solution"
+                                                                     })
+
+    aplot.uni_plot(nb_ax=0, xx=plot_xx, yy=plot_yy_pred, dict_plot_param={"color": "c",
+                                                                          "linewidth": 2,
+                                                                          "label": "Predicted Data used for Training"
+                                                                          })
+    aplot.show_legend()
+    APlot.show_plot()
+    return
+
+
+def nn_print_errors(net, train_X, train_Y, testing_X, testing_Y):
+    # Compute the relative validation error
+    relative_error_train = torch.mean((nn_predict(net, train_X) - train_Y) ** 2) / torch.mean(train_Y ** 2)
+    print("Relative Training Error: ", relative_error_train.detach().numpy() ** 0.5 * 100, "%")
+
+    # Compute the relative validation error
+    # relative_error_val = torch.mean((nn_predict(net, validation_X) - validation_Y) ** 2) / torch.mean(validation_Y ** 2)
+    # print("Relative Validation Error: ", relative_error_val.detach().numpy() ** 0.5 * 100, "%")
+
+    # Compute the relative L2 error norm (generalization error)
+    relative_error_test = torch.mean((nn_predict(net, testing_X) - testing_Y) ** 2) / torch.mean(testing_Y ** 2)
+    print("Relative Testing Error: ", relative_error_test.detach().numpy() ** 0.5 * 100, "%")
+    return
