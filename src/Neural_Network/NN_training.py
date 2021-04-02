@@ -12,6 +12,20 @@ from src.Neural_Network.NN_fcts import device, are_at_least_one_None, raise_if_n
 from src.kfold import *
 from tqdm import tqdm
 
+PLOT_WHILE_TRAIN = False
+if PLOT_WHILE_TRAIN:
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+
+FREQ_NEW_IMAGE = 40
+
+def plot_while_training(params_training, training_losses, validation_losses):
+    ax.clear()
+    plt.semilogy(range(params_training.epochs), training_losses, 'b', label='Train Loss')
+    plt.semilogy(range(params_training.epochs), validation_losses, 'r', label='Validation Loss')
+    plt.legend(loc="best")
+    plt.pause(0.0001)
+
 
 def nn_fit(net, X_train_on_device, Y_train_on_device, Y_train,
            params_training,
@@ -113,6 +127,11 @@ def nn_fit(net, X_train_on_device, Y_train_on_device, Y_train,
         if early_stopper_training is not None:
             if early_stopper_training(training_losses, epoch, net):
                 break  #: get out of epochs.
+
+
+        if PLOT_WHILE_TRAIN:
+            if epoch % FREQ_NEW_IMAGE == 0:
+                plot_while_training(params_training, training_losses, validation_losses)
 
     # ~~~~~~~~ end of the for in epoch.
     # we change the value of max_through_epoch:
