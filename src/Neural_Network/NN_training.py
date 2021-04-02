@@ -31,19 +31,22 @@ def nn_fit(net, X_train_on_device, Y_train_on_device, Y_train,
         Y_train:
         params_training:
         training_losses: always passed, numpy array where values are stored.
-        training_accuracy: always passed, numpy array where values are stored. Passed, even though compute_accuracy is false.
+        training_accuracy: always passed, numpy array where values are stored.
+        Passed, even though compute_accuracy is false.
         X_val_on_device:
         Y_val_on_device:
         Y_val:
         validation_losses: always passed, numpy array where values are stored.
-        validation_accuracy: always passed, numpy array where values are stored. Passed, even though compute_accuracy is false.
+        validation_accuracy: always passed, numpy array where values are stored.
+        Passed, even though compute_accuracy is false.
         max_through_epoch:
         early_stopper_training:
         early_stopper_validation:
         compute_accuracy: if True, training_accuracy and validation_accuracy are not updated.
         silent: verbose.
 
-    Returns: nothing but updates the value passed, training_losses, training_accuracy, validation_losses, validation_accuracy, max_through_epoch.
+    Returns: nothing but updates the value passed, training_losses, training_accuracy,
+    validation_losses, validation_accuracy, max_through_epoch.
 
     """
     # condition if we use validation set.
@@ -73,7 +76,7 @@ def nn_fit(net, X_train_on_device, Y_train_on_device, Y_train,
 
             # get batch
             # squeeze batch y in order to have the right format. not the good size for the results
-            batch_X, batch_y = batch_X.to(device), batch_y.to(device).squeeze_()
+            batch_X, batch_y = batch_X.to(device), batch_y.to(device)
 
             def closure():
                 # set gradients to zero
@@ -111,14 +114,18 @@ def nn_fit(net, X_train_on_device, Y_train_on_device, Y_train,
             if early_stopper_training(training_losses, epoch, net):
                 break  #: get out of epochs.
 
-    #### end of the for in epoch.
+    # ~~~~~~~~ end of the for in epoch.
     # we change the value of max_through_epoch:
     max_through_epoch[0] = epoch + 1  #: +1 because it starts at zero so the real value is shifted.
 
 
-def nn_train(net, data_X, data_Y, params_training, indic_train_X, indic_train_Y, indic_validation_X=None,
-             indic_validation_Y=None, early_stopper_training=None, early_stopper_validation=None,
-             compute_accuracy=False, silent=False):
+def nn_train(net, data_X, data_Y,
+             params_training,
+             indic_train_X, indic_train_Y,
+             indic_validation_X=None, indic_validation_Y=None,
+             early_stopper_training=None, early_stopper_validation=None,
+             compute_accuracy=False,
+             silent=False):
     """
     Semantics : Given the net, we train it upon data.
     For optimisation reasons, we pass the indices.
@@ -137,8 +144,11 @@ def nn_train(net, data_X, data_Y, params_training, indic_train_X, indic_train_Y,
         silent:
 
     Returns: Trained net and the data.
-    If validation is given: returns net, trained_loss/accuracy, validation_loss/accuracy;
-    Else: returns net, trained_loss/accuracy;
+    If validation is given:
+        returns trained/validation accuracy, trained/validation loss;
+    Else:
+        returns trained accuracy then loss;
+    Whenever the accuracy is not requested, the accuracy vector is zero.
     """
     max_through_epoch = [0]  # : nb of epochs that the NN has back propagated over.
     #: we need to use a container because 0 is immutable, and we want that value to change inside of fit.
@@ -205,7 +215,7 @@ def nn_kfold_train(data_training_X, data_training_Y,
                    activation_functions, dropout=0,
                    parameters_for_training=None,
                    early_stopper_validation=None, early_stopper_training=None,
-                   nb_split=5, shuffle_kfold=True,
+                   nb_split=5, shuffle_kfold=True, percent_validation_for_1_fold=20,
                    compute_accuracy=False,
                    silent=False):
     """
@@ -225,11 +235,14 @@ def nn_kfold_train(data_training_X, data_training_Y,
         early_stopper_validation:weight
         nb_split:
         shuffle_kfold:
+        percent_validation_for_1_fold:
         silent:
 
-    Returns:
+    Returns: net, loss train, loss validation, accuracy train, accuracy validation
 
     """
+    # we distinguish the two cases, but in both we have a list of the result:
+    # by inclusivity of else into if compute_accuracy, [0] should be loss and [1] accuracy.
     if compute_accuracy:
         training_data = [np.zeros((nb_split, parameters_for_training.epochs)),
                          np.zeros((nb_split, parameters_for_training.epochs))]
@@ -239,34 +252,83 @@ def nn_kfold_train(data_training_X, data_training_Y,
         training_data = [np.zeros((nb_split, parameters_for_training.epochs))]
         validation_data = [np.zeros((nb_split, parameters_for_training.epochs))]
 
-        # The case nb_split = 1: we use the whole dataset for training, without validation:
+    # The case nb_split = 1: we use the whole dataset for training, without validation:
     if nb_split == 1:
-        neural_network = Fully_connected_NN(input_size, hidden_sizes,
-                                            output_size, biases,
-                                            activation_functions, dropout).to(device)
-        # initialise weights of the NN:
-        neural_network.init_weights_of_model()
+        net = Fully_connected_NN(input_size, hidden_sizes,
+                                 output_size, biases,
+                                 activation_functions, dropout).to(device)
+        # #indices splitting:
+        # #WIP CREATE FUNCTION
+        training_size = int((100. - percent_validation_for_1_fold) / 100. * data_training_X.shape[0])
+        # where validation included.
+        if percent_validation_for_1_fold > 0:
+            if shuffle_kfold:
+                # for the permutation, one could look at https://discuss.pytorch.org/t/shuffling-a-tensor/25422/7:
+                # we simplify the expression bc our tensors are in 2D only:
+                indices = torch.randperm(                    data_training_X.shape[0])
+                #: create a random permutation of the range( nb of data )
 
-        res = nn_train(neural_network, data_X=data_training_X, data_Y=data_training_Y,
-                       params_training=parameters_for_training, indic_train_X=range(data_training_X.shape[0]),
-                       indic_train_Y=range(data_training_Y.shape[0]), early_stopper_training=early_stopper_training,
-                       early_stopper_validation=early_stopper_validation, compute_accuracy=compute_accuracy,
-                       silent=silent)
+                indic_train = indices[:training_size]
+                indic_validation = indices[training_size:]
+            else:
+                indic_train = torch.arange(training_size)
+                indic_validation = torch.arange(training_size, data_training_X.shape[1])
 
-        training_data[0] += res[1]
-        nb_of_epochs_through = res[2]  # :this number is how many epochs the NN has been trained over.
-        # :with such quantity, one does not return a vector full of 0, but only the meaningful data.
-        if compute_accuracy:
-            training_data[1] += res[0]
-            return (neural_network,
-                    training_data[1][:nb_of_epochs_through],
-                    training_data[0][:nb_of_epochs_through])
-        return (neural_network,
-                training_data[0][:nb_of_epochs_through])  # : do not return accuracy, only the losses.
+            res = nn_train(net,
+                           data_X=data_training_X, data_Y=data_training_Y,
+                           params_training=parameters_for_training,
+                           indic_train_X=indic_train,
+                           indic_train_Y=indic_train,
+                           indic_validation_X=indic_validation,
+                           indic_validation_Y=indic_validation,
+                           early_stopper_training=early_stopper_training,
+                           early_stopper_validation=early_stopper_validation,
+                           compute_accuracy=compute_accuracy,
+                           silent=silent)
+
+
+            training_data[0][0, :] += res[2]
+            validation_data[0][0, :] += res[3]
+            nb_of_epochs_through = res[4]  # :this number is how many epochs the NN has been trained over.
+            # :with such quantity, one does not return a vector full of 0, but only the meaningful data.
+            if compute_accuracy:
+                training_data[1] += res[0]
+                validation_data[1] += res[1]
+                return (net,
+                        training_data[1][:, :nb_of_epochs_through], validation_data[1][:, :nb_of_epochs_through],
+                        training_data[0][:, :nb_of_epochs_through], validation_data[0][:, :nb_of_epochs_through])
+            return (net,
+                    training_data[0][:, :nb_of_epochs_through], validation_data[0][:, :nb_of_epochs_through])
+
+
+        # 1-Fold. where validation not included.
+        else:
+            res = nn_train(net,
+                           data_X=data_training_X, data_Y=data_training_Y,
+                           params_training=parameters_for_training,
+                           indic_train_X=torch.arange(data_training_X.shape[0]),
+                           indic_train_Y=torch.arange(data_training_Y.shape[0]),
+                           indic_validation_X=None,
+                           indic_validation_Y=None,
+                           early_stopper_training=early_stopper_training,
+                           early_stopper_validation=early_stopper_validation,
+                           compute_accuracy=compute_accuracy,
+                           silent=silent)
+
+            training_data[0] += res[1]
+            nb_of_epochs_through = res[2]  # :this number is how many epochs the NN has been trained over.
+            # :with such quantity, one does not return a vector full of 0, but only the meaningful data.
+            if compute_accuracy:
+                training_data[1] += res[0]
+                return (net,
+                        training_data[1][:nb_of_epochs_through],
+                        training_data[0][:nb_of_epochs_through])
+            return (net, training_data[0][:nb_of_epochs_through])
+            # : do not return accuracy, only the losses.
 
     # Kfold for nb_split > 1:
     skfold = sklearn.model_selection.StratifiedKFold(n_splits=nb_split, shuffle=shuffle_kfold, random_state=0)
-    # for storing the newtork:
+    # for storing the network:
     performance = 0
     best_net = 0
     nb_max_epochs_through = 0  # :this number is how many epochs the NN has been trained over.
@@ -277,14 +339,18 @@ def nn_kfold_train(data_training_X, data_training_Y,
         if not silent:
             print(f"{i + 1}-th Fold out of {nb_split} Folds.")
 
-        neural_network = Fully_connected_NN(input_size, hidden_sizes,
-                                            output_size, biases, activation_functions, dropout).to(device)
+        net = Fully_connected_NN(input_size, hidden_sizes,
+                                 output_size, biases, activation_functions, dropout).to(device)
+
         # train network and save results
-        res = nn_train(neural_network, data_X=data_training_X, data_Y=data_training_Y,
-                       params_training=parameters_for_training, indic_train_X=index_training,
-                       indic_train_Y=index_training, indic_validation_X=index_validation,
-                       indic_validation_Y=index_validation, early_stopper_training=early_stopper_training,
-                       early_stopper_validation=early_stopper_validation, compute_accuracy=compute_accuracy,
+        res = nn_train(net, data_X=data_training_X, data_Y=data_training_Y,
+                       params_training=parameters_for_training,
+                       indic_train_X=index_training, indic_train_Y=index_training,
+                       indic_validation_X=index_validation,
+                       indic_validation_Y=index_validation,
+                       early_stopper_training=early_stopper_training,
+                       early_stopper_validation=early_stopper_validation,
+                       compute_accuracy=compute_accuracy,
                        silent=silent)
 
         if compute_accuracy:
@@ -297,7 +363,7 @@ def nn_kfold_train(data_training_X, data_training_Y,
         # storing the best network.
         new_res = res[1][-1]  # the criteria is best validation accuracy at final time.
         if new_res > performance:
-            best_net = neural_network
+            best_net = net
         performance = new_res
 
         # this number is how many epochs the NN has been trained over.
