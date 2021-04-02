@@ -256,6 +256,7 @@ def nn_kfold_train(data_training_X, data_training_Y,
 
     # The case nb_split = 1: we use the whole dataset for training, without validation:
     if nb_split == 1:
+        assert 0 <= percent_validation_for_1_fold < 100, "percent_validation_for_1_fold should be in [0,100[ !"
         return nn_1fold_train(activation_functions, biases, compute_accuracy, data_training_X, data_training_Y, dropout,
                            early_stopper_training, early_stopper_validation, hidden_sizes, input_size, output_size,
                            parameters_for_training, percent_validation_for_1_fold, shuffle_kfold, silent, training_data,
