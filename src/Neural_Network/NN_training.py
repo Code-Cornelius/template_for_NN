@@ -159,8 +159,8 @@ def nn_train(net, data_X, data_Y,
     Y_train_on_device = Y_train.to(device)
 
     # prepare for iteration over epochs:
-    training_losses = np.zeros(params_training.epochs)
-    training_accuracy = np.zeros(params_training.epochs)
+    training_losses = np.full(params_training.epochs, np.nan)
+    training_accuracy = np.full(params_training.epochs, np.nan)
 
     # condition if we use validation set:
     list_params_validation = [indic_validation_X, indic_validation_Y]
@@ -173,8 +173,8 @@ def nn_train(net, data_X, data_Y,
         X_val_on_device = data_X[indic_validation_X].to(device)
         Y_val = data_Y[indic_validation_Y]  # :useful for using it in order to compute accuracy.
         Y_val_on_device = Y_val.to(device)
-        validation_losses = np.zeros(params_training.epochs)
-        validation_accuracy = np.zeros(params_training.epochs)
+        validation_losses = np.full(params_training.epochs, np.nan)
+        validation_accuracy = np.full(params_training.epochs, np.nan)
 
         # essentially, we need to check what is the max epoch:
         nn_fit(net, X_train_on_device, Y_train_on_device, Y_train, params_training, training_losses, training_accuracy,
