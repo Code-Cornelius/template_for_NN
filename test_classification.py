@@ -11,6 +11,9 @@ from src.Neural_Network.NNTrainParameters import *
 from src.Neural_Network.Fully_connected_NN import *
 
 # set seed for pytorch.
+from src.Training_stopper.Early_stopper_training import Early_stopper_training
+from src.Training_stopper.Early_stopper_validation import Early_stopper_validation
+
 torch.manual_seed(42)
 np.random.seed(42)
 
@@ -20,6 +23,9 @@ n_samples = 10000
 # Noise level
 sigma = 0.01
 pytorch_device_setting()
+SILENT = False
+early_stop_train = Early_stopper_training(patience=20, silent=SILENT, delta=0.1)
+early_stop_valid = Early_stopper_validation(patience=20, silent=SILENT, delta=0.1)
 #############################
 
 
@@ -50,7 +56,7 @@ if __name__ == '__main__':
     biases = [True, True, True]
     activation_functions = [F.relu, F.relu]
     dropout = 0.4
-    epochs = 20
+    epochs = 200
     batch_size = 2000
     optimiser = torch.optim.SGD
     criterion = nn.CrossEntropyLoss()
@@ -76,9 +82,25 @@ if __name__ == '__main__':
                                                                     compute_accuracy=True,
                                                                     silent=False)
 
-    nn_plot_train_loss_acc(mean_training_losses, mean_validation_losses, mean_training_accuracy, mean_validation_accuracy)
+    nn_plot_train_loss_acc(mean_training_losses, mean_validation_losses, mean_training_accuracy,
+                           mean_validation_accuracy)
 
-    print(" ~~~~~~~~~~Example 2 : Split 5~~~~~~~~~~ ")
+    print(" ~~~~~~~~~~Example 2 : Split 1 with both stopper~~~~~~~~~~ ")
+    (net, mean_training_accuracy, mean_validation_accuracy,
+     mean_training_losses, mean_validation_losses) = nn_kfold_train(train_X, train_Y,
+                                                                    parametrized_NN,
+                                                                    parameters_training=parameters_for_training,
+                                                                    early_stopper_training=early_stop_train,
+                                                                    early_stopper_validation=early_stop_valid,
+                                                                    shuffle_kfold=True, nb_split=1,
+                                                                    percent_validation_for_1_fold=20,
+                                                                    compute_accuracy=True,
+                                                                    silent=False)
+
+    nn_plot_train_loss_acc(mean_training_losses, mean_validation_losses, mean_training_accuracy,
+                           mean_validation_accuracy)
+
+    print(" ~~~~~~~~~~Example 3 : Split 5~~~~~~~~~~ ")
     (net, mean_training_accuracy, mean_validation_accuracy,
      mean_training_losses, mean_validation_losses) = nn_kfold_train(train_X, train_Y,
                                                                     parametrized_NN,
@@ -91,7 +113,7 @@ if __name__ == '__main__':
     nn_plot_train_loss_acc(mean_training_losses, mean_validation_losses, mean_training_accuracy,
                            mean_validation_accuracy)
 
-    print(" ~~~~~~~~~~Example 3 : no validation for 1 split ~~~~~~~~~~ ")
+    print(" ~~~~~~~~~~Example 4 : no validation for 1 split ~~~~~~~~~~ ")
     (net, mean_training_accuracy,
      mean_training_losses) = nn_kfold_train(train_X, train_Y,
                                             parametrized_NN,
@@ -107,22 +129,3 @@ if __name__ == '__main__':
     confusion_matrix_creator(train_Y, nn_predict(net, train_X), range(10), title="Training Set")
     confusion_matrix_creator(test_Y, nn_predict(net, test_X), range(10), title="Test Set")
     APlot.show_plot()
-
-# TODO WHAT IS THIS
-# analyze_neural_network(data_train_X, data_train_Y, data_test_X, data_test_Y, 5, epochs=30, silent=True)
-#
-# # Activation Function
-# batch_size = 128
-# learning_rate = 0.005
-# epochs = 30
-# hidden_size = 16
-# num_layers = 2
-# dropout = 0
-# norm = False
-# activ_function = "tanh"
-# version = 0
-# optim = "sgd"
-#
-# analyze_convolution_neural_network(data_train_X, data_train_Y, data_test_X, data_test_Y, 5,
-#                                    batch_size, learning_rate, epochs,
-#                                    hidden_size, num_layers, dropout, norm, activ_function, version, optim, True)

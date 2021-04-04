@@ -111,7 +111,7 @@ def nn_fit(net, X_train_on_device, Y_train_on_device, Y_train,
         training_losses[epoch] = train_loss / (Y_train_on_device.shape[0])
         if compute_accuracy:
             training_accuracy[epoch] = sklearn.metrics.accuracy_score(
-                nn_predict(net, X_train_on_device), Y_train.reshape(-1,1))
+                nn_predict(net, X_train_on_device), Y_train.reshape(-1, 1))
             # :here the reshape is assuming we use Cross Entropy and the data outside is set in the right format.
             # :sklearn can't access data on gpu.
 
@@ -121,16 +121,20 @@ def nn_fit(net, X_train_on_device, Y_train_on_device, Y_train,
                                                  Y_val_on_device).item()  # WIP THERE WAS A SQUEEZE HERE ON Y
             if compute_accuracy:
                 validation_accuracy[epoch] = sklearn.metrics.accuracy_score(
-                    nn_predict(net, X_val_on_device), Y_val.reshape(                    -1, 1))
+                    nn_predict(net, X_val_on_device), Y_val.reshape(-1, 1))
             # :here the reshape is assuming we use Cross Entropy and the data outside is set in the right format.
-                # :sklearn can't access data on gpu.
+            # :sklearn can't access data on gpu.
 
             # Calculations to see if it's time to stop early:
             if early_stopper_validation is not None:
                 if early_stopper_validation(net, validation_losses, epoch):
+                    if not silent:
+                        print("Terminated epochs, with early stopper validation.")
                     break  #: get out of epochs
         if early_stopper_training is not None:
             if early_stopper_training(net, training_losses, epoch):
+                if not silent:
+                    print("Terminated epochs, with early stopper training.")
                 break  #: get out of epochs.
 
         if PLOT_WHILE_TRAIN:
@@ -228,5 +232,3 @@ def nn_train(net, data_X, data_Y,
         else:
             return (training_accuracy, training_losses,
                     max_through_epoch[0])
-
-

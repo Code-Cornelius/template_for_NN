@@ -7,7 +7,7 @@ import torch.utils.data
 
 
 # todo the path things, saving the NN.
-
+DEBUG = False
 
 class Early_stopper(object):
     """
@@ -47,8 +47,7 @@ class Early_stopper(object):
     def __call__(self, neural_network, losses, epoch):
         if self.is_early_stop(losses, epoch):
             self._counter += 1
-            print(self._counter)
-            if not self._silent:
+            if DEBUG:
                 self._print_func(f'EarlyStopping counter: {self._counter} out of {self._patience}')
             if self._counter >= self._patience:
                 return True

@@ -6,8 +6,8 @@ class Early_stopper_validation(Early_stopper):
         super().__init__(patience=patience, silent=silent, delta=delta, print_func=print_func)
 
     def is_early_stop(self, validation_losses, epoch):
+        """ the critirea is whether the NN is not overfitting: i.e. the validation loss is decreasing."""
         if self._lowest_loss * (1 + self._delta) > validation_losses[epoch]:
             return False
-
         else:
             return True

@@ -23,8 +23,9 @@ n_samples = 1000
 # Noise level
 sigma = 0.01
 pytorch_device_setting()
-early_stop_train = Early_stopper_training(patience=20, silent=False, delta=0.1)
-early_stop_valid = Early_stopper_validation(patience=20, silent=False, delta=0.1)
+SILENT = False
+early_stop_train = Early_stopper_training(patience=20, silent=SILENT, delta=0.1)
+early_stop_valid = Early_stopper_validation(patience=40, silent=SILENT, delta=0.1)
 #############################
 plot_xx = torch.linspace(0, 2 * np.pi, 1000).reshape(-1, 1)
 plot_yy = exact_solution(plot_xx).reshape(-1, )
@@ -48,7 +49,7 @@ if __name__ == '__main__':
     biases = [True, True, True, True]
     activation_functions = [torch.tanh, torch.tanh, torch.relu]
     dropout = 0.
-    epochs = 300
+    epochs = 500
     batch_size = 200
     optimiser = torch.optim.Adam
     criterion = nn.MSELoss()
@@ -63,20 +64,20 @@ if __name__ == '__main__':
                                                  dropout=dropout, predict_fct=None)
 
     # training
-    # print(" ~~~~~~~~~~Example 1 : Split 1~~~~~~~~~~ ")
-    # (net, mean_training_losses, mean_validation_losses) = nn_kfold_train(train_X, train_Y,
-    #                                                                      parametrized_NN,
-    #                                                                      parameters_training=parameters_training,
-    #                                                                      early_stopper_validation=None, nb_split=1,
-    #                                                                      shuffle_kfold=True,
-    #                                                                      percent_validation_for_1_fold=20,
-    #                                                                      compute_accuracy=False,
-    #                                                                      silent=False)
-    # nn_plot_train_loss_acc(training_loss=mean_training_losses, validation_loss=mean_validation_losses)
-    # nn_plot_prediction_vs_true(net, plot_xx, plot_yy, plot_yy_noisy)
-    # nn_print_errors(net, train_X, train_Y, testing_X, testing_Y)
+    print(" ~~~~~~~~~~Example 1 : Split 1~~~~~~~~~~ ")
+    (net, mean_training_losses, mean_validation_losses) = nn_kfold_train(train_X, train_Y,
+                                                                         parametrized_NN,
+                                                                         parameters_training=parameters_training,
+                                                                         early_stopper_validation=None, nb_split=1,
+                                                                         shuffle_kfold=True,
+                                                                         percent_validation_for_1_fold=20,
+                                                                         compute_accuracy=False,
+                                                                         silent=False)
+    nn_plot_train_loss_acc(training_loss=mean_training_losses, validation_loss=mean_validation_losses)
+    nn_plot_prediction_vs_true(net, plot_xx, plot_yy, plot_yy_noisy)
+    nn_print_errors(net, train_X, train_Y, testing_X, testing_Y)
 
-    print(" ~~~~~~~~~~Example 2 : Split 1 with stopper~~~~~~~~~~ ")
+    print(" ~~~~~~~~~~Example 2 : Split 1 with both stopper~~~~~~~~~~ ")
     (net, mean_training_losses, mean_validation_losses) = nn_kfold_train(train_X, train_Y,
                                                                          parametrized_NN,
                                                                          parameters_training=parameters_training,
@@ -86,32 +87,32 @@ if __name__ == '__main__':
                                                                          shuffle_kfold=True,
                                                                          percent_validation_for_1_fold=20,
                                                                          compute_accuracy=False,
-                                                                         silent=False)
+                                                                         silent=SILENT)
     nn_plot_train_loss_acc(training_loss=mean_training_losses, validation_loss=mean_validation_losses)
     nn_plot_prediction_vs_true(net, plot_xx, plot_yy, plot_yy_noisy)
     nn_print_errors(net, train_X, train_Y, testing_X, testing_Y)
 
     # todo IMPLEMENT NOT STRATIFIED K-FOLD
-    # print(" ~~~~~~~~~~Example 2 : Split 5~~~~~~~~~~ ")
+    # print(" ~~~~~~~~~~Example 3 : Split 5~~~~~~~~~~ ")
     # (net, mean_training_losses, mean_validation_losses) = nn_kfold_train(train_X, train_Y,
     #                                                                      parametrized_NN,
     #                                                                      parameters_training=parameters_training,
     #                                                                      early_stopper_validation=None, nb_split=5,
     #                                                                      shuffle_kfold=True,
-    #                                                                      compute_accuracy=False, silent=False)
+    #                                                                      compute_accuracy=False, silent=SILENT)
     # nn_plot_train_loss_acc(training_loss=mean_training_losses, validation_loss=mean_validation_losses)
     # nn_plot_prediction_vs_true(net, plot_xx, plot_yy, plot_yy_noisy)
     # nn_print_errors(net, train_X, train_Y, testing_X, testing_Y)
 
-    # print(" ~~~~~~~~~~Example 3 : no validation for 1 split ~~~~~~~~~~ ")
-    # (net, mean_training_losses) = nn_kfold_train(train_X, train_Y, parametrized_NN,
-    #                                              parameters_training=parameters_training,
-    #                                              early_stopper_validation=None, nb_split=1,
-    #                                              shuffle_kfold=True,
-    #                                              percent_validation_for_1_fold=0,
-    #                                              compute_accuracy=False, silent=False)
-    # nn_plot_train_loss_acc(training_loss=mean_training_losses)
-    # nn_plot_prediction_vs_true(net, plot_xx, plot_yy, plot_yy_noisy)
-    # nn_print_errors(net, train_X, train_Y, testing_X, testing_Y)
+    print(" ~~~~~~~~~~Example 4 : no validation for 1 split ~~~~~~~~~~ ")
+    (net, mean_training_losses) = nn_kfold_train(train_X, train_Y, parametrized_NN,
+                                                 parameters_training=parameters_training,
+                                                 early_stopper_validation=None, nb_split=1,
+                                                 shuffle_kfold=True,
+                                                 percent_validation_for_1_fold=0,
+                                                 compute_accuracy=False, silent=SILENT)
+    nn_plot_train_loss_acc(training_loss=mean_training_losses)
+    nn_plot_prediction_vs_true(net, plot_xx, plot_yy, plot_yy_noisy)
+    nn_print_errors(net, train_X, train_Y, testing_X, testing_Y)
 
     APlot.show_plot()
