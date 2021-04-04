@@ -110,7 +110,9 @@ def nn_fit(net, X_train_on_device, Y_train_on_device, Y_train,
         # Normalize and save the loss over the current epoch:
         training_losses[epoch] = train_loss / (Y_train_on_device.shape[0])
         if compute_accuracy:
-            training_accuracy[epoch] = sklearn.metrics.accuracy_score(nn_predict(net, X_train_on_device), Y_train)
+            training_accuracy[epoch] = sklearn.metrics.accuracy_score(
+                nn_predict(net, X_train_on_device), Y_train.reshape(-1,1))
+            # :here the reshape is assuming we use Cross Entropy and the data outside is set in the right format.
             # :sklearn can't access data on gpu.
 
         # Calculate validation loss for the current epoch
@@ -118,7 +120,9 @@ def nn_fit(net, X_train_on_device, Y_train_on_device, Y_train,
             validation_losses[epoch] = criterion(net(X_val_on_device),
                                                  Y_val_on_device).item()  # WIP THERE WAS A SQUEEZE HERE ON Y
             if compute_accuracy:
-                validation_accuracy[epoch] = sklearn.metrics.accuracy_score(nn_predict(net, X_val_on_device), Y_val)
+                validation_accuracy[epoch] = sklearn.metrics.accuracy_score(
+                    nn_predict(net, X_val_on_device), Y_val.reshape(                    -1, 1))
+            # :here the reshape is assuming we use Cross Entropy and the data outside is set in the right format.
                 # :sklearn can't access data on gpu.
 
             # Calculations to see if it's time to stop early:

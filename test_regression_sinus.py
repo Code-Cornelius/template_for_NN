@@ -1,4 +1,5 @@
 from src.Neural_Network.NN_fcts import pytorch_device_setting
+from src.Neural_Network.NN_kfold_training import nn_kfold_train
 from src.Neural_Network.NN_plots import *
 from src.Neural_Network.NN_training import *
 from src.Neural_Network.NNTrainParameters import *
@@ -13,80 +14,90 @@ np.random.seed(42)
 def exact_solution(x):
     return torch.sin(x)
 
-
+############################## GLOBAL PARAMETERS
 # Number of training samples
-n_samples = 5000
+n_samples = 1000
 # Noise level
-sigma = 0.
+sigma = 0.01
+pytorch_device_setting()
+#############################
+plot_xx = torch.linspace(0, 2 * np.pi, 1000).reshape(-1, 1)
+plot_yy = exact_solution(plot_xx).reshape(-1, )
+plot_yy_noisy = (exact_solution(plot_xx) + sigma * torch.randn(plot_xx.shape) ).reshape(-1, )
 
 xx = 2 * np.pi * torch.rand((n_samples,1))
 yy = exact_solution(xx) + sigma * torch.randn(xx.shape)
 
-validation_size = int(20. / 100. * n_samples)
-training_size = n_samples - validation_size
+training_size = int(90. / 100. * n_samples)
 train_X = xx[:training_size,:]
 train_Y = yy[:training_size, :]
 
-validation_X = xx[training_size:, :]
-validation_Y = yy[training_size:, :]
+testing_X = xx[training_size:, :]
+testing_Y = yy[training_size:, :]
 
-input_size = 1
-hidden_sizes = [20, 20, 20]
-output_size = 1
-biases = [True, True, True, True]
-activation_functions = [F.relu, F.relu, F.relu]
-dropout = 0.4
-epochs = 150
-batch_size = 1000
-optimiser = torch.optim.LBFGS
-optimiser = torch.optim.Adam
 
-criterion = nn.MSELoss()
-
-pytorch_device_setting()
-dict_optimiser = {"lr": 0.01,
-                  "max_iter": 1, "max_eval": 50000,
-                  "tolerance_change": 1.0 * np.finfo(float).eps}
-dict_optimiser = {"lr": 0.001, "weight_decay" : 0.01}
-parameters_for_training = NNTrainParameters(batch_size=batch_size, epochs=epochs,
-                                            criterion=criterion, optimiser=optimiser,
-                                            dict_params_optimiser=dict_optimiser)
 
 if __name__ == '__main__':
-    (net, mean_training_losses) = nn_kfold_train(
-        train_X, train_Y, input_size, hidden_sizes, output_size, biases, activation_functions, dropout,
-        parameters_for_training=parameters_for_training, early_stopper_validation=None, nb_split=1,
-        shuffle_kfold=True, compute_accuracy=False, silent=False)
+    # config of the architecture:
+    input_size = 1
+    hidden_sizes = [20, 20, 20]
+    output_size = 1
+    biases = [True, True, True, True]
+    activation_functions = [torch.tanh, torch.tanh, torch.relu]
+    dropout = 0.
+    epochs = 100
+    batch_size = 200
+    optimiser = torch.optim.Adam
+    criterion = nn.MSELoss()
 
-    nn_plot(mean_training_losses)
+    dict_optimiser = {"lr": 0.001, "weight_decay": 0.0000001}
+    parameters_training = NNTrainParameters(batch_size=batch_size, epochs=epochs,
+                                            criterion=criterion, optimiser=optimiser,
+                                            dict_params_optimiser=dict_optimiser)
+    parametrized_NN = factory_parametrised_FC_NN(input_size=input_size, list_hidden_sizes=hidden_sizes,
+                                                 output_size=output_size,
+                                                 list_biases=biases, activation_functions=activation_functions,
+                                                 dropout=dropout, predict_fct = None)
 
-    aplot = APlot(how=(1, 1))
-    x_test = torch.linspace(0, 2 * np.pi, 100).reshape(-1, 1)
-    y_test = exact_solution(x_test).reshape(-1, )
+    # training
+    print(" ~~~~~~~~~~Example 1 : Split 1~~~~~~~~~~ ")
+    (net, mean_training_losses, mean_validation_losses) = nn_kfold_train(train_X, train_Y,
+                                                                         parametrized_NN,
+                                                                         parameters_training=parameters_training,
+                                                                         early_stopper_validation=None, nb_split=1,
+                                                                         shuffle_kfold=True,
+                                                                         percent_validation_for_1_fold=20,
+                                                                         compute_accuracy=False,
+                                                                         silent=False)
+    nn_plot_train_loss_acc(training_loss = mean_training_losses, validation_loss=mean_validation_losses)
+    nn_plot_prediction_vs_true(net, plot_xx, plot_yy, plot_yy_noisy)
+    nn_print_errors(net, train_X, train_Y, testing_X, testing_Y)
 
-    aplot.uni_plot(nb_ax=0, xx=x_test, yy=y_test, dict_plot_param={"color": "orange",
-                                                           "linewidth": 1,
-                                                           "label": "Training Data"
-                                                           })
-    x_pred= torch.linspace(0, 2 * np.pi, 100).reshape(-1,1)
-    y_pred = nn_predict(net, x_pred)
+    # todo IMPLEMENT NOT STRATIFIED K-FOLD
+    # print(" ~~~~~~~~~~Example 2 : Split 5~~~~~~~~~~ ")
+    # (net, mean_training_losses, mean_validation_losses) = nn_kfold_train(train_X, train_Y,
+    #                                                                      parametrized_NN,
+    #                                                                      parameters_training=parameters_training,
+    #                                                                      early_stopper_validation=None, nb_split=5,
+    #                                                                      shuffle_kfold=True,
+    #                                                                      compute_accuracy=False, silent=False)
+    # nn_plot_train_loss_acc(training_loss=mean_training_losses, validation_loss=mean_validation_losses)
+    # nn_plot_prediction_vs_true(net, plot_xx, plot_yy, plot_yy_noisy)
+    # nn_print_errors(net, train_X, train_Y, testing_X, testing_Y)
 
-    aplot.uni_plot(nb_ax=0, xx=x_pred, yy=y_pred, dict_plot_param={"color": "c",
-                                                           "linewidth": 2,
-                                                           "label": "Predicted Data"
-                                                           })
+    print(" ~~~~~~~~~~Example 3 : no validation for 1 split ~~~~~~~~~~ ")
+    (net, mean_training_losses) = nn_kfold_train(train_X, train_Y, parametrized_NN,
+                                                                         parameters_training=parameters_training,
+                                                                         early_stopper_validation=None, nb_split=1,
+                                                                         shuffle_kfold=True,
+                                                                         percent_validation_for_1_fold=0,
+                                                                         compute_accuracy=False, silent=False)
+    nn_plot_train_loss_acc(training_loss=mean_training_losses)
+    nn_plot_prediction_vs_true(net, plot_xx, plot_yy, plot_yy_noisy)
+    nn_print_errors(net, train_X, train_Y, testing_X, testing_Y)
 
-    # Compute the relative validation error
-    relative_error_train = torch.mean((nn_predict(net,train_X) - train_Y) ** 2) / torch.mean(train_Y ** 2)
-    print("Relative Training Error: ", relative_error_train.detach().numpy() ** 0.5 * 100, "%")
 
-    # Compute the relative validation error
-    relative_error_val = torch.mean((nn_predict(net, validation_X) - validation_Y) ** 2) / torch.mean(validation_Y ** 2)
-    print("Relative Validation Error: ", relative_error_val.detach().numpy() ** 0.5 * 100, "%")
 
-    # Compute the relative L2 error norm (generalization error)
-    relative_error_test = torch.mean((y_pred - y_test) ** 2) / torch.mean(y_test ** 2)
-    print("Relative Testing Error: ", relative_error_test.detach().numpy() ** 0.5 * 100, "%")
 
-    aplot.show_legend()
     APlot.show_plot()
+

@@ -1,5 +1,6 @@
-import numpy
+import numpy as np
 import sklearn.model_selection
+import torch
 
 from src.Neural_Network.NN_fcts import device
 from src.Neural_Network.NN_training import nn_train
