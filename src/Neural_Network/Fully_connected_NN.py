@@ -2,41 +2,138 @@
 import torch
 import torch.nn as nn
 
+from abc import abstractmethod
 
-def my_id(out):
-    return out
+# my lib
+from priv_lib_error import Error_type_setter
+from priv_lib_util.tools import function_iterable
+
 
 # the class of NN
 class Fully_connected_NN(nn.Module):
+    # Abstract classes with virtual parameters that are initialized with the function *factory_parametrised_FC_NN*
+    #
+    # Abstract args:
+    # input_size: the size of the input layer.
+    # list_hidden_sizes: iterable the input sizes for each hidden layer + output of last hidden layer.
+    # output_size: the output size of the neural network.
+    # list_biases: list of booleans for specifying which layers use biases.
+    # activation_functions: list of activation functions for each layer.
+    # dropout: dropout rate for all layers. We do not dropout the first and last layer (input and output layer).
+    # predict_function should be a callable function
 
-    def __init__(self, list_hidden_sizes, hidden_sizes, output_size,
-                 list_biases, activation_functions,
-                 dropout=0, predict_fct = None):
+    @staticmethod
+    def my_id(out):
+        return out
+
+    # function that from the output returns the prediction. Depends on the problem:
+    _predict_fct = my_id  # :default predict_fct. Can be masked with lower child class functions.
+
+    # : the hidden mark "_" is important to pass through the getter.
+    def __init__(self):
         """
-        Constructor for Neural Network
-
-        Args:
-            list_hidden_sizes: the size of the input layer.
-            hidden_sizes: the input sizes for each hidden layer + output of last hidden layer.
-            output_size: the output size of the neural network.
-            list_biases: list of booleans for specifying which layers use biases.
-            activation_functions: list of activation functions for each layer.
-            dropout: dropout rate for all layers. We do not dropout the first and last layer (input and output layer).
+        Constructor for Neural Network.
         """
         super().__init__()
-        # check the inputs
-        assert len(list_biases) == len(hidden_sizes) + 1
-        self.input_size = list_hidden_sizes
-        self.list_hidden_sizes = hidden_sizes
-        self.output_size = output_size
-        self.list_biases = list_biases
-        self.activation_functions = activation_functions
 
-        #function that from the output returns the prediction. Depends on the problem.
-        if predict_fct is None:
-            self.predict_fct = my_id
+    # section ######################################################################
+    #  #############################################################################
+    #  SETTERS / GETTERS
+    @property
+    @abstractmethod
+    def input_size(self):
+        return self._input_size
+
+    @input_size.setter
+    def input_size(self, new_input_size):
+        if isinstance(new_input_size, int):
+            self._input_size = new_input_size
         else:
-            self.predict_fct = predict_fct
+            raise Error_type_setter(f"Argument is not an {str(int)}.")
+
+    @property
+    @abstractmethod
+    def list_hidden_sizes(self):
+        return self._list_hidden_sizes
+
+    @list_hidden_sizes.setter
+    def list_hidden_sizes(self, new_list_hidden_sizes):
+        if function_iterable.is_iterable(new_list_hidden_sizes):
+            self._list_hidden_sizes = new_list_hidden_sizes
+        else:
+            raise Error_type_setter(f"Argument is not an Iterable.")
+
+    @property
+    @abstractmethod
+    def output_size(self):
+        return self._output_size
+
+    @output_size.setter
+    def output_size(self, new_output_size):
+        if isinstance(new_output_size, int):
+            self._output_size = new_output_size
+        else:
+            raise Error_type_setter(f"Argument is not an {str(int)}.")
+
+    @property
+    @abstractmethod
+    def list_biases(self):
+        return self._list_biases
+
+    # always set list_biases after list_hidden_sizes:
+    @list_biases.setter
+    def list_biases(self, new_list_biases):
+        if function_iterable.is_iterable(new_list_biases):
+            assert len(new_list_biases) == len(self.list_hidden_sizes) + 1
+            # :security that the right parameters are given.
+            self._list_biases = new_list_biases
+        else:
+            raise Error_type_setter(f"Argument is not an iterable.")
+
+    @property
+    @abstractmethod
+    def activation_functions(self):
+        return self._activation_functions
+
+    @activation_functions.setter
+    def activation_functions(self, new_activation_functions):
+        if function_iterable.is_iterable(new_activation_functions):
+            self._activation_functions = new_activation_functions
+        else:
+            raise Error_type_setter(f"Argument is not an iterable.")
+
+    # function that from the output returns the prediction. Depends on the problem:
+    @property
+    def predict_fct(self):
+        return self._predict_fct
+
+    @predict_fct.setter
+    def predict_fct(self, new_predict_fct):
+        if new_predict_fct is None:
+            pass
+        else :
+            if callable(new_predict_fct):
+                self._predict_fct = new_predict_fct
+            else:
+                raise Error_type_setter(f"Argument is not callable.")
+
+    @property
+    def dropout(self):
+        return self._dropout
+
+    @dropout.setter
+    def dropout(self, new_dropout):
+        if isinstance(new_dropout, float) and 0 <= new_dropout < 1:  # : dropout should be a percent between 0 and 1.
+            self._dropout = new_dropout
+        else:
+            raise Error_type_setter(f"Argument is not an {str(float)}.")
+
+    # section ######################################################################
+    #  #############################################################################
+    # rest of methods
+
+    def set_layers(self):  #: mandatory call in the constructor, 
+        #: to initialize all the layers and dropout with respect to the parameters created.
 
         # array of fully connected layers
         self._layers = nn.ModuleList()
@@ -45,14 +142,14 @@ class Fully_connected_NN(nn.Module):
         self._layers.append(nn.Linear(self.input_size, self.list_hidden_sizes[0], self.list_biases[0]))
 
         # initialise the hidden layers
-        for i in range(len(hidden_sizes) - 1):
-            self._layers.append(nn.Linear(hidden_sizes[i], hidden_sizes[i + 1], self.list_biases[i + 1]))
+        for i in range(len(self.list_hidden_sizes) - 1):
+            self._layers.append(nn.Linear(self.list_hidden_sizes[i], self.list_hidden_sizes[i + 1], self.list_biases[i + 1]))
 
         # initialise the output layer
         self._layers.append(nn.Linear(self.list_hidden_sizes[-1], self.output_size, self.list_biases[-1]))
 
         # initialise dropout
-        self.dropout = nn.Dropout(p=dropout)
+        self._apply_dropout = nn.Dropout(p=self.dropout)
 
     def forward(self, x):
         # pass through the input layer
@@ -60,7 +157,7 @@ class Fully_connected_NN(nn.Module):
 
         # pass through the hidden layers
         for layer_index in range(1, len(self.list_hidden_sizes) - 1):
-            out = self.activation_functions[layer_index](self.dropout(self._layers[layer_index](out)))
+            out = self.activation_functions[layer_index](self._apply_dropout(self._layers[layer_index](out)))
 
         # pass through the output layer
         out = self._layers[-1](out)
@@ -82,3 +179,23 @@ class Fully_connected_NN(nn.Module):
             gain = nn.init.calculate_gain('tanh')
             torch.nn.init.xavier_uniform_(layer.weight, gain=gain)
             layer.bias.data.fill_(0)
+
+
+def factory_parametrised_FC_NN(input_size, list_hidden_sizes, output_size,
+                               list_biases, activation_functions,
+                               dropout=0, predict_fct=None):
+    class parametrised_FC_NN(Fully_connected_NN):
+        def __init__(self):
+            super().__init__()
+            self.input_size = input_size
+            self.list_hidden_sizes = list_hidden_sizes
+            self.output_size = output_size
+            self.list_biases = list_biases  # should always be defined after list_hidden_sizes.
+            self.activation_functions = activation_functions
+            self.dropout = dropout
+            self.predict_fct = predict_fct
+
+            self.set_layers()  #: mandatory call in the constructor,
+            #: to initialize all the layers and dropout with respect to the parameters created.
+
+    return parametrised_FC_NN

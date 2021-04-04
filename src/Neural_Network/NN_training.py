@@ -19,6 +19,7 @@ if PLOT_WHILE_TRAIN:
 
 FREQ_NEW_IMAGE = 40
 
+
 def plot_while_training(params_training, training_losses, validation_losses):
     ax.clear()
     plt.semilogy(range(params_training.epochs), training_losses, 'b', label='Train Loss')
@@ -115,7 +116,8 @@ def nn_fit(net, X_train_on_device, Y_train_on_device, Y_train,
 
         # Calculate validation loss for the current epoch
         if is_validation_included:
-            validation_losses[epoch] = criterion(net(X_val_on_device), Y_val_on_device).item()  # WIP THERE WAS A SQUEEZE HERE ON Y
+            validation_losses[epoch] = criterion(net(X_val_on_device),
+                                                 Y_val_on_device).item()  # WIP THERE WAS A SQUEEZE HERE ON Y
             if compute_accuracy:
                 validation_accuracy[epoch] = sklearn.metrics.accuracy_score(nn_predict(net, X_val_on_device), Y_val)
                 # :sklearn can't access data on gpu.
@@ -127,7 +129,6 @@ def nn_fit(net, X_train_on_device, Y_train_on_device, Y_train,
         if early_stopper_training is not None:
             if early_stopper_training(training_losses, epoch, net):
                 break  #: get out of epochs.
-
 
         if PLOT_WHILE_TRAIN:
             if epoch % FREQ_NEW_IMAGE == 0:
@@ -230,27 +231,23 @@ def nn_train(net, data_X, data_Y,
 # it returns the score during training,
 # but also the best out of the k models, with respect to the accuracy over the whole set.
 def nn_kfold_train(data_training_X, data_training_Y,
-                   input_size, hidden_sizes, output_size, biases,
-                   activation_functions, dropout=0,
-                   parameters_for_training=None,
-                   early_stopper_validation=None, early_stopper_training=None,
-                   nb_split=5, shuffle_kfold=True, percent_validation_for_1_fold=20,
+                   model_NN, parameters_training=None,
+                   early_stopper_validation=None,
+                   early_stopper_training=None,
+                   nb_split=5, shuffle_kfold=True,
+                   percent_validation_for_1_fold=20,
                    compute_accuracy=False,
                    silent=False):
     """
 
     Args:
+        model_NN: parametrised architecture,
+        should be a Class (object type Class) and such that we can call constructor over it to create a net.
         compute_accuracy:
         early_stopper_training:
         data_training_X: tensor
         data_training_Y: tensor
-        input_size:
-        hidden_sizes:
-        output_size:
-        biases:
-        activation_functions:
-        dropout:
-        parameters_for_training:
+        parameters_training:
         early_stopper_validation:weight
         nb_split:
         shuffle_kfold:
@@ -265,91 +262,93 @@ def nn_kfold_train(data_training_X, data_training_Y,
 
     # the nans are because we want to skip the plotting at places where we did not collect data.
     if compute_accuracy:
-        training_data = [np.zeros((nb_split, parameters_for_training.epochs)),
-                         np.zeros((nb_split, parameters_for_training.epochs))]
-        validation_data = [np.zeros((nb_split, parameters_for_training.epochs)),
-                           np.zeros((nb_split, parameters_for_training.epochs))]
+        training_data = [np.zeros((nb_split, parameters_training.epochs)),
+                         np.zeros((nb_split, parameters_training.epochs))]
+        validation_data = [np.zeros((nb_split, parameters_training.epochs)),
+                           np.zeros((nb_split, parameters_training.epochs))]
     else:
-        training_data = [np.zeros((nb_split, parameters_for_training.epochs))]
-        validation_data = [np.zeros((nb_split, parameters_for_training.epochs))]
+        training_data = [np.zeros((nb_split, parameters_training.epochs))]
+        validation_data = [np.zeros((nb_split, parameters_training.epochs))]
 
     # The case nb_split = 1: we use the whole dataset for training, without validation:
     if nb_split == 1:
         assert 0 <= percent_validation_for_1_fold < 100, "percent_validation_for_1_fold should be in [0,100[ !"
-        return nn_1fold_train(activation_functions, biases, compute_accuracy, data_training_X, data_training_Y, dropout,
-                           early_stopper_training, early_stopper_validation, hidden_sizes, input_size, output_size,
-                           parameters_for_training, percent_validation_for_1_fold, shuffle_kfold, silent, training_data,
-                           validation_data)
+        return _nn_1fold_train(compute_accuracy, data_training_X, data_training_Y, early_stopper_training,
+                               early_stopper_validation, parameters_training, percent_validation_for_1_fold,
+                               shuffle_kfold, silent, training_data, validation_data, model_NN)
     else:
-        # Kfold for nb_split > 1:
-        skfold = sklearn.model_selection.StratifiedKFold(n_splits=nb_split, shuffle=shuffle_kfold, random_state=0)
-        # for storing the network:
-        performance = 0
-        best_net = 0
-        nb_max_epochs_through = 0  # :this number is how many epochs the NN has been trained over.
-        # :with such quantity, one does not return a vector full of 0, but only the meaningful data.
-        # it is equal to max_{kfold} min_{epoch} { epoch trained over }
-
-        for i, (index_training, index_validation) in enumerate(
-                skfold.split(data_training_X, data_training_Y)):  # one can use tensors as they are convertible to numpy.
-            if not silent:
-                print(f"{i + 1}-th Fold out of {nb_split} Folds.")
-
-            net = Fully_connected_NN(input_size, hidden_sizes,
-                                     output_size, biases, activation_functions, dropout).to(device)
-
-            # train network and save results
-            res = nn_train(net, data_X=data_training_X, data_Y=data_training_Y,
-                           params_training=parameters_for_training,
-                           indic_train_X=index_training, indic_train_Y=index_training,
-                           indic_validation_X=index_validation,
-                           indic_validation_Y=index_validation,
-                           early_stopper_training=early_stopper_training,
-                           early_stopper_validation=early_stopper_validation,
-                           compute_accuracy=compute_accuracy,
-                           silent=silent)
-
-            if compute_accuracy:
-                training_data[1][i, :] = res[0]
-                validation_data[1][i, :] += res[1]
-            training_data[0][i, :] += res[2]
-            validation_data[0][i, :] += res[3]
-            nb_of_epochs_through = res[4]
-
-            # storing the best network.
-            new_res = res[1][-1]  # the criteria is best validation accuracy at final time.
-            if new_res > performance:
-                best_net = net
-            performance = new_res
-
-            # this number is how many epochs the NN has been trained over.
-            # with such quantity, one does not return a vector full of 0, but only the meaningful data.
-            if nb_of_epochs_through > nb_max_epochs_through:
-                nb_max_epochs_through = nb_of_epochs_through
+        best_net, nb_max_epochs_through = _nn_multiplefold_train(compute_accuracy, data_training_X, data_training_Y,
+                                                                 early_stopper_training, early_stopper_validation,
+                                                                 model_NN, nb_split, parameters_training, shuffle_kfold,
+                                                                 silent, training_data, validation_data)
 
         return (best_net,
                 training_data[1][:, :nb_max_epochs_through], validation_data[1][:, :nb_max_epochs_through],
                 training_data[0][:, :nb_max_epochs_through], validation_data[0][:, :nb_max_epochs_through])
 
 
-def nn_1fold_train(activation_functions, biases, compute_accuracy, data_training_X, data_training_Y, dropout,
-                early_stopper_training, early_stopper_validation, hidden_sizes, input_size, output_size,
-                parameters_for_training, percent_validation_for_1_fold, shuffle_kfold, silent, training_data,
-                validation_data):
-    net = Fully_connected_NN(input_size, hidden_sizes,
-                             output_size, biases,
-                             activation_functions, dropout).to(device)
-    # #indices splitting:
-    # #WIP CREATE FUNCTION
+def _nn_multiplefold_train(compute_accuracy, data_training_X, data_training_Y, early_stopper_training,
+                           early_stopper_validation, model_NN, nb_split, parameters_training, shuffle_kfold, silent,
+                           training_data, validation_data):
+    # Kfold for nb_split > 1:
+    skfold = sklearn.model_selection.StratifiedKFold(n_splits=nb_split, shuffle=shuffle_kfold, random_state=0)
+    # for storing the network:
+    performance = 0
+    best_net = 0
+    nb_max_epochs_through = 0  # :this number is how many epochs the NN has been trained over.
+    # :with such quantity, one does not return a vector full of 0, but only the meaningful data.
+    # it is equal to max_{kfold} min_{epoch} { epoch trained over }
+    for i, (index_training, index_validation) in enumerate(
+            skfold.split(data_training_X, data_training_Y)):  # one can use tensors as they are convertible to numpy.
+        if not silent:
+            print(f"{i + 1}-th Fold out of {nb_split} Folds.")
 
+        net = model_NN().to(device)
+
+        # train network and save results
+        res = nn_train(net, data_X=data_training_X, data_Y=data_training_Y,
+                       params_training=parameters_training,
+                       indic_train_X=index_training, indic_train_Y=index_training,
+                       indic_validation_X=index_validation,
+                       indic_validation_Y=index_validation,
+                       early_stopper_training=early_stopper_training,
+                       early_stopper_validation=early_stopper_validation,
+                       compute_accuracy=compute_accuracy,
+                       silent=silent)
+
+        if compute_accuracy:
+            training_data[1][i, :] = res[0]
+            validation_data[1][i, :] += res[1]
+        training_data[0][i, :] += res[2]
+        validation_data[0][i, :] += res[3]
+        nb_of_epochs_through = res[4]
+
+        # storing the best network.
+        new_res = res[1][-1]  # the criteria is best validation accuracy at final time.
+        if new_res > performance:
+            best_net = net
+        performance = new_res
+
+        # this number is how many epochs the NN has been trained over.
+        # with such quantity, one does not return a vector full of 0, but only the meaningful data.
+        if nb_of_epochs_through > nb_max_epochs_through:
+            nb_max_epochs_through = nb_of_epochs_through
+    return best_net, nb_max_epochs_through
+
+
+def _nn_1fold_train(compute_accuracy, data_training_X, data_training_Y, early_stopper_training,
+                    early_stopper_validation, parameters_training, percent_validation_for_1_fold, shuffle_kfold, silent,
+                    training_data, validation_data, model_NN):
+    net = model_NN().to(device)
     # where validation included.
     if percent_validation_for_1_fold > 0:
+        # #indices splitting:
         indic_train, indic_validation = nn_1fold_indices_creation(data_training_X, percent_validation_for_1_fold,
                                                                   shuffle_kfold)
 
         res = nn_train(net,
                        data_X=data_training_X, data_Y=data_training_Y,
-                       params_training=parameters_for_training,
+                       params_training=parameters_training,
                        indic_train_X=indic_train,
                        indic_train_Y=indic_train,
                        indic_validation_X=indic_validation,
@@ -377,7 +376,7 @@ def nn_1fold_train(activation_functions, biases, compute_accuracy, data_training
     else:
         res = nn_train(net,
                        data_X=data_training_X, data_Y=data_training_Y,
-                       params_training=parameters_for_training,
+                       params_training=parameters_training,
                        indic_train_X=torch.arange(data_training_X.shape[0]),
                        indic_train_Y=torch.arange(data_training_Y.shape[0]),
                        indic_validation_X=None,
@@ -413,4 +412,3 @@ def nn_1fold_indices_creation(data_training_X, percent_validation_for_1_fold, sh
         indic_train = torch.arange(training_size)
         indic_validation = torch.arange(training_size, data_training_X.shape[1])
     return indic_train, indic_validation
-
