@@ -127,10 +127,10 @@ def nn_fit(net, X_train_on_device, Y_train_on_device, Y_train,
 
             # Calculations to see if it's time to stop early:
             if early_stopper_validation is not None:
-                if early_stopper_validation(validation_losses, epoch):
+                if early_stopper_validation(net, validation_losses, epoch):
                     break  #: get out of epochs
         if early_stopper_training is not None:
-            if early_stopper_training(training_losses, epoch, net):
+            if early_stopper_training(net, training_losses, epoch):
                 break  #: get out of epochs.
 
         if PLOT_WHILE_TRAIN:
