@@ -1,15 +1,9 @@
-# parameters
-
-# from useful_functions import *
-
-# for neural networks
 import torch.utils.data
-
 import sklearn.model_selection
-
 from src.Neural_Network.NN_fcts import device, are_at_least_one_None, raise_if_not_all_None, nn_predict
-from src.kfold import *
 from tqdm import tqdm
+import numpy as np
+import matplotlib.pyplot as plt
 
 PLOT_WHILE_TRAIN = False
 if PLOT_WHILE_TRAIN:
@@ -27,12 +21,13 @@ def plot_while_training(params_training, training_losses, validation_losses):
     plt.pause(0.0001)
 
 
-def nn_fit(net, X_train_on_device, Y_train_on_device, Y_train,
+def nn_fit(net,
+           X_train_on_device, Y_train_on_device,
+           Y_train,
            params_training,
            training_losses, training_accuracy,
            X_val_on_device=None, Y_val_on_device=None, Y_val=None,
            validation_losses=None, validation_accuracy=None,
-           max_through_epoch=None,
            early_stopper_training=None, early_stopper_validation=None,
            compute_accuracy=False,
            silent=False):
@@ -53,13 +48,13 @@ def nn_fit(net, X_train_on_device, Y_train_on_device, Y_train,
         validation_losses: always passed, numpy array where values are stored.
         validation_accuracy: always passed, numpy array where values are stored.
         Passed, even though compute_accuracy is false.
-        max_through_epoch:
         early_stopper_training:
         early_stopper_validation:
         compute_accuracy: if True, training_accuracy and validation_accuracy are not updated.
         silent: verbose.
 
-    Returns: nothing but updates the value passed, training_losses, training_accuracy,
+    Returns: return epoch of best net and updates the value passed in
+    training_losses, training_accuracy,
     validation_losses, validation_accuracy, max_through_epoch.
 
     """
@@ -107,43 +102,59 @@ def nn_fit(net, X_train_on_device, Y_train_on_device, Y_train,
             # you need to call again criterion unless you do not need the closure.
             train_loss += criterion(net(batch_X), batch_y).item() * batch_X.shape[0]  # weight the loss accordingly
 
-        # Normalize and save the loss over the current epoch:
-        training_losses[epoch] = train_loss / (Y_train_on_device.shape[0])
-        if compute_accuracy:
-            training_accuracy[epoch] = sklearn.metrics.accuracy_score(
-                nn_predict(net, X_train_on_device), Y_train.reshape(-1, 1))
-            # :here the reshape is assuming we use Cross Entropy and the data outside is set in the right format.
-            # :sklearn can't access data on gpu.
+        update_history(X_train_on_device, X_val_on_device, Y_train,
+                       Y_train_on_device, Y_val, Y_val_on_device,
+                       compute_accuracy, criterion, epoch, is_validation_included,
+                       net, train_loss, training_accuracy,
+                       training_losses, validation_accuracy, validation_losses)
 
-        # Calculate validation loss for the current epoch
-        if is_validation_included:
-            validation_losses[epoch] = criterion(net(X_val_on_device),
-                                                 Y_val_on_device).item()  # WIP THERE WAS A SQUEEZE HERE ON Y
-            if compute_accuracy:
-                validation_accuracy[epoch] = sklearn.metrics.accuracy_score(
-                    nn_predict(net, X_val_on_device), Y_val.reshape(-1, 1))
-            # :here the reshape is assuming we use Cross Entropy and the data outside is set in the right format.
-            # :sklearn can't access data on gpu.
-
-            # Calculations to see if it's time to stop early:
-            if early_stopper_validation is not None:
-                if early_stopper_validation(net, validation_losses, epoch):
-                    if not silent:
-                        print("Terminated epochs, with early stopper validation.")
-                    break  #: get out of epochs
+        # Calculations to see if it's time to stop early:
+        if is_validation_included and early_stopper_validation is not None:
+            if early_stopper_validation(net, validation_losses, epoch):
+                if not silent: print("Terminated epochs, with early stopper validation.")
+                break  #: get out of epochs
         if early_stopper_training is not None:
             if early_stopper_training(net, training_losses, epoch):
-                if not silent:
-                    print("Terminated epochs, with early stopper training.")
+                if not silent: print("Terminated epochs, with early stopper training.")
                 break  #: get out of epochs.
 
         if PLOT_WHILE_TRAIN:
             if epoch % FREQ_NEW_IMAGE == 0:
                 plot_while_training(params_training, training_losses, validation_losses)
 
-    # ~~~~~~~~ end of the for in epoch.
-    # we change the value of max_through_epoch:
-    max_through_epoch[0] = epoch + 1  #: +1 because it starts at zero so the real value is shifted.
+    # ~~~~~~~~ end of the for in epoch. Training
+    return return_the_stop(net, epoch, early_stopper_validation, early_stopper_training)
+
+
+def return_the_stop(net, current_epoch, *args): # args should be early_stoppers (or none if not defined)
+    # multiple early_stoppers can't break at the same time, because there will be a first that breaks out the loop first.
+    # if no early_stopper broke, return the current epoch.
+    for stopper in args:
+        if stopper is not None and stopper.is_stopped(): #: check if the stopper is none or actually of type early stop.
+            (net.load_state_dict(stopper.best_net_dict))  # .to(device)
+            return stopper.best_epoch
+    return current_epoch
+
+
+def update_history(X_train_on_device, X_val_on_device, Y_train, Y_train_on_device, Y_val, Y_val_on_device,
+                   compute_accuracy, criterion, epoch, is_validation_included, net, train_loss, training_accuracy,
+                   training_losses, validation_accuracy, validation_losses):
+    # Normalize and save the loss over the current epoch:
+    training_losses[epoch] = train_loss / (Y_train_on_device.shape[0])
+    if compute_accuracy:
+        training_accuracy[epoch] = sklearn.metrics.accuracy_score(
+            nn_predict(net, X_train_on_device), Y_train.reshape(-1, 1))
+        # :here the reshape is assuming we use Cross Entropy and the data outside is set in the right format.
+        # :sklearn can't access data on gpu.
+    # Calculate validation loss for the current epoch
+    if is_validation_included:
+        validation_losses[epoch] = criterion(net(X_val_on_device),
+                                             Y_val_on_device).item()  # WIP THERE WAS A SQUEEZE HERE ON Y
+        if compute_accuracy:
+            validation_accuracy[epoch] = sklearn.metrics.accuracy_score(
+                nn_predict(net, X_val_on_device), Y_val.reshape(-1, 1))
+        # :here the reshape is assuming we use Cross Entropy and the data outside is set in the right format.
+        # :sklearn can't access data on gpu.
 
 
 def nn_train(net, data_X, data_Y,
@@ -170,16 +181,13 @@ def nn_train(net, data_X, data_Y,
         compute_accuracy: no impact here, impacts nn_fit.
         silent:
 
-    Returns: Trained net and the data.
+    Returns: the data with history of training and best epoch for training. Net is modified in the progress.
     If validation is given:
         returns trained/validation accuracy, trained/validation loss;
     Else:
         returns trained accuracy then loss;
     Whenever the accuracy is not requested, the accuracy vector is zero.
     """
-    max_through_epoch = [0]  # : nb of epochs that the NN has back propagated over.
-    #: we need to use a container because 0 is immutable, and we want that value to change inside of fit.
-
     # Prepare Training set
     X_train_on_device = data_X[indic_train_X].to(device)
     Y_train = data_Y[indic_train_Y]  # : useful for using it in order to compute accuracy.
@@ -191,7 +199,7 @@ def nn_train(net, data_X, data_Y,
 
     # condition if we use validation set:
     list_params_validation = [indic_validation_X, indic_validation_Y]
-    is_validation_included = not are_at_least_one_None(list_params_validation)  #: equivalent to are all not None ?
+    is_validation_included = not are_at_least_one_None(list_params_validation)  #: equivalent to "are all not None ?"
     if not is_validation_included:
         raise_if_not_all_None(list_params_validation)
 
@@ -204,31 +212,35 @@ def nn_train(net, data_X, data_Y,
         validation_accuracy = np.full(params_training.epochs, np.nan)
 
         # essentially, we need to check what is the max epoch:
-        nn_fit(net, X_train_on_device, Y_train_on_device, Y_train, params_training, training_losses, training_accuracy,
-               X_val_on_device=X_val_on_device, Y_val_on_device=Y_val_on_device, Y_val=Y_val,
-               validation_losses=validation_losses, validation_accuracy=validation_accuracy,
-               max_through_epoch=max_through_epoch, early_stopper_training=early_stopper_training,
-               early_stopper_validation=early_stopper_validation, compute_accuracy=compute_accuracy, silent=silent)
+        epoch_best_net = nn_fit(net, X_train_on_device, Y_train_on_device, Y_train, params_training, training_losses,
+                                training_accuracy,
+                                X_val_on_device=X_val_on_device, Y_val_on_device=Y_val_on_device, Y_val=Y_val,
+                                validation_losses=validation_losses, validation_accuracy=validation_accuracy,
+                                early_stopper_training=early_stopper_training,
+                                early_stopper_validation=early_stopper_validation,
+                                compute_accuracy=compute_accuracy, silent=silent)
 
         # return loss over epochs and accuracy
         if early_stopper_validation is not None or early_stopper_training is not None:
             return (training_accuracy, validation_accuracy,
                     training_losses, validation_losses,
-                    max_through_epoch[0])
+                    epoch_best_net)
         else:
             return (training_accuracy, validation_accuracy,
                     training_losses, validation_losses,
-                    max_through_epoch[0])
+                    epoch_best_net)
 
     # if no validation set
     else:
-        nn_fit(net, X_train_on_device, Y_train_on_device, Y_train, params_training, training_losses, training_accuracy,
-               max_through_epoch=max_through_epoch, early_stopper_training=early_stopper_training,
-               early_stopper_validation=early_stopper_validation, compute_accuracy=compute_accuracy, silent=silent)
+        epoch_best_net = nn_fit(net, X_train_on_device, Y_train_on_device, Y_train, params_training, training_losses,
+                                training_accuracy,
+                                early_stopper_training=early_stopper_training,
+                                early_stopper_validation=early_stopper_validation,
+                                compute_accuracy=compute_accuracy, silent=silent)
         # return loss over epochs and accuracy
         if early_stopper_validation is not None or early_stopper_training is not None:
             return (training_accuracy, training_losses,
-                    max_through_epoch[0])
+                    epoch_best_net)
         else:
             return (training_accuracy, training_losses,
-                    max_through_epoch[0])
+                    epoch_best_net)

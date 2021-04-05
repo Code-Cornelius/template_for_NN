@@ -1,3 +1,4 @@
+from copy import deepcopy
 from abc import abstractmethod
 
 import numpy as np
@@ -5,9 +6,9 @@ import numpy as np
 import torch
 import torch.utils.data
 
-
 # todo the path things, saving the NN.
 DEBUG = False
+
 
 class Early_stopper(object):
     """
@@ -44,20 +45,31 @@ class Early_stopper(object):
         self._delta = delta
         self._print_func = print_func
 
+        # for retrieving the best result
+        self.best_net_dict = None  # : it is the best net seen so far that is saved for later purpose.
+        # : We decide to keep a copy instead of saving the model in a file because we might not want to save this model (E.G. if we do a K-FOLD)
+        self.best_epoch = 0
+        self._early_stopped = False
+
     def __call__(self, neural_network, losses, epoch):
-        if self.is_early_stop(losses, epoch):
+        if self._is_early_stop(losses, epoch):
             self._counter += 1
             if DEBUG:
                 self._print_func(f'EarlyStopping counter: {self._counter} out of {self._patience}')
+
+            #early stop triggered
             if self._counter >= self._patience:
+                self._early_stopped = True
                 return True
         else:
             self._lowest_loss = min(losses[epoch], self._lowest_loss)
             self._counter = 0
+            self.best_net_dict = deepcopy(neural_network.state_dict())
+            self.best_epoch = epoch
         return False
 
     @abstractmethod
-    def is_early_stop(self, losses, epoch):
+    def _is_early_stop(self, losses, epoch):
         """
         should be a const method
         The requirements are:
@@ -70,3 +82,6 @@ class Early_stopper(object):
 
         """
         pass
+
+    def is_stopped(self):
+        return self._early_stopped

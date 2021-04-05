@@ -93,7 +93,7 @@ def result_function(title, data_train_Y, y_pred1, no_classes, data_test_Y=None, 
 
 
 def nn_plot_train_loss_acc(training_loss, validation_loss=None, training_acc=None, validation_acc=None,
-                           log_axis_for_loss=True):
+                           log_axis_for_loss=True, best_epoch_of_NN=None):
     if training_acc is not None:
         aplot = APlot(how=(1, 1), sharex=True)
     else:
@@ -156,6 +156,14 @@ def nn_plot_train_loss_acc(training_loss, validation_loss=None, training_acc=Non
                                                        }
                 aplot.uni_plot_ax_bis(nb_ax=0, xx=xx, yy=validation_acc[i, :],
                                       dict_plot_param=dict_plot_param_accuracy_validation)
+    # plot lines of best NN:
+    if best_epoch_of_NN is not None:
+        for i in range(nb_trials):
+            aplot.plot_vertical_line(best_epoch_of_NN[i], [0, 1], nb_ax=0, dict_plot_param={"color": "black",
+                                                                                            "linestyle": "--",
+                                                                                            "linewidth": 0.5,
+                                                                                            "label": f"Best model for fold nb {i}"
+                                                                                            })
 
     aplot.show_legend()
     aplot._axs[0].grid(True)
@@ -180,8 +188,6 @@ def nn_plot_prediction_vs_true(net, plot_xx, plot_yy, plot_yy_noisy):
                                                                      "linewidth": 1,
                                                                      "label": "Solution"
                                                                      })
-
-
 
     aplot.uni_plot(nb_ax=0, xx=plot_xx, yy=plot_yy_pred, dict_plot_param={"color": "c",
                                                                           "linewidth": 2,

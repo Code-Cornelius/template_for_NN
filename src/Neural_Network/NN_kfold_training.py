@@ -27,13 +27,13 @@ def nn_kfold_train(data_training_X, data_training_Y,
         data_training_X: tensor
         data_training_Y: tensor
         parameters_training:
-        early_stopper_validation:weight
+        early_stopper_validation:
         nb_split:
         shuffle_kfold:
         percent_validation_for_1_fold:
         silent:
 
-    Returns: net, loss train, loss validation, accuracy train, accuracy validation
+    Returns: net, loss train, loss validation, accuracy train, accuracy validation, best_epoch_for_model
 
     """
     # we distinguish the two cases, but in both we have a list of the result:
@@ -55,15 +55,12 @@ def nn_kfold_train(data_training_X, data_training_Y,
         return _nn_1fold_train(compute_accuracy, data_training_X, data_training_Y, early_stopper_training,
                                early_stopper_validation, parameters_training, percent_validation_for_1_fold,
                                shuffle_kfold, silent, training_data, validation_data, model_NN)
-    else:
-        best_net, nb_max_epochs_through = _nn_multiplefold_train(compute_accuracy, data_training_X, data_training_Y,
-                                                                 early_stopper_training, early_stopper_validation,
-                                                                 model_NN, nb_split, parameters_training, shuffle_kfold,
-                                                                 silent, training_data, validation_data)
 
-        return (best_net,
-                training_data[1][:, :nb_max_epochs_through], validation_data[1][:, :nb_max_epochs_through],
-                training_data[0][:, :nb_max_epochs_through], validation_data[0][:, :nb_max_epochs_through])
+    else:
+        return _nn_multiplefold_train(compute_accuracy, data_training_X, data_training_Y,
+                                      early_stopper_training, early_stopper_validation,
+                                      model_NN, nb_split, parameters_training, shuffle_kfold,
+                                      silent, training_data, validation_data)
 
 
 def _nn_multiplefold_train(compute_accuracy, data_training_X, data_training_Y, early_stopper_training,
@@ -74,9 +71,7 @@ def _nn_multiplefold_train(compute_accuracy, data_training_X, data_training_Y, e
     # for storing the network:
     performance = 0
     best_net = 0
-    nb_max_epochs_through = 0  # :this number is how many epochs the NN has been trained over.
-    # :with such quantity, one does not return a vector full of 0, but only the meaningful data.
-    # it is equal to max_{kfold} min_{epoch} { epoch trained over }
+    best_epoch_of_NN = [0] * nb_split  # :we store the epoch of the best net for each fold.
     for i, (index_training, index_validation) in enumerate(
             skfold.split(data_training_X, data_training_Y)):  # one can use tensors as they are convertible to numpy.
         if not silent:
@@ -100,29 +95,27 @@ def _nn_multiplefold_train(compute_accuracy, data_training_X, data_training_Y, e
             validation_data[1][i, :] += res[1]
         training_data[0][i, :] += res[2]
         validation_data[0][i, :] += res[3]
-        nb_of_epochs_through = res[4]
+        best_epoch_of_NN[i] = res[4]
 
         # storing the best network.
         new_res = res[1][-1]  # the criteria is best validation accuracy at final time.
-        if new_res > performance:
+        if performance < new_res:
             best_net = net
         performance = new_res
 
-        # this number is how many epochs the NN has been trained over.
-        # with such quantity, one does not return a vector full of 0, but only the meaningful data.
-        if nb_of_epochs_through > nb_max_epochs_through:
-            nb_max_epochs_through = nb_of_epochs_through
-    return best_net, nb_max_epochs_through
+    return (best_net, training_data[1], validation_data[1],
+            training_data[0], validation_data[0], best_epoch_of_NN)
 
 
 def _nn_1fold_train(compute_accuracy, data_training_X, data_training_Y, early_stopper_training,
-                    early_stopper_validation, parameters_training, percent_validation_for_1_fold, shuffle_kfold, silent,
-                    training_data, validation_data, model_NN):
+                    early_stopper_validation, parameters_training, percent_validation_for_1_fold,
+                    shuffle_kfold, silent, training_data, validation_data, model_NN):
     net = model_NN().to(device)
     # where validation included.
     if percent_validation_for_1_fold > 0:
         # #indices splitting:
-        indic_train, indic_validation = nn_1fold_indices_creation(data_training_X, percent_validation_for_1_fold,
+        indic_train, indic_validation = nn_1fold_indices_creation(data_training_X,
+                                                                  percent_validation_for_1_fold,
                                                                   shuffle_kfold)
 
         res = nn_train(net,
@@ -139,16 +132,13 @@ def _nn_1fold_train(compute_accuracy, data_training_X, data_training_Y, early_st
 
         training_data[0][0, :] += res[2]
         validation_data[0][0, :] += res[3]
-        nb_of_epochs_through = res[4]  # :this number is how many epochs the NN has been trained over.
-        # :with such quantity, one does not return a vector full of 0, but only the meaningful data.
+        best_epoch_of_NN = [res[4]]  # :we store the epoch of the best net for each fold.
         if compute_accuracy:
             training_data[1] += res[0]
             validation_data[1] += res[1]
-            return (net,
-                    training_data[1][:, :nb_of_epochs_through], validation_data[1][:, :nb_of_epochs_through],
-                    training_data[0][:, :nb_of_epochs_through], validation_data[0][:, :nb_of_epochs_through])
-        return (net,
-                training_data[0][:, :nb_of_epochs_through], validation_data[0][:, :nb_of_epochs_through])
+            return (net, training_data[1], validation_data[1],
+                    training_data[0], validation_data[0], best_epoch_of_NN)
+        return (net, training_data[0], validation_data[0], best_epoch_of_NN)
 
 
     # 1-Fold. where validation not included.
@@ -166,14 +156,11 @@ def _nn_1fold_train(compute_accuracy, data_training_X, data_training_Y, early_st
                        silent=silent)
 
         training_data[0] += res[1]
-        nb_of_epochs_through = res[2]  # :this number is how many epochs the NN has been trained over.
-        # :with such quantity, one does not return a vector full of 0, but only the meaningful data.
+        best_epoch_of_NN = [res[2]]  # :we store the epoch of the best net for each fold.
         if compute_accuracy:
             training_data[1] += res[0]
-            return (net,
-                    training_data[1][:nb_of_epochs_through],
-                    training_data[0][:nb_of_epochs_through])
-        return (net, training_data[0][:nb_of_epochs_through])
+            return (net, training_data[1], training_data[0], best_epoch_of_NN)
+        return (net, training_data[0], best_epoch_of_NN)
         # : do not return accuracy, only the losses.
 
 
