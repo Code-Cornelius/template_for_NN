@@ -71,6 +71,7 @@ def _nn_multiplefold_train(compute_accuracy, data_training_X, data_training_Y, e
     # for storing the network:
     performance = 0
     best_net = 0
+    number_kfold_best_net = 1  # to keep track of best net
     best_epoch_of_NN = [0] * nb_split  # :we store the epoch of the best net for each fold.
     for i, (index_training, index_validation) in enumerate(
             skfold.split(data_training_X, data_training_Y)):  # one can use tensors as they are convertible to numpy.
@@ -99,13 +100,27 @@ def _nn_multiplefold_train(compute_accuracy, data_training_X, data_training_Y, e
                                    validation_data=validation_data)
 
         # storing the best network.
-        new_res = res[1][-1]  # the criteria is best validation accuracy at final time.
-        if performance < new_res:
-            best_net = net
-        performance = new_res
-
+        best_net, performance, number_kfold_best_net = _new_best_model(best_epoch_of_NN, best_net, compute_accuracy, i,
+                                                                       net, performance, validation_data,
+                                                                       number_kfold_best_net)
+    if not silent:
+        print("Finis the K-Fold, the best NN is the number {}".format(number_kfold_best_net))
     return (best_net, training_data[1], validation_data[1],
             training_data[0], validation_data[0], best_epoch_of_NN)
+
+
+def _new_best_model(best_epoch_of_NN, best_net, compute_accuracy, i, net,
+                    performance, validation_data, number_kfold_best_net):
+    # criterion is either best validation accuracy, or lowest validation loss, at final time (best_epoch
+    if compute_accuracy:
+        rookie_perf = validation_data[1][i, best_epoch_of_NN[i]]
+    else:
+        rookie_perf = - validation_data[0][i, best_epoch_of_NN[i]]  #: -1 * ... bc we want to keep order below
+    if performance < rookie_perf:
+        best_net = net
+        performance = rookie_perf
+        number_kfold_best_net = i
+    return best_net, performance, number_kfold_best_net
 
 
 def _nn_1fold_train(compute_accuracy, data_training_X, data_training_Y, early_stopper_training,
@@ -150,14 +165,9 @@ def _nn_1fold_train(compute_accuracy, data_training_X, data_training_Y, early_st
                        indic_validation_X=None, indic_validation_Y=None, compute_accuracy=compute_accuracy,
                        silent=silent)
 
-        _set_history_from_nn_train(best_epoch_of_NN=best_epoch_of_NN,
-                                   compute_accuracy=compute_accuracy,
-                                   compute_validation=False,
-                                   index=0,
-                                   res=res,
-                                   training_data=training_data,
-                                   validation_data=validation_data)
-
+        _set_history_from_nn_train(best_epoch_of_NN=best_epoch_of_NN, compute_accuracy=compute_accuracy,
+                                   compute_validation=False, index=0, res=res,
+                                   training_data=training_data, validation_data=validation_data)
         if compute_accuracy:
             return net, training_data[1], training_data[0], best_epoch_of_NN
         return net, training_data[0], best_epoch_of_NN

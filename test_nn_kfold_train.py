@@ -115,17 +115,20 @@ def test(train_X, train_Y, parametrized_NN, parameters_training, testing_X, test
         print("todo implement.")
 
     if compute_accuracy:
-        test_accuracy(train_X, train_Y, parametrized_NN, parameters_training, early_stop_train = early_stop_train,
-                      early_stop_valid = early_stop_valid,                      nb_split=5, percent_validation_for_1_fold=0, compute_accuracy=True, silent=SILENT,
+        test_accuracy(train_X, train_Y, parametrized_NN, parameters_training, early_stop_train=early_stop_train,
+                      early_stop_valid=early_stop_valid, nb_split=5, percent_validation_for_1_fold=0,
+                      compute_accuracy=True, silent=SILENT,
                       testing_X=testing_X, testing_Y=testing_Y)
 
     print(" ~~~~~~~~~~Example 4 : no validation for 1 split ~~~~~~~~~~ ")
     if not compute_accuracy:
         test_no_accuracy_no_validation(train_X, train_Y, parametrized_NN, parameters_training, nb_split=1,
-                                       percent_validation_for_1_fold=0,                                       compute_accuracy=False, silent=SILENT, plot_xx=plot_xx, plot_yy=plot_yy,
+                                       percent_validation_for_1_fold=0, compute_accuracy=False, silent=SILENT,
+                                       plot_xx=plot_xx, plot_yy=plot_yy,
                                        plot_yy_noisy=plot_yy_noisy, testing_X=testing_X, testing_Y=testing_Y)
     if compute_accuracy:
         test_accuracy_no_validation(train_X, train_Y, parametrized_NN, parameters_training, nb_split=1,
-                                    percent_validation_for_1_fold=0,                                    compute_accuracy=True, silent=SILENT, testing_X=testing_X, testing_Y=testing_Y)
+                                    percent_validation_for_1_fold=0, compute_accuracy=True, silent=SILENT,
+                                    testing_X=testing_X, testing_Y=testing_Y)
 
     APlot.show_plot()

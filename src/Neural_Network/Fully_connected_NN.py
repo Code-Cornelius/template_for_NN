@@ -198,6 +198,14 @@ class Fully_connected_NN(nn.Module):
             layer.bias.data.fill_(0)
 
 
+    def save_net(self, path):
+        torch.save(self.state_dict(), path)
+        return self
+
+    def load_net(self, path):
+        self.load_state_dict(torch.load(path))
+        return self
+
 # section ######################################################################
 #  #############################################################################
 # CLASS FACTORY :  creates subclasses of FC NN

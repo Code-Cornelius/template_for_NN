@@ -26,7 +26,7 @@ np.random.seed(42)
 
 ############################## GLOBAL PARAMETERS
 # Number of training samples
-n_samples = 10000
+n_samples = 5000
 # Noise level
 sigma = 0.01
 pytorch_device_setting()
@@ -77,7 +77,22 @@ if __name__ == '__main__':
                                                  list_biases=biases, activation_functions=activation_functions,
                                                  dropout=dropout, predict_fct=lambda out: torch.max(out, 1)[1])
 
-    test_nn_kfold_train.test(train_X, train_Y, parametrized_NN, parameters_for_training,
-                             test_X, test_Y, early_stop_train, early_stop_valid,
-                             SILENT,
-                             compute_accuracy=True, plot_xx=None, plot_yy=None, plot_yy_noisy=None)
+    # test_nn_kfold_train.test(train_X, train_Y, parametrized_NN, parameters_for_training,
+    #                          test_X, test_Y, early_stop_train, early_stop_valid,
+    #                          SILENT,
+    #                          compute_accuracy=True, plot_xx=None, plot_yy=None, plot_yy_noisy=None)
+
+    (net, mean_training_accuracy, mean_validation_accuracy,
+     mean_training_losses, mean_validation_losses, best_epoch_of_NN) = nn_kfold_train(train_X, train_Y, parametrized_NN,
+                                                                                      parameters_training=parameters_for_training,
+                                                                                      early_stopper_validation=early_stop_valid,
+                                                                                      early_stopper_training=early_stop_train,
+                                                                                      nb_split=5,
+                                                                                      shuffle_kfold=True,
+                                                                                      percent_validation_for_1_fold=10,
+                                                                                      compute_accuracy=True,
+                                                                                      silent=SILENT)
+    nn_plot_train_loss_acc(mean_training_losses, mean_validation_losses, mean_training_accuracy,
+                           mean_validation_accuracy, best_epoch_of_NN=best_epoch_of_NN)
+    net.save_net(path = '../NETS_MODELS/the_path.pth')
+    APlot.show_plot()
