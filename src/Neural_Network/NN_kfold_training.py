@@ -4,14 +4,14 @@ import torch
 
 from src.Neural_Network.NN_fcts import device
 from src.Neural_Network.NN_train import nn_train
+from src.Training_stopper.Early_stopper_vanilla import Early_stopper_vanilla
 
 
 def nn_kfold_train(data_training_X, data_training_Y,
-                   model_NN, parameters_training=None,
-                   early_stopper_validation=None,
-                   early_stopper_training=None,
-                   nb_split=5, shuffle_kfold=True,
-                   percent_validation_for_1_fold=20,
+                   model_NN, parameters_training,
+                   early_stopper_validation=Early_stopper_vanilla(),
+                   early_stopper_training=Early_stopper_vanilla(),
+                   nb_split=5, shuffle_kfold=True, percent_validation_for_1_fold=20,
                    compute_accuracy=False,
                    silent=False):
     """
@@ -84,23 +84,19 @@ def _nn_multiplefold_train(compute_accuracy, data_training_X, data_training_Y, e
             early_stopper_validation.reset()
 
         # train network and save results
-        res = nn_train(net, data_X=data_training_X, data_Y=data_training_Y,
-                       params_training=parameters_training,
+        res = nn_train(net, data_X=data_training_X, data_Y=data_training_Y, params_training=parameters_training,
                        indic_train_X=index_training, indic_train_Y=index_training,
-                       indic_validation_X=index_validation,
-                       indic_validation_Y=index_validation,
-                       early_stopper_training=early_stopper_training,
-                       early_stopper_validation=early_stopper_validation,
-                       compute_accuracy=compute_accuracy,
-                       silent=silent)
+                       early_stopper_validation=early_stopper_validation, early_stopper_training=early_stopper_training,
+                       indic_validation_X=index_validation, indic_validation_Y=index_validation,
+                       compute_accuracy=compute_accuracy, silent=silent)
 
-        set_history_from_nn_train(best_epoch_of_NN=best_epoch_of_NN,
-                                  compute_accuracy=compute_accuracy,
-                                  compute_validation=True,
-                                  index=i,
-                                  res=res,
-                                  training_data=training_data,
-                                  validation_data=validation_data)
+        _set_history_from_nn_train(best_epoch_of_NN=best_epoch_of_NN,
+                                   compute_accuracy=compute_accuracy,
+                                   compute_validation=True,
+                                   index=i,
+                                   res=res,
+                                   training_data=training_data,
+                                   validation_data=validation_data)
 
         # storing the best network.
         new_res = res[1][-1]  # the criteria is best validation accuracy at final time.
@@ -120,29 +116,23 @@ def _nn_1fold_train(compute_accuracy, data_training_X, data_training_Y, early_st
     best_epoch_of_NN = [0]
     if percent_validation_for_1_fold > 0:
         # #indices splitting:
-        indic_train, indic_validation = nn_1fold_indices_creation(data_training_X,
-                                                                  percent_validation_for_1_fold,
-                                                                  shuffle_kfold)
+        indic_train, indic_validation = _nn_1fold_indices_creation(data_training_X,
+                                                                   percent_validation_for_1_fold,
+                                                                   shuffle_kfold)
 
-        res = nn_train(net,
-                       data_X=data_training_X, data_Y=data_training_Y,
-                       params_training=parameters_training,
-                       indic_train_X=indic_train,
-                       indic_train_Y=indic_train,
-                       indic_validation_X=indic_validation,
-                       indic_validation_Y=indic_validation,
-                       early_stopper_training=early_stopper_training,
-                       early_stopper_validation=early_stopper_validation,
-                       compute_accuracy=compute_accuracy,
-                       silent=silent)
+        res = nn_train(net, data_X=data_training_X, data_Y=data_training_Y, params_training=parameters_training,
+                       indic_train_X=indic_train, indic_train_Y=indic_train,
+                       early_stopper_validation=early_stopper_validation, early_stopper_training=early_stopper_training,
+                       indic_validation_X=indic_validation, indic_validation_Y=indic_validation,
+                       compute_accuracy=compute_accuracy, silent=silent)
 
-        set_history_from_nn_train(best_epoch_of_NN=best_epoch_of_NN,
-                                  compute_accuracy=compute_accuracy,
-                                  compute_validation=True,
-                                  index=0,
-                                  res=res,
-                                  training_data=training_data,
-                                  validation_data=validation_data)
+        _set_history_from_nn_train(best_epoch_of_NN=best_epoch_of_NN,
+                                   compute_accuracy=compute_accuracy,
+                                   compute_validation=True,
+                                   index=0,
+                                   res=res,
+                                   training_data=training_data,
+                                   validation_data=validation_data)
 
         if compute_accuracy:
             return (net, training_data[1], validation_data[1],
@@ -153,25 +143,20 @@ def _nn_1fold_train(compute_accuracy, data_training_X, data_training_Y, early_st
 
     # 1-Fold. where validation not included.
     else:
-        res = nn_train(net,
-                       data_X=data_training_X, data_Y=data_training_Y,
-                       params_training=parameters_training,
+        res = nn_train(net, data_X=data_training_X, data_Y=data_training_Y, params_training=parameters_training,
                        indic_train_X=torch.arange(data_training_X.shape[0]),
                        indic_train_Y=torch.arange(data_training_Y.shape[0]),
-                       indic_validation_X=None,
-                       indic_validation_Y=None,
-                       early_stopper_training=early_stopper_training,
-                       early_stopper_validation=early_stopper_validation,
-                       compute_accuracy=compute_accuracy,
+                       early_stopper_validation=early_stopper_validation, early_stopper_training=early_stopper_training,
+                       indic_validation_X=None, indic_validation_Y=None, compute_accuracy=compute_accuracy,
                        silent=silent)
 
-        set_history_from_nn_train(best_epoch_of_NN=best_epoch_of_NN,
-                                  compute_accuracy=compute_accuracy,
-                                  compute_validation=False,
-                                  index=0,
-                                  res=res,
-                                  training_data=training_data,
-                                  validation_data=validation_data)
+        _set_history_from_nn_train(best_epoch_of_NN=best_epoch_of_NN,
+                                   compute_accuracy=compute_accuracy,
+                                   compute_validation=False,
+                                   index=0,
+                                   res=res,
+                                   training_data=training_data,
+                                   validation_data=validation_data)
 
         if compute_accuracy:
             return net, training_data[1], training_data[0], best_epoch_of_NN
@@ -179,7 +164,7 @@ def _nn_1fold_train(compute_accuracy, data_training_X, data_training_Y, early_st
         # : do not return accuracy, only the losses.
 
 
-def nn_1fold_indices_creation(data_training_X, percent_validation_for_1_fold, shuffle_kfold):
+def _nn_1fold_indices_creation(data_training_X, percent_validation_for_1_fold, shuffle_kfold):
     training_size = int((100. - percent_validation_for_1_fold) / 100. * data_training_X.shape[0])
     if shuffle_kfold:
         # for the permutation, one could look at https://discuss.pytorch.org/t/shuffling-a-tensor/25422/7:
@@ -195,8 +180,8 @@ def nn_1fold_indices_creation(data_training_X, percent_validation_for_1_fold, sh
     return indic_train, indic_validation
 
 
-def set_history_from_nn_train(best_epoch_of_NN, compute_accuracy, compute_validation, index, res, training_data,
-                              validation_data):
+def _set_history_from_nn_train(best_epoch_of_NN, compute_accuracy, compute_validation, index, res, training_data,
+                               validation_data):
     if compute_validation:
         if compute_accuracy:
             training_data[1][index, :] = res[0]

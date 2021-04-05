@@ -32,6 +32,9 @@ class Early_stopper(object):
         _early_stopped = False
         has_improved_last_epoch = True
 
+    One should check two things. Early_stopped allows to know whether we early_stopped.
+    has_improved_last_epoch is a flag showing whether the stopper wishes to save the model or not (because the new model is better since the last check).
+
     """
 
     def __init__(self, patience=50, silent=True, delta=0.1, print_func=print):

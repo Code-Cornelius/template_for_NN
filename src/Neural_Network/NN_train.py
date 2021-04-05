@@ -1,15 +1,15 @@
 from src.Neural_Network.NN_fcts import device, are_at_least_one_None, raise_if_not_all_None
 import numpy as np
 
-from src.Neural_Network.NN_fit import PLOT_WHILE_TRAIN, nn_fit
-
+from src.Neural_Network.NN_fit import nn_fit
+from src.Training_stopper.Early_stopper_vanilla import Early_stopper_vanilla
 
 
 def nn_train(net, data_X, data_Y,
              params_training,
              indic_train_X, indic_train_Y,
+             early_stopper_validation=Early_stopper_vanilla(), early_stopper_training=Early_stopper_vanilla(),
              indic_validation_X=None, indic_validation_Y=None,
-             early_stopper_training=None, early_stopper_validation=None,
              compute_accuracy=False,
              silent=False):
     """
@@ -64,11 +64,14 @@ def nn_train(net, data_X, data_Y,
                                 params_training,
                                 training_losses,
                                 training_accuracy,
-                                X_val_on_device=X_val_on_device, Y_val_on_device=Y_val_on_device, Y_val=Y_val,
-                                validation_losses=validation_losses, validation_accuracy=validation_accuracy,
-                                early_stopper_training=early_stopper_training,
                                 early_stopper_validation=early_stopper_validation,
-                                compute_accuracy=compute_accuracy, silent=silent)
+                                early_stopper_training=early_stopper_training,
+                                X_val_on_device=X_val_on_device,
+                                Y_val_on_device=Y_val_on_device, Y_val=Y_val,
+                                validation_losses=validation_losses,
+                                validation_accuracy=validation_accuracy,
+                                compute_accuracy=compute_accuracy,
+                                silent=silent)
 
         # return loss over epochs and accuracy
         if early_stopper_validation is not None or early_stopper_training is not None:
@@ -82,11 +85,13 @@ def nn_train(net, data_X, data_Y,
 
     # if no validation set
     else:
-        epoch_best_net = nn_fit(net, X_train_on_device, Y_train_on_device, Y_train, params_training, training_losses,
-                                training_accuracy,
-                                early_stopper_training=early_stopper_training,
+        epoch_best_net = nn_fit(net, X_train_on_device, Y_train_on_device, Y_train,
+                                params_training,
+                                training_losses, training_accuracy,
                                 early_stopper_validation=early_stopper_validation,
-                                compute_accuracy=compute_accuracy, silent=silent)
+                                early_stopper_training=early_stopper_training,
+                                compute_accuracy=compute_accuracy,
+                                silent=silent)
         # return loss over epochs and accuracy
         if early_stopper_validation is not None or early_stopper_training is not None:
             return (training_accuracy, training_losses,

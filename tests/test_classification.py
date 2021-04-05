@@ -63,11 +63,11 @@ if __name__ == '__main__':
     biases = [True, True]
     activation_functions = [F.relu]
     dropout = 0.2
-    epochs = 200
+    epochs = 100
     batch_size = 2000
     optimiser = torch.optim.SGD
     criterion = nn.CrossEntropyLoss()
-    dict_optimiser = {"lr": 0.001, "weight_decay": 0.01}
+    dict_optimiser = {"lr": 0.005, "weight_decay": 0.00001}
 
     parameters_for_training = NNTrainParameters(batch_size=batch_size, epochs=epochs,
                                                 criterion=criterion, optimiser=optimiser,

@@ -59,12 +59,12 @@ if __name__ == '__main__':
     biases = [True, True, True, True]
     activation_functions = [torch.tanh, torch.tanh, torch.relu]
     dropout = 0.
-    epochs = 400
+    epochs = 200
     batch_size = 200
     optimiser = torch.optim.Adam
     criterion = nn.MSELoss()
 
-    dict_optimiser = {"lr": 0.01, "weight_decay": 0.0000001}
+    dict_optimiser = {"lr": 0.03, "weight_decay": 0.0000001}
     parameters_training = NNTrainParameters(batch_size=batch_size, epochs=epochs,
                                             criterion=criterion, optimiser=optimiser,
                                             dict_params_optimiser=dict_optimiser)
