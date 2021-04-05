@@ -38,8 +38,8 @@ class Fully_connected_NN(nn.Module):
         """
         super().__init__()
 
-        #best parameters, keeps track in case of early stopping.
-        self.best_weights = None # init the field best weights.
+        # best parameters, keeps track in case of early stopping.
+        self.best_weights = None  # init the field best weights.
         self.best_epoch = 0
 
     def update_best_weights(self, epoch):
@@ -122,7 +122,7 @@ class Fully_connected_NN(nn.Module):
     def predict_fct(self, new_predict_fct):
         if new_predict_fct is None:
             pass
-        else :
+        else:
             if callable(new_predict_fct):
                 self._predict_fct = new_predict_fct
             else:
@@ -138,12 +138,11 @@ class Fully_connected_NN(nn.Module):
             self._dropout = new_dropout
         else:
             raise Error_type_setter(f"Argument is not an {str(float)}.")
-        
-        
+
     @property
     def best_weights(self):
         return self._best_weights
-    
+
     @best_weights.setter
     def best_weights(self, new_best_weights):
         self._best_weights = new_best_weights
@@ -157,17 +156,15 @@ class Fully_connected_NN(nn.Module):
 
         # array of fully connected layers
         self._layers = nn.ModuleList()
-
         # initialise the input layer
         self._layers.append(nn.Linear(self.input_size, self.list_hidden_sizes[0], self.list_biases[0]))
-
         # initialise the hidden layers
         for i in range(len(self.list_hidden_sizes) - 1):
-            self._layers.append(nn.Linear(self.list_hidden_sizes[i], self.list_hidden_sizes[i + 1], self.list_biases[i + 1]))
-
+            self._layers.append(nn.Linear(self.list_hidden_sizes[i],
+                                          self.list_hidden_sizes[i + 1],
+                                          self.list_biases[i + 1]))
         # initialise the output layer
         self._layers.append(nn.Linear(self.list_hidden_sizes[-1], self.output_size, self.list_biases[-1]))
-
         # initialise dropout
         self._apply_dropout = nn.Dropout(p=self.dropout)
 
@@ -199,6 +196,7 @@ class Fully_connected_NN(nn.Module):
             gain = nn.init.calculate_gain('tanh')
             torch.nn.init.xavier_uniform_(layer.weight, gain=gain)
             layer.bias.data.fill_(0)
+
 
 # section ######################################################################
 #  #############################################################################
