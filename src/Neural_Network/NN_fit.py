@@ -71,7 +71,7 @@ def nn_fit(net,
         # create data validat_loader : load validation data in batches
         validat_loader_on_device = torch.utils.data.DataLoader(
             torch.utils.data.TensorDataset(X_val_on_device, Y_val_on_device),
-            batch_size=params_training.batch_size, shuffle=True,
+            batch_size=params_training.batch_size, shuffle=False,
             num_workers=0)  # num_workers can be increased, only under Linux.
     else:
         total_number_data = Y_train.shape[0], 0  # : constants for normalisation
@@ -89,12 +89,12 @@ def nn_fit(net,
     # because the accuracy is computed with sklearn that does not support GPU:
     if compute_accuracy:
         train_loader = torch.utils.data.DataLoader(torch.utils.data.TensorDataset(X_train_on_device, Y_train),
-                                                   batch_size=params_training.batch_size, shuffle=True,
+                                                   batch_size=params_training.batch_size, shuffle=False,
                                                    num_workers=0)  # num_workers can be increased, only under Linux.
         if is_validat_included:
             validat_loader = torch.utils.data.DataLoader(
                 torch.utils.data.TensorDataset(X_val_on_device, Y_val),
-                batch_size=params_training.batch_size, shuffle=True,
+                batch_size=params_training.batch_size, shuffle=False,
                 num_workers=0)  # num_workers can be increased, only under Linux.
 
     # pick loss function and optimizer
