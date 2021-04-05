@@ -89,15 +89,15 @@ def nn_fit(net,
 
             def closure():
                 # set gradients to zero
-                optimiser.zero_grad() # https://stackoverflow.com/questions/48001598/why-do-we-need-to-call-zero-grad-in-pytorch
+                optimiser.zero_grad()  # https://stackoverflow.com/questions/48001598/why-do-we-need-to-call-zero-grad-in-pytorch
 
                 # Do forward and backward pass
-                loss = criterion(net(batch_X), batch_y) #compute the loss : difference of result and expectation
-                loss.backward() # compute the gradients
+                loss = criterion(net(batch_X), batch_y)  # compute the loss : difference of result and expectation
+                loss.backward()  # compute the gradients
                 return loss
 
             # Optimisation step
-            optimiser.step(closure=closure) # update the weights
+            optimiser.step(closure=closure)  # update the weights
 
             # you need to call again criterion, as we cannot store the criterion result.
             train_loss += criterion(net(batch_X), batch_y).item() * batch_X.shape[0]  # weight the loss accordingly
@@ -129,7 +129,6 @@ def nn_fit(net,
                 if not silent: print("Terminated epochs, with early stopper training at epoch {}.".format(epoch))
                 break  #: get out of epochs.
 
-
         if PLOT_WHILE_TRAIN:
             if epoch % FREQ_NEW_IMAGE == 0:
                 plot_while_training(params_training, training_losses, validation_losses)
@@ -138,11 +137,11 @@ def nn_fit(net,
     return return_the_stop(net, epoch, early_stopper_validation, early_stopper_training)
 
 
-def return_the_stop(net, current_epoch, *args): # args should be early_stoppers (or none if not defined)
+def return_the_stop(net, current_epoch, *args):  # args should be early_stoppers (or none if not defined)
     # multiple early_stoppers can't break at the same time, because there will be a first that breaks out the loop first.
     # if no early_stopper broke, return the current epoch.
     for stopper in args:
-        if stopper is not None and stopper.is_stopped(): #: check if the stopper is none or actually of type early stop.
+        if stopper is not None and stopper.is_stopped():  #: check if the stopper is none or actually of type early stop.
             (net.load_state_dict(net.best_weights))  # .to(device)
             return net.best_epoch
     return current_epoch

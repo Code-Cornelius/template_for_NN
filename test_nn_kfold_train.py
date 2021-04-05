@@ -1,12 +1,6 @@
-import torch.nn.functional as F
-from src.Training_stopper.Early_stopper_training import Early_stopper_training
-from src.Training_stopper.Early_stopper_validation import Early_stopper_validation
-from src.Neural_Network.NN_fcts import pytorch_device_setting
+from src.Neural_Network.NN_plot_history import nn_plot_train_loss_acc
 from src.Neural_Network.NN_kfold_training import nn_kfold_train
 from src.Neural_Network.NN_plots import *
-from src.Neural_Network.NN_training import *
-from src.Neural_Network.NNTrainParameters import *
-from src.Neural_Network.Fully_connected_NN import *
 
 
 def test_no_accuracy(train_X, train_Y, parametrized_NN, parameters_training, early_stop_train, early_stop_valid,
