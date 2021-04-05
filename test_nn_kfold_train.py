@@ -86,36 +86,36 @@ def test_accuracy_no_validation(train_X, train_Y, parametrized_NN, parameters_tr
 
 def test(train_X, train_Y, parametrized_NN, parameters_training, testing_X, testing_Y, early_stop_train,
          early_stop_valid, SILENT, compute_accuracy, plot_xx=None, plot_yy=None, plot_yy_noisy=None):
-    # print(" ~~~~~~~~~~Example 1 : Split 1~~~~~~~~~~ ")
-    # if not compute_accuracy:
-    #     test_no_accuracy(train_X, train_Y, parametrized_NN, parameters_training, early_stop_train=None,
-    #                      early_stop_valid=None, nb_split=1, percent_validation_for_1_fold=20, compute_accuracy=False,
-    #                      silent=SILENT, plot_xx=plot_xx, plot_yy=plot_yy, plot_yy_noisy=plot_yy_noisy,
-    #                      testing_X=testing_X, testing_Y=testing_Y)
-    # if compute_accuracy:
-    #     test_accuracy(train_X, train_Y, parametrized_NN, parameters_training, early_stop_train=None,
-    #                   early_stop_valid=None, nb_split=1, percent_validation_for_1_fold=20, compute_accuracy=True,
-    #                   silent=SILENT, testing_X=testing_X, testing_Y=testing_Y)
-    #
-    # print(" ~~~~~~~~~~Example 2 : Split 1 with both stopper~~~~~~~~~~ ")
-    # if not compute_accuracy:
-    #     test_no_accuracy(train_X, train_Y, parametrized_NN, parameters_training, early_stop_train=early_stop_train,
-    #                      early_stop_valid=early_stop_valid, nb_split=1, percent_validation_for_1_fold=20,
-    #                      compute_accuracy=False, silent=SILENT, plot_xx=plot_xx, plot_yy=plot_yy,
-    #                      plot_yy_noisy=plot_yy_noisy, testing_X=testing_X, testing_Y=testing_Y)
-    # if compute_accuracy:
-    #     test_accuracy(train_X, train_Y, parametrized_NN, parameters_training, early_stop_train=early_stop_train,
-    #                   early_stop_valid=early_stop_valid, nb_split=1, percent_validation_for_1_fold=20,
-    #                   compute_accuracy=True, silent=SILENT, testing_X=testing_X, testing_Y=testing_Y)
-    #
-    # print(" ~~~~~~~~~~Example 3 : Split 5~~~~~~~~~~ ")
-    # if not compute_accuracy:
-    #     print("todo implement.")
-    #
-    # if compute_accuracy:
-    #     test_accuracy(train_X, train_Y, parametrized_NN, parameters_training, early_stop_train=None,
-    #                   early_stop_valid=None, nb_split=5, percent_validation_for_1_fold=0, compute_accuracy=True,
-    #                   silent=SILENT, testing_X=testing_X, testing_Y=testing_Y)
+    print(" ~~~~~~~~~~Example 1 : Split 1~~~~~~~~~~ ")
+    if not compute_accuracy:
+        test_no_accuracy(train_X, train_Y, parametrized_NN, parameters_training, early_stop_train=None,
+                         early_stop_valid=None, nb_split=1, percent_validation_for_1_fold=20, compute_accuracy=False,
+                         silent=SILENT, plot_xx=plot_xx, plot_yy=plot_yy, plot_yy_noisy=plot_yy_noisy,
+                         testing_X=testing_X, testing_Y=testing_Y)
+    if compute_accuracy:
+        test_accuracy(train_X, train_Y, parametrized_NN, parameters_training, early_stop_train=None,
+                      early_stop_valid=None, nb_split=1, percent_validation_for_1_fold=20, compute_accuracy=True,
+                      silent=SILENT, testing_X=testing_X, testing_Y=testing_Y)
+
+    print(" ~~~~~~~~~~Example 2 : Split 1 with both stopper~~~~~~~~~~ ")
+    if not compute_accuracy:
+        test_no_accuracy(train_X, train_Y, parametrized_NN, parameters_training, early_stop_train=early_stop_train,
+                         early_stop_valid=early_stop_valid, nb_split=1, percent_validation_for_1_fold=20,
+                         compute_accuracy=False, silent=SILENT, plot_xx=plot_xx, plot_yy=plot_yy,
+                         plot_yy_noisy=plot_yy_noisy, testing_X=testing_X, testing_Y=testing_Y)
+    if compute_accuracy:
+        test_accuracy(train_X, train_Y, parametrized_NN, parameters_training, early_stop_train=early_stop_train,
+                      early_stop_valid=early_stop_valid, nb_split=1, percent_validation_for_1_fold=20,
+                      compute_accuracy=True, silent=SILENT, testing_X=testing_X, testing_Y=testing_Y)
+
+    print(" ~~~~~~~~~~Example 3 : Split 3~~~~~~~~~~ ")
+    if not compute_accuracy:
+        print("todo implement.")
+
+    if compute_accuracy:
+        test_accuracy(train_X, train_Y, parametrized_NN, parameters_training, early_stop_train=None,
+                      early_stop_valid=None, nb_split=3, percent_validation_for_1_fold=0, compute_accuracy=True,
+                      silent=SILENT, testing_X=testing_X, testing_Y=testing_Y)
 
     print(" ~~~~~~~~~~Example 3 : Split 5 with both stoppers~~~~~~~~~~ ")
     if not compute_accuracy:
