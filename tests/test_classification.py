@@ -31,8 +31,8 @@ n_samples = 10000
 sigma = 0.01
 pytorch_device_setting()
 SILENT = False
-early_stop_train = Early_stopper_training(patience=20, silent=SILENT, delta=0.1)
-early_stop_valid = Early_stopper_validation(patience=20, silent=SILENT, delta=0.1)
+early_stop_train = Early_stopper_training(patience=20, silent=SILENT, delta=-0.05)
+early_stop_valid = Early_stopper_validation(patience=20, silent=SILENT, delta=-0.05)
 #############################
 
 

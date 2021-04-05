@@ -33,8 +33,8 @@ n_samples = 1000
 sigma = 0.01
 pytorch_device_setting()
 SILENT = False
-early_stop_train = Early_stopper_training(patience=20, silent=SILENT, delta=0.1)
-early_stop_valid = Early_stopper_validation(patience=20, silent=SILENT, delta=0.1)
+early_stop_train = Early_stopper_training(patience=20, silent=SILENT, delta=0.01)
+early_stop_valid = Early_stopper_validation(patience=20, silent=SILENT, delta=0.01)
 #############################
 plot_xx = torch.linspace(0, 2 * np.pi, 1000).reshape(-1, 1)
 plot_yy = exact_solution(plot_xx).reshape(-1, )

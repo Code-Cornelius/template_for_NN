@@ -85,21 +85,21 @@ def nn_fit(net,
 
             # get batch
             # squeeze batch y in order to have the right format. not the good size for the results
-            batch_X, batch_y = batch_X.to(device), batch_y.to(device)  # WIP THERE WAS A SQUEEZE HERE ON Y
+            batch_X, batch_y = batch_X.to(device), batch_y.to(device)
 
             def closure():
                 # set gradients to zero
-                optimiser.zero_grad()
+                optimiser.zero_grad() # https://stackoverflow.com/questions/48001598/why-do-we-need-to-call-zero-grad-in-pytorch
 
                 # Do forward and backward pass
-                loss = criterion(net(batch_X), batch_y)
-                loss.backward()
+                loss = criterion(net(batch_X), batch_y) #compute the loss : difference of result and expectation
+                loss.backward() # compute the gradients
                 return loss
 
             # Optimisation step
-            optimiser.step(closure=closure)
+            optimiser.step(closure=closure) # update the weights
 
-            # you need to call again criterion unless you do not need the closure.
+            # you need to call again criterion, as we cannot store the criterion result.
             train_loss += criterion(net(batch_X), batch_y).item() * batch_X.shape[0]  # weight the loss accordingly
 
         update_history(X_train_on_device, X_val_on_device, Y_train,
@@ -108,15 +108,27 @@ def nn_fit(net,
                        net, train_loss, training_accuracy,
                        training_losses, validation_accuracy, validation_losses)
 
+        # Check if NN has not improved with respect to one of the two critereas. If has not, we do not improve the best_weights of the NN
+        if early_stopper_validation is not None and early_stopper_training is not None:
+            if early_stopper_validation.has_improved_last_epoch and early_stopper_training.has_improved_last_epoch:
+                net.update_best_weights(epoch)
+
+        if early_stopper_training is None and early_stopper_validation is not None and early_stopper_validation.has_improved_last_epoch:
+            net.update_best_weights(epoch)
+
+        if early_stopper_validation is None and early_stopper_training is not None and early_stopper_training.has_improved_last_epoch:
+            net.update_best_weights(epoch)
+
         # Calculations to see if it's time to stop early:
         if is_validation_included and early_stopper_validation is not None:
             if early_stopper_validation(net, validation_losses, epoch):
-                if not silent: print("Terminated epochs, with early stopper validation.")
+                if not silent: print("Terminated epochs, with early stopper validation at epoch {}.".format(epoch))
                 break  #: get out of epochs
         if early_stopper_training is not None:
             if early_stopper_training(net, training_losses, epoch):
-                if not silent: print("Terminated epochs, with early stopper training.")
+                if not silent: print("Terminated epochs, with early stopper training at epoch {}.".format(epoch))
                 break  #: get out of epochs.
+
 
         if PLOT_WHILE_TRAIN:
             if epoch % FREQ_NEW_IMAGE == 0:
@@ -131,8 +143,8 @@ def return_the_stop(net, current_epoch, *args): # args should be early_stoppers 
     # if no early_stopper broke, return the current epoch.
     for stopper in args:
         if stopper is not None and stopper.is_stopped(): #: check if the stopper is none or actually of type early stop.
-            (net.load_state_dict(stopper.best_net_dict))  # .to(device)
-            return stopper.best_epoch
+            (net.load_state_dict(net.best_weights))  # .to(device)
+            return net.best_epoch
     return current_epoch
 
 
@@ -143,16 +155,20 @@ def update_history(X_train_on_device, X_val_on_device, Y_train, Y_train_on_devic
     training_losses[epoch] = train_loss / (Y_train_on_device.shape[0])
     if compute_accuracy:
         training_accuracy[epoch] = sklearn.metrics.accuracy_score(
-            nn_predict(net, X_train_on_device), Y_train.reshape(-1, 1))
+            nn_predict(net, X_train_on_device),
+            Y_train.reshape(-1, 1)
+        )
         # :here the reshape is assuming we use Cross Entropy and the data outside is set in the right format.
         # :sklearn can't access data on gpu.
     # Calculate validation loss for the current epoch
     if is_validation_included:
         validation_losses[epoch] = criterion(net(X_val_on_device),
-                                             Y_val_on_device).item()  # WIP THERE WAS A SQUEEZE HERE ON Y
+                                             Y_val_on_device).item()
         if compute_accuracy:
             validation_accuracy[epoch] = sklearn.metrics.accuracy_score(
-                nn_predict(net, X_val_on_device), Y_val.reshape(-1, 1))
+                nn_predict(net, X_val_on_device),
+                Y_val.reshape(-1, 1)
+            )
         # :here the reshape is assuming we use Cross Entropy and the data outside is set in the right format.
         # :sklearn can't access data on gpu.
 

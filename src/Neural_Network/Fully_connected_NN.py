@@ -1,4 +1,6 @@
 # for neural networks
+from copy import deepcopy
+
 import torch
 import torch.nn as nn
 
@@ -35,6 +37,15 @@ class Fully_connected_NN(nn.Module):
         Constructor for Neural Network.
         """
         super().__init__()
+
+        #best parameters, keeps track in case of early stopping.
+        self.best_weights = None # init the field best weights.
+        self.best_epoch = 0
+
+    def update_best_weights(self, epoch):
+        # : We decide to keep a copy instead of saving the model in a file because we might not want to save this model (E.G. if we do a K-FOLD)
+        self.best_weights = deepcopy(self.state_dict())
+        self.best_epoch = epoch
 
     # section ######################################################################
     #  #############################################################################
@@ -127,6 +138,15 @@ class Fully_connected_NN(nn.Module):
             self._dropout = new_dropout
         else:
             raise Error_type_setter(f"Argument is not an {str(float)}.")
+        
+        
+    @property
+    def best_weights(self):
+        return self._best_weights
+    
+    @best_weights.setter
+    def best_weights(self, new_best_weights):
+        self._best_weights = new_best_weights
 
     # section ######################################################################
     #  #############################################################################
@@ -180,6 +200,9 @@ class Fully_connected_NN(nn.Module):
             torch.nn.init.xavier_uniform_(layer.weight, gain=gain)
             layer.bias.data.fill_(0)
 
+# section ######################################################################
+#  #############################################################################
+# CLASS FACTORY :  creates subclasses of FC NN
 
 def factory_parametrised_FC_NN(input_size, list_hidden_sizes, output_size,
                                list_biases, activation_functions,

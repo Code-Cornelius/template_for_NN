@@ -78,6 +78,10 @@ def _nn_multiplefold_train(compute_accuracy, data_training_X, data_training_Y, e
             print(f"{i + 1}-th Fold out of {nb_split} Folds.")
 
         net = model_NN().to(device)
+        if early_stopper_training is not None:
+            early_stopper_training.reset()
+        if early_stopper_validation is not None:
+            early_stopper_validation.reset()
 
         # train network and save results
         res = nn_train(net, data_X=data_training_X, data_Y=data_training_Y,

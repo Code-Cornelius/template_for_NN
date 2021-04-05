@@ -27,6 +27,7 @@ class Early_stopper(object):
     """
 
     def __init__(self, patience=50, silent=True, delta=0.1, print_func=print):
+        #TODO REFACTOR NEURALNETWORK INTO NET
         """
         Args:
             patience (int): How long to wait after last time loss improved.
@@ -46,14 +47,13 @@ class Early_stopper(object):
         self._print_func = print_func
 
         # for retrieving the best result
-        self.best_net_dict = None  # : it is the best net seen so far that is saved for later purpose.
-        # : We decide to keep a copy instead of saving the model in a file because we might not want to save this model (E.G. if we do a K-FOLD)
-        self.best_epoch = 0
         self._early_stopped = False
+        self.has_improved_last_epoch = True
 
     def __call__(self, neural_network, losses, epoch):
         if self._is_early_stop(losses, epoch):
             self._counter += 1
+            self.has_improved_last_epoch = False  # : flag giving information about the performance of the NN
             if DEBUG:
                 self._print_func(f'EarlyStopping counter: {self._counter} out of {self._patience}')
 
@@ -62,10 +62,9 @@ class Early_stopper(object):
                 self._early_stopped = True
                 return True
         else:
+            self.has_improved_last_epoch = True # : flag giving information about the performance of the NN
             self._lowest_loss = min(losses[epoch], self._lowest_loss)
             self._counter = 0
-            self.best_net_dict = deepcopy(neural_network.state_dict())
-            self.best_epoch = epoch
         return False
 
     @abstractmethod
@@ -85,3 +84,11 @@ class Early_stopper(object):
 
     def is_stopped(self):
         return self._early_stopped
+
+    def reset(self):
+        """ Allows to reset the log of the early stopper between kfold for example."""
+        self._early_stopped = False  # if we train again, then we reset early_stopped.
+        self.has_improved_last_epoch = True
+        self._lowest_loss = np.Inf
+        self._counter = 0
+
