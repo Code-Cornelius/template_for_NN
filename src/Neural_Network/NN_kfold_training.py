@@ -94,12 +94,13 @@ def _nn_multiplefold_train(compute_accuracy, data_training_X, data_training_Y, e
                        compute_accuracy=compute_accuracy,
                        silent=silent)
 
-        if compute_accuracy:
-            training_data[1][i, :] = res[0]
-            validation_data[1][i, :] += res[1]
-        training_data[0][i, :] += res[2]
-        validation_data[0][i, :] += res[3]
-        best_epoch_of_NN[i] = res[4]
+        set_history_from_nn_train(best_epoch_of_NN=best_epoch_of_NN,
+                                  compute_accuracy=compute_accuracy,
+                                  compute_validation=True,
+                                  index=i,
+                                  res=res,
+                                  training_data=training_data,
+                                  validation_data=validation_data)
 
         # storing the best network.
         new_res = res[1][-1]  # the criteria is best validation accuracy at final time.
@@ -116,6 +117,7 @@ def _nn_1fold_train(compute_accuracy, data_training_X, data_training_Y, early_st
                     shuffle_kfold, silent, training_data, validation_data, model_NN):
     net = model_NN().to(device)
     # where validation included.
+    best_epoch_of_NN = [0]
     if percent_validation_for_1_fold > 0:
         # #indices splitting:
         indic_train, indic_validation = nn_1fold_indices_creation(data_training_X,
@@ -134,15 +136,19 @@ def _nn_1fold_train(compute_accuracy, data_training_X, data_training_Y, early_st
                        compute_accuracy=compute_accuracy,
                        silent=silent)
 
-        training_data[0][0, :] += res[2]
-        validation_data[0][0, :] += res[3]
-        best_epoch_of_NN = [res[4]]  # :we store the epoch of the best net for each fold.
+        set_history_from_nn_train(best_epoch_of_NN=best_epoch_of_NN,
+                                  compute_accuracy=compute_accuracy,
+                                  compute_validation=True,
+                                  index=0,
+                                  res=res,
+                                  training_data=training_data,
+                                  validation_data=validation_data)
+
         if compute_accuracy:
-            training_data[1] += res[0]
-            validation_data[1] += res[1]
             return (net, training_data[1], validation_data[1],
                     training_data[0], validation_data[0], best_epoch_of_NN)
-        return (net, training_data[0], validation_data[0], best_epoch_of_NN)
+        else:
+            return net, training_data[0], validation_data[0], best_epoch_of_NN
 
 
     # 1-Fold. where validation not included.
@@ -159,12 +165,17 @@ def _nn_1fold_train(compute_accuracy, data_training_X, data_training_Y, early_st
                        compute_accuracy=compute_accuracy,
                        silent=silent)
 
-        training_data[0] += res[1]
-        best_epoch_of_NN = [res[2]]  # :we store the epoch of the best net for each fold.
+        set_history_from_nn_train(best_epoch_of_NN=best_epoch_of_NN,
+                                  compute_accuracy=compute_accuracy,
+                                  compute_validation=False,
+                                  index=0,
+                                  res=res,
+                                  training_data=training_data,
+                                  validation_data=validation_data)
+
         if compute_accuracy:
-            training_data[1] += res[0]
-            return (net, training_data[1], training_data[0], best_epoch_of_NN)
-        return (net, training_data[0], best_epoch_of_NN)
+            return net, training_data[1], training_data[0], best_epoch_of_NN
+        return net, training_data[0], best_epoch_of_NN
         # : do not return accuracy, only the losses.
 
 
@@ -182,3 +193,19 @@ def nn_1fold_indices_creation(data_training_X, percent_validation_for_1_fold, sh
         indic_train = torch.arange(training_size)
         indic_validation = torch.arange(training_size, data_training_X.shape[1])
     return indic_train, indic_validation
+
+
+def set_history_from_nn_train(best_epoch_of_NN, compute_accuracy, compute_validation, index, res, training_data,
+                              validation_data):
+    if compute_validation:
+        if compute_accuracy:
+            training_data[1][index, :] = res[0]
+            validation_data[1][index, :] += res[1]
+        training_data[0][index, :] += res[2]
+        validation_data[0][index, :] += res[3]
+        best_epoch_of_NN[index] = res[4]  # :we store the epoch of the best net for each fold.
+    else:
+        if compute_accuracy:
+            training_data[1][index, :] = res[0]
+        training_data[0][index, :] += res[1]
+        best_epoch_of_NN[index] = res[2]  # :we store the epoch of the best net for each fold.
