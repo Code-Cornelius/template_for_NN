@@ -12,22 +12,29 @@ DEBUG = False
 
 class Early_stopper(object):
     """
-    ABSTRACT CLASS
+    Abstract class of an early stopper. Given to a training, allows for stopping earlier with respect to some criteria.
 
-    Early stops the training if validation loss doesn't improve after a given patience.
+    The requirements for children class is:
+        redefine _is_early_stop
     References:
             https://github.com/Bjarten/early-stopping-pytorch/blob/master/pytorchtools.py
 
     In order to use it, one initializes it and then call it with the corresponding data.
     The call returns whether or not we should "early stop" training.
 
+    Fields of an early_stopper:
+        _patience
+        _silent
+        _delta
+        _print_func
+        _counter
+        _lowest_loss
+        _early_stopped = False
+        has_improved_last_epoch = True
 
-    The behavior is you set an early_stopper that you call whenever to test condition.
-    In order to extend the class, one shall define the abstract method is_early_stop.
     """
 
     def __init__(self, patience=50, silent=True, delta=0.1, print_func=print):
-        #TODO REFACTOR NEURALNETWORK INTO NET
         """
         Args:
             patience (int): How long to wait after last time loss improved.
@@ -50,19 +57,19 @@ class Early_stopper(object):
         self._early_stopped = False
         self.has_improved_last_epoch = True
 
-    def __call__(self, neural_network, losses, epoch):
+    def __call__(self, net, losses, epoch):
         if self._is_early_stop(losses, epoch):
             self._counter += 1
             self.has_improved_last_epoch = False  # : flag giving information about the performance of the NN
             if DEBUG:
                 self._print_func(f'EarlyStopping counter: {self._counter} out of {self._patience}')
 
-            #early stop triggered
+            # early stop triggered
             if self._counter >= self._patience:
                 self._early_stopped = True
                 return True
         else:
-            self.has_improved_last_epoch = True # : flag giving information about the performance of the NN
+            self.has_improved_last_epoch = True  # : flag giving information about the performance of the NN
             self._lowest_loss = min(losses[epoch], self._lowest_loss)
             self._counter = 0
         return False
@@ -74,7 +81,7 @@ class Early_stopper(object):
         The requirements are:
 
         Args:
-            losses:
+            losses: data for criteria
             epoch:
 
         Returns: boolean answering the question should we stop early.
@@ -91,4 +98,3 @@ class Early_stopper(object):
         self.has_improved_last_epoch = True
         self._lowest_loss = np.Inf
         self._counter = 0
-

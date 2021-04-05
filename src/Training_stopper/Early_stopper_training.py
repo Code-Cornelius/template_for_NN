@@ -11,7 +11,7 @@ class Early_stopper_training(Early_stopper):
         return abs(previous_loss - current_loss) / previous_loss
 
     def _is_early_stop(self, training_losses, epoch):
-        """ the critirea is whether the NN is still learning: i.e. the loss moves (in absolute value)."""
+        """ the criteria is whether the NN is still learning: i.e. the loss moves (in absolute value)."""
         # we compute the relative difference in the training loss of the actual loss wrt to the previous losses.
         # with that, we see if there is any significant improvement in training (significant, more than delta).
         # if there is not, then stop.
@@ -19,5 +19,6 @@ class Early_stopper_training(Early_stopper):
         differences_percent = [self.diff_percent(previous_loss, current_loss)
                                for previous_loss in training_losses[epoch - self._patience:epoch]]
         cdt = epoch > self._patience and all(
-            difference_percent < self._delta for difference_percent in differences_percent)
+            difference_percent < self._delta for difference_percent in differences_percent
+        )
         return cdt
