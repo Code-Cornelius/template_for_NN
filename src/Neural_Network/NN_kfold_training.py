@@ -3,7 +3,7 @@ import sklearn.model_selection
 import torch
 
 from src.Neural_Network.NN_fcts import device
-from src.Neural_Network.NN_training import nn_train
+from src.Neural_Network.NN_train import nn_train
 
 
 def nn_kfold_train(data_training_X, data_training_Y,

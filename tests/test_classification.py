@@ -58,11 +58,11 @@ test_Y = torch.from_numpy(test_Y.values).long().squeeze()  # squeeze for compati
 if __name__ == '__main__':
     # config of the architecture:
     input_size = 28 * 28
-    hidden_sizes = [200, 200]
+    hidden_sizes = [100]
     output_size = 10
-    biases = [True, True, True]
-    activation_functions = [F.relu, F.relu]
-    dropout = 0.4
+    biases = [True, True]
+    activation_functions = [F.relu]
+    dropout = 0.2
     epochs = 200
     batch_size = 2000
     optimiser = torch.optim.SGD
