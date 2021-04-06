@@ -107,7 +107,10 @@ def test(train_X, train_Y, parametrized_NN, parameters_training, testing_X, test
 
     print(" ~~~~~~~~~~Example 3 : Split 3~~~~~~~~~~ ")
     if not compute_accuracy:
-        print("todo implement.")
+        test_no_accuracy(train_X, train_Y, parametrized_NN, parameters_training, nb_split=3,
+                         percent_validation_for_1_fold=0, compute_accuracy=False,
+                         silent=SILENT, plot_xx=plot_xx, plot_yy=plot_yy, plot_yy_noisy=plot_yy_noisy,
+                         testing_X=testing_X, testing_Y=testing_Y)
 
     if compute_accuracy:
         test_accuracy(train_X, train_Y, parametrized_NN, parameters_training, nb_split=3,
@@ -116,7 +119,11 @@ def test(train_X, train_Y, parametrized_NN, parameters_training, testing_X, test
 
     print(" ~~~~~~~~~~Example 3 : Split 5 with both stoppers~~~~~~~~~~ ")
     if not compute_accuracy:
-        print("todo implement.")
+        test_no_accuracy(train_X, train_Y, parametrized_NN, parameters_training, early_stop_train=early_stop_train,
+                         early_stop_valid=early_stop_valid, nb_split=5, percent_validation_for_1_fold=0,
+                         compute_accuracy=False, silent=SILENT, plot_xx=plot_xx, plot_yy=plot_yy,
+                         plot_yy_noisy=plot_yy_noisy,
+                         testing_X=testing_X, testing_Y=testing_Y)
 
     if compute_accuracy:
         test_accuracy(train_X, train_Y, parametrized_NN, parameters_training, early_stop_train=early_stop_train,

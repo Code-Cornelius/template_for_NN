@@ -1,3 +1,5 @@
+import time
+
 import numpy as np
 import sklearn.model_selection
 import torch
@@ -62,66 +64,114 @@ def nn_kfold_train(data_training_X, data_training_Y,
                                       silent, training_data, validation_data)
 
 
+# section ######################################################################
+#  #############################################################################
+# MULTIFOLD
+
 def _nn_multiplefold_train(compute_accuracy, data_training_X, data_training_Y, early_stopper_training,
                            early_stopper_validation, model_NN, nb_split, parameters_training, shuffle_kfold, silent,
                            training_data, validation_data):
-    # Kfold for nb_split > 1:
-    skfold = sklearn.model_selection.StratifiedKFold(n_splits=nb_split, shuffle=shuffle_kfold, random_state=0)
-    # : random_state is the seed of StratifiedKFold.
     # for storing the network:
-    performance = 0
-    best_net = 0
+    value_metric_for_best_NN = - np.Inf # :we set -\infty which can only be improved.
+    # :Recall, the two criterea are either accuracy (so any accuracy is better than a neg. number)
+    # : and minus loss, and a loss is always closer to zero than - infinity.
+    best_net = None
     number_kfold_best_net = 1  # to keep track of best net
     best_epoch_of_NN = [0] * nb_split  # :we store the epoch of the best net for each fold.
-    for i, (index_training, index_validation) in enumerate(
-            skfold.split(data_training_X, data_training_Y)):  # one can use tensors as they are convertible to numpy.
-        if not silent:
-            print(f"{i + 1}-th Fold out of {nb_split} Folds.")
 
-        net = model_NN().to(parameters_training.device)
-        if early_stopper_training is not None:
-            early_stopper_training.reset()
-        if early_stopper_validation is not None:
-            early_stopper_validation.reset()
-
-        # train network and save results
-        res = nn_train(net, data_X=data_training_X, data_Y=data_training_Y, params_training=parameters_training,
-                       indic_train_X=index_training, indic_train_Y=index_training,
-                       early_stopper_validation=early_stopper_validation, early_stopper_training=early_stopper_training,
-                       indic_validation_X=index_validation, indic_validation_Y=index_validation,
-                       compute_accuracy=compute_accuracy, silent=silent)
-
-        _set_history_from_nn_train(best_epoch_of_NN=best_epoch_of_NN,
-                                   compute_accuracy=compute_accuracy,
-                                   compute_validation=True,
-                                   index=i,
-                                   res=res,
-                                   training_data=training_data,
-                                   validation_data=validation_data)
-
-        # storing the best network.
-        best_net, performance, number_kfold_best_net = _new_best_model(best_epoch_of_NN, best_net, compute_accuracy, i,
-                                                                       net, performance, validation_data,
-                                                                       number_kfold_best_net)
+    try:
+        # Kfold for nb_split > 1:
+        skfold = sklearn.model_selection.StratifiedKFold(n_splits=nb_split, shuffle=shuffle_kfold, random_state=0)
+        # : random_state is the seed of StratifiedKFold.
+        for i, (index_training, index_validation) in enumerate(
+                skfold.split(data_training_X,
+                             data_training_Y)):  # one can use tensors as they are convertible to numpy.
+            best_net, number_kfold_best_net = train_kfold_a_fold_after_split(best_epoch_of_NN, best_net,
+                                                                             compute_accuracy, data_training_X,
+                                                                             data_training_Y, early_stopper_training,
+                                                                             early_stopper_validation, i,
+                                                                             index_training, index_validation, model_NN,
+                                                                             nb_split, number_kfold_best_net,
+                                                                             parameters_training,
+                                                                             value_metric_for_best_NN, silent,
+                                                                             training_data, validation_data)
+    except ValueError:  # erro from skfold split.
+        # Kfold for nb_split > 1:
+        kfold = sklearn.model_selection.KFold(n_splits=nb_split, shuffle=shuffle_kfold, random_state=0)
+        # : random_state is the seed of StratifiedKFold.
+        for i, (index_training, index_validation) in enumerate(
+                kfold.split(data_training_X,
+                            data_training_Y)):  # one can use tensors as they are convertible to numpy.
+            best_net, number_kfold_best_net = train_kfold_a_fold_after_split(best_epoch_of_NN, best_net,
+                                                                             compute_accuracy, data_training_X,
+                                                                             data_training_Y, early_stopper_training,
+                                                                             early_stopper_validation, i,
+                                                                             index_training, index_validation, model_NN,
+                                                                             nb_split, number_kfold_best_net,
+                                                                             parameters_training,
+                                                                             value_metric_for_best_NN, silent,
+                                                                             training_data, validation_data)
     if not silent:
         print("Finis the K-Fold, the best NN is the number {}".format(number_kfold_best_net))
-    return (best_net, training_data[1], validation_data[1],
-            training_data[0], validation_data[0], best_epoch_of_NN)
+    if compute_accuracy:
+        return (best_net, training_data[1], validation_data[1],
+                training_data[0], validation_data[0], best_epoch_of_NN)
+    else:
+        return (best_net, training_data[0], validation_data[0], best_epoch_of_NN)
 
 
-def _new_best_model(best_epoch_of_NN, best_net, compute_accuracy, i, net,
-                    performance, validation_data, number_kfold_best_net):
+def train_kfold_a_fold_after_split(best_epoch_of_NN, best_net, compute_accuracy, data_training_X, data_training_Y,
+                                   early_stopper_training, early_stopper_validation, i, index_training,
+                                   index_validation, model_NN, nb_split, number_kfold_best_net, parameters_training,
+                                   value_metric_for_best_NN, silent, training_data, validation_data):
+    if not silent:
+        time.sleep(0.001)  # for printing order
+        print(f"{i + 1}-th Fold out of {nb_split} Folds.")
+        time.sleep(0.001)  # for printing order
+
+    net = model_NN().to(parameters_training.device)
+    if early_stopper_training is not None:
+        early_stopper_training.reset()
+    if early_stopper_validation is not None:
+        early_stopper_validation.reset()
+    # train network and save results
+    res = nn_train(net, data_X=data_training_X, data_Y=data_training_Y, params_training=parameters_training,
+                   indic_train_X=index_training, indic_train_Y=index_training,
+                   early_stopper_validation=early_stopper_validation, early_stopper_training=early_stopper_training,
+                   indic_validation_X=index_validation, indic_validation_Y=index_validation,
+                   compute_accuracy=compute_accuracy, silent=silent)
+    _set_history_from_nn_train(best_epoch_of_NN=best_epoch_of_NN,
+                               compute_accuracy=compute_accuracy,
+                               compute_validation=True,
+                               index=i,
+                               res=res,
+                               training_data=training_data,
+                               validation_data=validation_data)
+    # storing the best network.
+    best_net, value_metric_for_best_NN, number_kfold_best_net = _new_best_model(best_epoch_of_NN, best_net,
+                                                                                compute_accuracy, i, net,
+                                                                                value_metric_for_best_NN,
+                                                                                validation_data, number_kfold_best_net)
+    return best_net, number_kfold_best_net
+
+
+def _new_best_model(best_epoch_of_NN, best_net, compute_accuracy, i, net, value_metric_for_best_NN, validation_data,
+                    number_kfold_best_net):
     # criterion is either best validation accuracy, or lowest validation loss, at final time (best_epoch
     if compute_accuracy:
         rookie_perf = validation_data[1][i, best_epoch_of_NN[i]]
     else:
         rookie_perf = - validation_data[0][i, best_epoch_of_NN[i]]  #: -1 * ... bc we want to keep order below
-    if performance < rookie_perf:
+    if value_metric_for_best_NN < rookie_perf:
         best_net = net
-        performance = rookie_perf
+        value_metric_for_best_NN = rookie_perf
         number_kfold_best_net = i
-    return best_net, performance, number_kfold_best_net
+    return best_net, value_metric_for_best_NN, number_kfold_best_net
 
+
+# section ######################################################################
+#  #############################################################################
+# 1 FOLD
 
 def _nn_1fold_train(compute_accuracy, data_training_X, data_training_Y, early_stopper_training,
                     early_stopper_validation, parameters_training, percent_validation_for_1_fold,
@@ -173,6 +223,30 @@ def _nn_1fold_train(compute_accuracy, data_training_X, data_training_Y, early_st
         # : do not return accuracy, only the losses.
 
 
+# section ######################################################################
+#  #############################################################################
+# HISTORY FUNCTION
+
+def _set_history_from_nn_train(best_epoch_of_NN, compute_accuracy, compute_validation, index,
+                               res, training_data, validation_data):
+    if compute_validation:
+        if compute_accuracy:
+            training_data[1][index, :] = res[0]
+            validation_data[1][index, :] += res[1]
+        training_data[0][index, :] += res[2]
+        validation_data[0][index, :] += res[3]
+        best_epoch_of_NN[index] = res[4]  # :we store the epoch of the best net for each fold.
+    else:
+        if compute_accuracy:
+            training_data[1][index, :] = res[0]
+        training_data[0][index, :] += res[1]
+        best_epoch_of_NN[index] = res[2]  # :we store the epoch of the best net for each fold.
+
+
+# section ######################################################################
+#  #############################################################################
+# INDICES
+
 def _nn_1fold_indices_creation(data_training_X, percent_validation_for_1_fold, shuffle_kfold):
     training_size = int((100. - percent_validation_for_1_fold) / 100. * data_training_X.shape[0])
     if shuffle_kfold:
@@ -187,19 +261,3 @@ def _nn_1fold_indices_creation(data_training_X, percent_validation_for_1_fold, s
         indic_train = torch.arange(training_size)
         indic_validation = torch.arange(training_size, data_training_X.shape[1])
     return indic_train, indic_validation
-
-
-def _set_history_from_nn_train(best_epoch_of_NN, compute_accuracy, compute_validation, index, res, training_data,
-                               validation_data):
-    if compute_validation:
-        if compute_accuracy:
-            training_data[1][index, :] = res[0]
-            validation_data[1][index, :] += res[1]
-        training_data[0][index, :] += res[2]
-        validation_data[0][index, :] += res[3]
-        best_epoch_of_NN[index] = res[4]  # :we store the epoch of the best net for each fold.
-    else:
-        if compute_accuracy:
-            training_data[1][index, :] = res[0]
-        training_data[0][index, :] += res[1]
-        best_epoch_of_NN[index] = res[2]  # :we store the epoch of the best net for each fold.

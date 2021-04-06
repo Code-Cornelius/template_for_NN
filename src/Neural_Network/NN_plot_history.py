@@ -5,6 +5,8 @@ from priv_lib_plot import APlot
 
 def nn_plot_train_loss_acc(training_loss, validation_loss=None, training_acc=None, validation_acc=None,
                            log_axis_for_loss=True, best_epoch_of_NN=None):
+    # todo add a title to the graph
+
     if training_acc is not None:
         aplot = APlot(how=(1, 1), sharex=True)
     else:

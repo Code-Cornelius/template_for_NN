@@ -93,6 +93,7 @@ def result_function(title, data_train_Y, y_pred1, no_classes, data_test_Y=None, 
 
 
 def nn_plot_prediction_vs_true(net, plot_xx, plot_yy, plot_yy_noisy):
+    # todo add a title to the graph
     aplot = APlot(how=(1, 1))
     plot_yy_pred = nn_predict_to_cpu(net, plot_xx)
 

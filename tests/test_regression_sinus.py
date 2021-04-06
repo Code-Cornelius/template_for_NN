@@ -30,7 +30,7 @@ def exact_solution(x):
 
 ############################## GLOBAL PARAMETERS
 # Number of training samples
-n_samples = 20000
+n_samples = 2000
 # Noise level
 sigma = 0.01
 device = pytorch_device_setting('not_cpu_please')
@@ -60,12 +60,12 @@ if __name__ == '__main__':
     biases = [True, True, True, True]
     activation_functions = [torch.tanh, torch.tanh, torch.relu]
     dropout = 0.
-    epochs = 300
-    batch_size = 2000
+    epochs = 750
+    batch_size = 200
     optimiser = torch.optim.Adam
     criterion = nn.MSELoss()
 
-    dict_optimiser = {"lr": 0.01, "weight_decay": 0.0000001}
+    dict_optimiser = {"lr": 0.001, "weight_decay": 0.0000001}
     parameters_training = NNTrainParameters(batch_size=batch_size, epochs=epochs, device=device,
                                                 criterion=criterion, optimiser=optimiser,
                                                 dict_params_optimiser=dict_optimiser)
