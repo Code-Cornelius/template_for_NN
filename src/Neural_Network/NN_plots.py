@@ -9,7 +9,7 @@ from sklearn import metrics
 
 import seaborn as sns
 
-from src.Neural_Network.NN_fcts import nn_predict, nn_predict_to_cpu
+from src.Neural_Network.NN_predict import nn_predict, nn_predict_to_cpu
 
 sns.set()
 

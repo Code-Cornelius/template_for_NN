@@ -4,8 +4,8 @@ from matplotlib import pyplot as plt
 from tqdm import tqdm
 
 from src.Fast_tensor_dataloader import FastTensorDataLoader
-from src.Neural_Network.NN_fcts import are_at_least_one_None, raise_if_not_all_None, nn_predict, \
-    decorator_train_disable_no_grad, nn_predict_to_cpu
+from src.Neural_Network.NN_fcts import are_at_least_one_None, raise_if_not_all_None, decorator_train_disable_no_grad
+from src.Neural_Network.NN_predict import nn_predict, nn_predict_to_cpu
 from src.Training_stopper.Early_stopper_vanilla import Early_stopper_vanilla
 
 PLOT_WHILE_TRAIN = False
