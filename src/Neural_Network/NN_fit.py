@@ -115,10 +115,6 @@ def nn_fit(net,
         train_loss = 0  #:  aggregate variable
         for i, (batch_X, batch_y) in enumerate(train_loader_on_device, 0):
             # closure needed for some algorithm.
-
-            # get batch
-            batch_X, batch_y = batch_X.to(params_training.device), batch_y.to(params_training.device)
-
             def closure():
                 # set gradients to zero
                 optimiser.zero_grad()  # https://stackoverflow.com/questions/48001598/why-do-we-need-to-call-zero-grad-in-pytorch
