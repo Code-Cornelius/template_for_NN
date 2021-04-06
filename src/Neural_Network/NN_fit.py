@@ -3,7 +3,7 @@ import torch.utils
 from matplotlib import pyplot as plt
 from tqdm import tqdm
 
-from src.Neural_Network.NN_fcts import are_at_least_one_None, raise_if_not_all_None, device, nn_predict, \
+from src.Neural_Network.NN_fcts import are_at_least_one_None, raise_if_not_all_None, nn_predict, \
     decorator_train_disable_no_grad
 from src.Training_stopper.Early_stopper_vanilla import Early_stopper_vanilla
 
@@ -32,6 +32,11 @@ def nn_fit(net,
            validation_losses=None, validation_accuracy=None,
            compute_accuracy=False,
            silent=False):
+    #todo rename params_training into params_train
+    #  early_stopper_validation into early_stopper_valid
+    #  early_stopper_training into early_stopper_train
+    #etc...
+
     """
 
     Args:
@@ -102,6 +107,7 @@ def nn_fit(net,
     criterion = params_training.criterion
     optimiser = params_training.optimiser(net.parameters(), **params_training.dict_params_optimiser)
 
+    epoch = 0
     for epoch in tqdm(range(params_training.epochs), disable=silent):  # disable unable the print.
         ###################
         # train the model #
@@ -111,7 +117,7 @@ def nn_fit(net,
             # closure needed for some algorithm.
 
             # get batch
-            batch_X, batch_y = batch_X.to(device), batch_y.to(device)
+            batch_X, batch_y = batch_X.to(params_training.device), batch_y.to(params_training.device)
 
             def closure():
                 # set gradients to zero
@@ -146,11 +152,11 @@ def nn_fit(net,
         if is_validat_included:
             if early_stopper_validation(net, validation_losses, epoch):
                 if not silent: print("Terminated epochs, with early stopper validation at epoch {}.".format(epoch))
-                break  #: get out of epochs
+                break  # : get out of epochs
         if early_stopper_training is not None:
             if early_stopper_training(net, training_losses, epoch):
                 if not silent: print("Terminated epochs, with early stopper training at epoch {}.".format(epoch))
-                break  #: get out of epochs.
+                break  # : get out of epochs.
 
         if PLOT_WHILE_TRAIN:
             if epoch % FREQ_NEW_IMAGE == 0:
@@ -185,9 +191,9 @@ def _update_history(net, compute_accuracy, criterion, epoch, is_valid_included, 
 
 def _update_validation_accuracy(epoch, net, total_number_data, valid_accuracy, validat_loader):
     """ no need for wrapping !"""
-    valid_accuracy[epoch] = 0  #:  aggregate variable
+    valid_accuracy[epoch] = 0  # :aggregate variable
     for batch_X, batch_y in validat_loader:
-        valid_accuracy[epoch] += sklearn.metrics.accuracy_score(nn_predict(net, batch_X),
+        valid_accuracy[epoch] += sklearn.metrics.accuracy_score(nn_predict(net, batch_X).cpu(),
                                                                 batch_y.reshape(-1, 1),
                                                                 normalize=False
                                                                 )
@@ -198,7 +204,7 @@ def _update_validation_accuracy(epoch, net, total_number_data, valid_accuracy, v
 
 @decorator_train_disable_no_grad  # make sure we don't back propagate any loss over this data
 def _update_validation_loss(net, criterion, epoch, total_number_data, valid_losses, validat_loader_on_device):
-    valid_losses[epoch] = 0  #:  aggregate variable
+    valid_losses[epoch] = 0  # :aggregate variable
     for batch_X, batch_y in validat_loader_on_device:
         valid_losses[epoch] += criterion(net(batch_X), batch_y).item() * batch_X.shape[0]
     valid_losses[epoch] /= total_number_data[1]
@@ -206,9 +212,9 @@ def _update_validation_loss(net, criterion, epoch, total_number_data, valid_loss
 
 def _update_training_accuracy(epoch, net, total_number_data, train_accuracy, train_loader):
     """ no need for wrapping !"""
-    train_accuracy[epoch] = 0  #:  aggregate variable
+    train_accuracy[epoch] = 0  # :aggregate variable
     for batch_X, batch_y in train_loader:
-        train_accuracy[epoch] += sklearn.metrics.accuracy_score(nn_predict(net, batch_X),
+        train_accuracy[epoch] += sklearn.metrics.accuracy_score(nn_predict(net, batch_X).cpu(),
                                                                 batch_y.reshape(-1, 1),
                                                                 normalize=False
                                                                 )
@@ -218,7 +224,8 @@ def _update_training_accuracy(epoch, net, total_number_data, train_accuracy, tra
 
 
 def _return_the_stop(net, current_epoch, *args):  # args should be early_stoppers (or none if not defined)
-    # multiple early_stoppers can't break at the same time, because there will be a first that breaks out the loop first.
+    # multiple early_stoppers can't break at the same time,
+    # because there will be a first that breaks out the loop first.
     # if no early_stopper broke, return the current epoch.
     for stopper in args:
         if stopper.is_stopped():  #: check if the stopper is none or actually of type early stop.

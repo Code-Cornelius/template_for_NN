@@ -29,7 +29,7 @@ np.random.seed(42)
 n_samples = 5000
 # Noise level
 sigma = 0.01
-pytorch_device_setting()
+device = pytorch_device_setting('not_cpu_please')
 SILENT = False
 early_stop_train = Early_stopper_training(patience=20, silent=SILENT, delta=-0.05)
 early_stop_valid = Early_stopper_validation(patience=20, silent=SILENT, delta=-0.05)
@@ -67,9 +67,9 @@ if __name__ == '__main__':
     batch_size = 2000
     optimiser = torch.optim.SGD
     criterion = nn.CrossEntropyLoss()
-    dict_optimiser = {"lr": 0.005, "weight_decay": 0.00001}
+    dict_optimiser = {"lr": 0.0005, "weight_decay": 0.00001}
 
-    parameters_for_training = NNTrainParameters(batch_size=batch_size, epochs=epochs,
+    parameters_for_training = NNTrainParameters(batch_size=batch_size, epochs=epochs, device=device,
                                                 criterion=criterion, optimiser=optimiser,
                                                 dict_params_optimiser=dict_optimiser)
     parametrized_NN = factory_parametrised_FC_NN(input_size=input_size, list_hidden_sizes=hidden_sizes,
@@ -87,7 +87,7 @@ if __name__ == '__main__':
                                                                                       parameters_training=parameters_for_training,
                                                                                       early_stopper_validation=early_stop_valid,
                                                                                       early_stopper_training=early_stop_train,
-                                                                                      nb_split=5,
+                                                                                      nb_split=2,
                                                                                       shuffle_kfold=True,
                                                                                       percent_validation_for_1_fold=10,
                                                                                       compute_accuracy=True,

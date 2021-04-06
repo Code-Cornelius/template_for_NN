@@ -3,7 +3,6 @@ import functools
 import torch
 import torch.cuda
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
 def are_at_least_one_None(list_parameters):
@@ -59,22 +58,27 @@ def nn_predict(net, data_to_predict):
     Returns:
 
     """
-    # to device for optimal speed, though we take the data back with .cpu().
-    data_predicted = net.prediction(net(data_to_predict.to(device))).cpu()  # forward pass
+    #~~~~~~~~~~~~~~~~~~ to device for optimal speed, though we take the data back with .cpu().
+    # we do not put the data on GPU! As the overhead might be too much.
+    data_predicted = net.prediction(net(data_to_predict))  # forward pass
     return data_predicted
 
 
-def pytorch_device_setting(type="cpu"):
+def pytorch_device_setting(type=''):
     """
     Semantics : sets the device for NeuralNetwork computations.
     Put nothing for automatic choice.
+    If cpu given, sets cpu
+    else, see if cuda available, otherwise cpu.
+
     Args:
         type:
 
     Returns:
 
     """
-    device = torch.device("cpu") if type == "cpu" else torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    device = torch.device('cpu') if type == 'cpu' else torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+    print("Script running on device : ", device)
     return device
 
 

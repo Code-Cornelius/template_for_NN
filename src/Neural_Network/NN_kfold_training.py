@@ -2,7 +2,6 @@ import numpy as np
 import sklearn.model_selection
 import torch
 
-from src.Neural_Network.NN_fcts import device
 from src.Neural_Network.NN_train import nn_train
 from src.Training_stopper.Early_stopper_vanilla import Early_stopper_vanilla
 
@@ -78,7 +77,7 @@ def _nn_multiplefold_train(compute_accuracy, data_training_X, data_training_Y, e
         if not silent:
             print(f"{i + 1}-th Fold out of {nb_split} Folds.")
 
-        net = model_NN().to(device)
+        net = model_NN().to(parameters_training.device)
         if early_stopper_training is not None:
             early_stopper_training.reset()
         if early_stopper_validation is not None:
@@ -126,7 +125,7 @@ def _new_best_model(best_epoch_of_NN, best_net, compute_accuracy, i, net,
 def _nn_1fold_train(compute_accuracy, data_training_X, data_training_Y, early_stopper_training,
                     early_stopper_validation, parameters_training, percent_validation_for_1_fold,
                     shuffle_kfold, silent, training_data, validation_data, model_NN):
-    net = model_NN().to(device)
+    net = model_NN().to(parameters_training.device)
     # where validation included.
     best_epoch_of_NN = [0]
     if percent_validation_for_1_fold > 0:
@@ -154,7 +153,6 @@ def _nn_1fold_train(compute_accuracy, data_training_X, data_training_Y, early_st
                     training_data[0], validation_data[0], best_epoch_of_NN)
         else:
             return net, training_data[0], validation_data[0], best_epoch_of_NN
-
 
     # 1-Fold. where validation not included.
     else:

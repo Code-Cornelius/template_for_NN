@@ -1,4 +1,4 @@
-from src.Neural_Network.NN_fcts import device, are_at_least_one_None, raise_if_not_all_None
+from src.Neural_Network.NN_fcts import are_at_least_one_None, raise_if_not_all_None
 import numpy as np
 
 from src.Neural_Network.NN_fit import nn_fit
@@ -37,13 +37,15 @@ def nn_train(net, data_X, data_Y,
     Whenever the accuracy is not requested, the accuracy vector is zero.
     """
     # Prepare Training set
+    device = params_training.device
+    epoch = params_training.epochs
     X_train_on_device = data_X[indic_train_X].to(device)
     Y_train = data_Y[indic_train_Y]  # : useful for using it in order to compute accuracy.
     Y_train_on_device = Y_train.to(device)
 
     # prepare for iteration over epochs:
-    training_losses = np.full(params_training.epochs, np.nan)
-    training_accuracy = np.full(params_training.epochs, np.nan)
+    training_losses = np.full(epoch, np.nan)
+    training_accuracy = np.full(epoch, np.nan)
 
     # condition if we use validation set:
     list_params_validation = [indic_validation_X, indic_validation_Y]
@@ -56,8 +58,8 @@ def nn_train(net, data_X, data_Y,
         X_val_on_device = data_X[indic_validation_X].to(device)
         Y_val = data_Y[indic_validation_Y]  # :useful for using it in order to compute accuracy.
         Y_val_on_device = Y_val.to(device)
-        validation_losses = np.full(params_training.epochs, np.nan)
-        validation_accuracy = np.full(params_training.epochs, np.nan)
+        validation_losses = np.full(epoch, np.nan)
+        validation_accuracy = np.full(epoch, np.nan)
 
         # essentially, we need to check what is the max epoch:
         epoch_best_net = nn_fit(net, X_train_on_device, Y_train_on_device, Y_train,

@@ -1,8 +1,9 @@
 class NNTrainParameters:
 
-    def __init__(self, batch_size, epochs, criterion, optimiser, dict_params_optimiser=None):
+    def __init__(self, batch_size, epochs, device, criterion, optimiser, dict_params_optimiser=None):
         self.batch_size = batch_size
         self.epochs = epochs
+        self.device = device
         self.criterion = criterion
         self.optimiser = optimiser
 
