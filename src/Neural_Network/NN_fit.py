@@ -3,8 +3,9 @@ import torch.utils
 from matplotlib import pyplot as plt
 from tqdm import tqdm
 
+from src.Fast_tensor_dataloader import FastTensorDataLoader
 from src.Neural_Network.NN_fcts import are_at_least_one_None, raise_if_not_all_None, nn_predict, \
-    decorator_train_disable_no_grad
+    decorator_train_disable_no_grad, nn_predict_to_cpu
 from src.Training_stopper.Early_stopper_vanilla import Early_stopper_vanilla
 
 PLOT_WHILE_TRAIN = False
@@ -74,34 +75,30 @@ def nn_fit(net,
     if is_validat_included:  #: if we need validation
         total_number_data = Y_train.shape[0], Y_val.shape[0]  # : constants for normalisation
         # create data validat_loader : load validation data in batches
-        validat_loader_on_device = torch.utils.data.DataLoader(
-            torch.utils.data.TensorDataset(X_val_on_device, Y_val_on_device),
-            batch_size=params_training.batch_size, shuffle=False,  # SHUFFLE IS COSTLY!
-            num_workers=0)  # num_workers can be increased, only under Linux.
-    else:
+        validat_loader_on_device = FastTensorDataLoader(
+            X_val_on_device, Y_val_on_device,
+            batch_size=params_training.batch_size, shuffle=False)  # SHUFFLE IS COSTLY!
+    else :
         total_number_data = Y_train.shape[0], 0  # : constants for normalisation
         raise_if_not_all_None(list_params_validat)
         validat_loader_on_device = None  # in order to avoid referenced before assigment
 
     # create data train_loader_on_device : load training data in batches
-    train_loader_on_device = torch.utils.data.DataLoader(
-        torch.utils.data.TensorDataset(X_train_on_device, Y_train_on_device),
-        batch_size=params_training.batch_size, shuffle=True,  # SHUFFLE IS COSTLY!
-        num_workers=0)  # num_workers can be increased, only under Linux.
+    train_loader_on_device = FastTensorDataLoader(
+        X_train_on_device, Y_train_on_device,
+        batch_size=params_training.batch_size, shuffle=True)  # SHUFFLE IS COSTLY! it is the only shuffle really useful
 
     train_loader = validat_loader = None  # in order to avoid referenced before assigment
     # when we compute accuracy, we need a dataloader between X on device and Y on the CPU :
     # because the accuracy is computed with sklearn that does not support GPU:
     if compute_accuracy:
-        train_loader = torch.utils.data.DataLoader(torch.utils.data.TensorDataset(X_train_on_device, Y_train),
-                                                   batch_size=params_training.batch_size,
-                                                   shuffle=False,  # SHUFFLE IS COSTLY!
-                                                   num_workers=0)  # num_workers can be increased, only under Linux.
+        train_loader = FastTensorDataLoader(X_train_on_device, Y_train,
+                                            batch_size=params_training.batch_size,
+                                            shuffle=False)  # SHUFFLE IS COSTLY!
         if is_validat_included:
-            validat_loader = torch.utils.data.DataLoader(
-                torch.utils.data.TensorDataset(X_val_on_device, Y_val),
-                batch_size=params_training.batch_size, shuffle=False,  # SHUFFLE IS COSTLY!
-                num_workers=0)  # num_workers can be increased, only under Linux.
+            validat_loader = FastTensorDataLoader(
+                X_val_on_device, Y_val,
+                batch_size=params_training.batch_size, shuffle=False)  # SHUFFLE IS COSTLY!
 
     # pick loss function and optimizer
     criterion = params_training.criterion
@@ -188,8 +185,8 @@ def _update_history(net, compute_accuracy, criterion, epoch, is_valid_included, 
 def _update_validation_accuracy(epoch, net, total_number_data, valid_accuracy, validat_loader):
     """ no need for wrapping !"""
     valid_accuracy[epoch] = 0  # :aggregate variable
-    for batch_X, batch_y in validat_loader:
-        valid_accuracy[epoch] += sklearn.metrics.accuracy_score(nn_predict(net, batch_X).cpu(),
+    for batch_X, batch_y in validat_loader:  # batch X on device, batch_y on cpu.
+        valid_accuracy[epoch] += sklearn.metrics.accuracy_score(nn_predict_to_cpu(net, batch_X),
                                                                 batch_y.reshape(-1, 1),
                                                                 normalize=False
                                                                 )
@@ -209,8 +206,8 @@ def _update_validation_loss(net, criterion, epoch, total_number_data, valid_loss
 def _update_training_accuracy(epoch, net, total_number_data, train_accuracy, train_loader):
     """ no need for wrapping !"""
     train_accuracy[epoch] = 0  # :aggregate variable
-    for batch_X, batch_y in train_loader:
-        train_accuracy[epoch] += sklearn.metrics.accuracy_score(nn_predict(net, batch_X).cpu(),
+    for batch_X, batch_y in train_loader: #batch X on device, batch_y on cpu.
+        train_accuracy[epoch] += sklearn.metrics.accuracy_score(nn_predict_to_cpu(net, batch_X),
                                                                 batch_y.reshape(-1, 1),
                                                                 normalize=False
                                                                 )

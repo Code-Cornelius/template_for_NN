@@ -67,6 +67,7 @@ def _nn_multiplefold_train(compute_accuracy, data_training_X, data_training_Y, e
                            training_data, validation_data):
     # Kfold for nb_split > 1:
     skfold = sklearn.model_selection.StratifiedKFold(n_splits=nb_split, shuffle=shuffle_kfold, random_state=0)
+    # : random_state is the seed of StratifiedKFold.
     # for storing the network:
     performance = 0
     best_net = 0

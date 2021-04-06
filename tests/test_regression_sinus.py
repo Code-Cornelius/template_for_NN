@@ -29,10 +29,10 @@ def exact_solution(x):
 
 ############################## GLOBAL PARAMETERS
 # Number of training samples
-n_samples = 1000
+n_samples = 20000
 # Noise level
 sigma = 0.01
-pytorch_device_setting()
+device = pytorch_device_setting('not_cpu_please')
 SILENT = False
 early_stop_train = Early_stopper_training(patience=20, silent=SILENT, delta=0.01)
 early_stop_valid = Early_stopper_validation(patience=20, silent=SILENT, delta=0.01)
@@ -59,15 +59,15 @@ if __name__ == '__main__':
     biases = [True, True, True, True]
     activation_functions = [torch.tanh, torch.tanh, torch.relu]
     dropout = 0.
-    epochs = 200
-    batch_size = 200
+    epochs = 300
+    batch_size = 2000
     optimiser = torch.optim.Adam
     criterion = nn.MSELoss()
 
-    dict_optimiser = {"lr": 0.03, "weight_decay": 0.0000001}
-    parameters_training = NNTrainParameters(batch_size=batch_size, epochs=epochs,
-                                            criterion=criterion, optimiser=optimiser,
-                                            dict_params_optimiser=dict_optimiser)
+    dict_optimiser = {"lr": 0.01, "weight_decay": 0.0000001}
+    parameters_training = NNTrainParameters(batch_size=batch_size, epochs=epochs, device=device,
+                                                criterion=criterion, optimiser=optimiser,
+                                                dict_params_optimiser=dict_optimiser)
     parametrized_NN = factory_parametrised_FC_NN(input_size=input_size, list_hidden_sizes=hidden_sizes,
                                                  output_size=output_size,
                                                  list_biases=biases, activation_functions=activation_functions,

@@ -9,7 +9,7 @@ from sklearn import metrics
 
 import seaborn as sns
 
-from src.Neural_Network.NN_fcts import nn_predict
+from src.Neural_Network.NN_fcts import nn_predict, nn_predict_to_cpu
 
 sns.set()
 
@@ -94,7 +94,7 @@ def result_function(title, data_train_Y, y_pred1, no_classes, data_test_Y=None, 
 
 def nn_plot_prediction_vs_true(net, plot_xx, plot_yy, plot_yy_noisy):
     aplot = APlot(how=(1, 1))
-    plot_yy_pred = nn_predict(net, plot_xx)
+    plot_yy_pred = nn_predict_to_cpu(net, plot_xx)
 
     aplot.uni_plot(nb_ax=0, xx=plot_xx, yy=plot_yy_noisy, dict_plot_param={"color": "black",
                                                                            "linestyle": "--",
@@ -118,7 +118,7 @@ def nn_plot_prediction_vs_true(net, plot_xx, plot_yy, plot_yy_noisy):
 
 def nn_print_errors(net, train_X, train_Y, testing_X, testing_Y):
     # Compute the relative validation error
-    relative_error_train = torch.mean((nn_predict(net, train_X) - train_Y) ** 2) / torch.mean(train_Y ** 2)
+    relative_error_train = torch.mean((nn_predict_to_cpu(net, train_X) - train_Y) ** 2) / torch.mean(train_Y ** 2)
     print("Relative Training Error: ", relative_error_train.numpy() ** 0.5 * 100, "%")
 
     # Compute the relative validation error
@@ -126,6 +126,6 @@ def nn_print_errors(net, train_X, train_Y, testing_X, testing_Y):
     # print("Relative Validation Error: ", relative_error_val.numpy() ** 0.5 * 100, "%")
 
     # Compute the relative L2 error norm (generalization error)
-    relative_error_test = torch.mean((nn_predict(net, testing_X) - testing_Y) ** 2) / torch.mean(testing_Y ** 2)
+    relative_error_test = torch.mean((nn_predict_to_cpu(net, testing_X) - testing_Y) ** 2) / torch.mean(testing_Y ** 2)
     print("Relative Testing Error: ", relative_error_test.numpy() ** 0.5 * 100, "%")
     return

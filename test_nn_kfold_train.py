@@ -18,6 +18,7 @@ def test_no_accuracy(train_X, train_Y, parametrized_NN, parameters_training, nb_
                                                                                            percent_validation_for_1_fold=percent_validation_for_1_fold,
                                                                                            compute_accuracy=compute_accuracy,
                                                                                            silent=silent)
+    net.to(torch.device('cpu'))
     nn_plot_train_loss_acc(training_loss=mean_training_losses, validation_loss=mean_validation_losses,
                            best_epoch_of_NN=best_epoch_of_NN)
     nn_plot_prediction_vs_true(net, plot_xx, plot_yy, plot_yy_noisy)
@@ -35,6 +36,7 @@ def test_no_accuracy_no_validation(train_X, train_Y, parametrized_NN, parameters
                                                                    nb_split=nb_split, shuffle_kfold=True,
                                                                    percent_validation_for_1_fold=percent_validation_for_1_fold,
                                                                    compute_accuracy=compute_accuracy, silent=silent)
+    net.to(torch.device('cpu'))
     nn_plot_train_loss_acc(training_loss=mean_training_losses, validation_loss=None, best_epoch_of_NN=best_epoch_of_NN)
     nn_plot_prediction_vs_true(net, plot_xx, plot_yy, plot_yy_noisy)
     nn_print_errors(net, train_X, train_Y, testing_X, testing_Y)
@@ -53,6 +55,7 @@ def test_accuracy(train_X, train_Y, parametrized_NN, parameters_training, nb_spl
                                                                                       percent_validation_for_1_fold=percent_validation_for_1_fold,
                                                                                       compute_accuracy=compute_accuracy,
                                                                                       silent=silent)
+    net.to(torch.device('cpu'))
     nn_plot_train_loss_acc(mean_training_losses, mean_validation_losses, mean_training_accuracy,
                            mean_validation_accuracy, best_epoch_of_NN=best_epoch_of_NN)
     # confusion_matrix_creator(train_Y, nn_predict(net, train_X), range(10), title="Training Set")
@@ -72,6 +75,7 @@ def test_accuracy_no_validation(train_X, train_Y, parametrized_NN, parameters_tr
                                                                                            percent_validation_for_1_fold=percent_validation_for_1_fold,
                                                                                            compute_accuracy=compute_accuracy,
                                                                                            silent=silent)
+    net.to(torch.device('cpu'))
     nn_plot_train_loss_acc(mean_training_losses, None, mean_training_accuracy, None, best_epoch_of_NN=best_epoch_of_NN)
     # confusion_matrix_creator(train_Y, nn_predict(net, train_X), range(10), title="Training Set")
     # confusion_matrix_creator(testing_Y, nn_predict(net, testing_X), range(10), title="Test Set")

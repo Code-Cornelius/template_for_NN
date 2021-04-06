@@ -47,7 +47,8 @@ def decorator_train_disable_no_grad(func):
 def nn_predict(net, data_to_predict):
     """
     Semantics : pass data_to_predict through the neural network and returns its prediction.
-    # do a single predictive forward pass on net (takes & returns numpy arrays)
+    The output data is going through the net.prediction() function.
+    Also, we request the device, where the input, the net, and output lies.
 
     Condition: net has the method prediction.
 
@@ -63,6 +64,8 @@ def nn_predict(net, data_to_predict):
     data_predicted = net.prediction(net(data_to_predict))  # forward pass
     return data_predicted
 
+def nn_predict_to_cpu(net, data_to_predict):
+    return nn_predict(net, data_to_predict).cpu()
 
 def pytorch_device_setting(type=''):
     """
