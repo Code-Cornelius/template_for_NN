@@ -20,6 +20,9 @@ import torch.nn.functional as F
 
 import sklearn.model_selection
 
+
+#todo what about a function that takes a folder and analyze all of them? With graph, little number on it
+
 def analyze_neural_network(data_X, data_Y,
                            indices_train_X, indices_train_Y,
                            indices_test_X, indices_test_Y,

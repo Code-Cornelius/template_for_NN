@@ -1,5 +1,5 @@
 from copy import deepcopy
-from abc import abstractmethod
+from abc import ABC, abstractmethod, ABCMeta
 
 import numpy as np
 
@@ -10,14 +10,12 @@ import torch.utils.data
 DEBUG = False
 
 
-class Early_stopper(object):
+class Early_stopper(metaclass =ABCMeta):
     """
     Abstract class of an early stopper. Given to a training, allows for stopping earlier with respect to some criteria.
 
     The requirements for children class is:
         redefine _is_early_stop
-    References:
-            https://github.com/Bjarten/early-stopping-pytorch/blob/master/pytorchtools.py
 
     In order to use it, one initializes it and then call it with the corresponding data.
     The call returns whether or not we should "early stop" training.
@@ -37,24 +35,21 @@ class Early_stopper(object):
 
     """
 
-    def __init__(self, patience=50, silent=True, delta=0.1, print_func=print):
+    def __init__(self, patience=50, silent=True, delta=0.1):
         """
         Args:
-            patience (int): How long to wait after last time loss improved.
-                            Default: 10
-            silent (bool): If False, prints a message for each validation loss improvement.
-                            Default: True
+            patience (int): How long the stopper waits for improvement of the criterion.
+
+            silent (bool):
+
             delta (float): Minimum change in the monitored quantity to qualify as an improvement. In percent.
                             Default: 0.1
-            print_func (function): trace print function.
-                            Default: print
         """
         self._patience = patience
         self._silent = silent
         self._counter = 0
         self._lowest_loss = np.Inf
         self._delta = delta
-        self._print_func = print_func
 
         # for retrieving the best result
         self._early_stopped = False
@@ -65,7 +60,7 @@ class Early_stopper(object):
             self._counter += 1
             self.has_improved_last_epoch = False  # : flag giving information about the performance of the NN
             if DEBUG:
-                self._print_func(f'EarlyStopping counter: {self._counter} out of {self._patience}')
+                print(f'EarlyStopping counter: {self._counter} out of {self._patience}')
 
             # early stop triggered
             if self._counter >= self._patience:

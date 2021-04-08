@@ -4,7 +4,7 @@ from copy import deepcopy
 import torch
 import torch.nn as nn
 
-from abc import abstractmethod
+from abc import abstractmethod, ABCMeta
 
 # my lib
 from priv_lib_error import Error_type_setter
@@ -15,7 +15,7 @@ from src.Neural_Network.Savable_net import Savable_net
 
 
 # the class of NN
-class Fully_connected_NN(Savable_net):
+class Fully_connected_NN(Savable_net, metaclass= ABCMeta):
     """
     Semantics:
         Abstract classes with virtual parameters that are initialized with the function *factory_parametrised_FC_NN*
