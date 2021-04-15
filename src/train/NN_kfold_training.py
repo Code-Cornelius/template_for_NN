@@ -4,8 +4,8 @@ import numpy as np
 import sklearn.model_selection
 import torch
 
-from src.Neural_Network.NN_train import nn_train
-from src.Training_stopper.Early_stopper_vanilla import Early_stopper_vanilla
+from src.train.NN_train import nn_train
+from src.training_stopper.Early_stopper_vanilla import Early_stopper_vanilla
 
 
 def nn_kfold_train(data_training_X, data_training_Y,

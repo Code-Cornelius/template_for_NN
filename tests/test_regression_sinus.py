@@ -15,8 +15,8 @@ from src.Neural_Network.NN_predict import nn_predict
 from src.Neural_Network.NN_kfold_training import nn_kfold_train
 from src.Neural_Network.NN_plots import confusion_matrix_creator
 from src.Neural_Network.NN_plot_history import nn_plot_train_loss_acc
-from src.Training_stopper.Early_stopper_training import Early_stopper_training
-from src.Training_stopper.Early_stopper_validation import Early_stopper_validation
+from src.training_stopper.Early_stopper_training import Early_stopper_training
+from src.training_stopper.Early_stopper_validation import Early_stopper_validation
 
 # set seed for pytorch.
 torch.manual_seed(42)

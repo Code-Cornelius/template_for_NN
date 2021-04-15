@@ -9,7 +9,7 @@ from sklearn import metrics
 
 import seaborn as sns
 
-from src.Neural_Network.NN_predict import nn_predict, nn_predict_to_cpu
+from src.train.NN_predict import nn_predict_to_cpu
 
 sns.set()
 
@@ -97,22 +97,25 @@ def nn_plot_prediction_vs_true(net, plot_xx, plot_yy, plot_yy_noisy):
     aplot = APlot(how=(1, 1))
     plot_yy_pred = nn_predict_to_cpu(net, plot_xx)
 
-    aplot.uni_plot(nb_ax=0, xx=plot_xx, yy=plot_yy_noisy, dict_plot_param={"color": "black",
-                                                                           "linestyle": "--",
-                                                                           "linewidth": 0.3,
-                                                                           "markersize": 0,
-                                                                           "label": "Noisy Trained over Solution"
-                                                                           })
+    aplot.uni_plot(nb_ax=0, xx=plot_xx, yy=plot_yy_noisy,
+                   dict_plot_param={"color": "black",
+                                    "linestyle": "--",
+                                    "linewidth": 0.3,
+                                    "markersize": 0,
+                                    "label": "Noisy Trained over Solution"
+                                    })
 
-    aplot.uni_plot(nb_ax=0, xx=plot_xx, yy=plot_yy, dict_plot_param={"color": "orange",
-                                                                     "linewidth": 1,
-                                                                     "label": "Solution"
-                                                                     })
+    aplot.uni_plot(nb_ax=0, xx=plot_xx, yy=plot_yy,
+                   dict_plot_param={"color": "orange",
+                                    "linewidth": 1,
+                                    "label": "Solution"
+                                    })
 
-    aplot.uni_plot(nb_ax=0, xx=plot_xx, yy=plot_yy_pred, dict_plot_param={"color": "c",
-                                                                          "linewidth": 2,
-                                                                          "label": "Predicted Data used for Training"
-                                                                          })
+    aplot.uni_plot(nb_ax=0, xx=plot_xx, yy=plot_yy_pred,
+                   dict_plot_param={"color": "c",
+                                    "linewidth": 2,
+                                    "label": "Predicted Data used for Training"
+                                    })
     aplot.show_legend()
     return
 

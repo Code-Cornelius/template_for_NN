@@ -1,6 +1,8 @@
 import numpy as np
-from matplotlib import pyplot as plt
+
+# my lib
 from priv_lib_plot import APlot
+from priv_lib_plot import AColorsetContinuous
 
 
 def nn_plot_train_loss_acc(training_loss, validation_loss=None, training_acc=None, validation_acc=None,
@@ -15,17 +17,10 @@ def nn_plot_train_loss_acc(training_loss, validation_loss=None, training_acc=Non
     nb_trials = training_loss.shape[0]
     xx = range(nb_of_epoch)
 
-    Blues = plt.get_cmap('Blues')
-    color_plot_blue = Blues(np.linspace(0.3, 1, nb_trials))  # color map for plot
-
-    Greens = plt.get_cmap('Greens')
-    color_plot_green = Greens(np.linspace(0.3, 1, nb_trials))  # color map for plot
-
-    Reds = plt.get_cmap('Reds')
-    color_plot_red = Reds(np.linspace(0.3, 1, nb_trials))  # color map for plot
-
-    Oranges = plt.get_cmap('Oranges')
-    color_plot_orange = Oranges(np.linspace(0.3, 1, nb_trials))  # color map for plot
+    color_plot_blue = AColorsetContinuous('Blues', nb_trials, (0.3, 1))
+    color_plot_green = AColorsetContinuous('Greens', nb_trials, (0.3, 1))
+    color_plot_red = AColorsetContinuous('Reds', nb_trials, (0.3, 1))
+    color_plot_orange = AColorsetContinuous('Oranges', nb_trials, (0.3, 1))
 
     if log_axis_for_loss:
         yscale = "log"
@@ -57,8 +52,8 @@ def nn_plot_train_loss_acc(training_loss, validation_loss=None, training_acc=Non
                                   dict_plot_param=dict_plot_param_accuracy_training)
 
     if validation_loss is not None:
-        _plot_validation_history(aplot, color_plot_orange, color_plot_red, linewidth, nb_trials, validation_acc,
-                                 validation_loss, xx)
+        _plot_validation_history(aplot, color_plot_orange, color_plot_red, linewidth,
+                                 nb_trials, validation_acc, validation_loss, xx)
     # plot lines of best NN:
     if best_epoch_of_NN is not None:
         _plot_best_epoch_NN(aplot, best_epoch_of_NN, nb_trials)
@@ -74,12 +69,13 @@ def nn_plot_train_loss_acc(training_loss, validation_loss=None, training_acc=Non
 def _plot_best_epoch_NN(aplot, best_epoch_of_NN, nb_trials):
     yy = np.array(aplot.get_y_lim(nb_ax=0))
     for i in range(nb_trials):
-        aplot.plot_vertical_line(best_epoch_of_NN[i], yy, nb_ax=0, dict_plot_param={"color": "black",
-                                                                                    "linestyle": "--",
-                                                                                    "linewidth": 0.3,
-                                                                                    "markersize": 0,
-                                                                                    "label": f"Best model for fold nb {i}"
-                                                                                    })
+        aplot.plot_vertical_line(best_epoch_of_NN[i], yy, nb_ax=0,
+                                 dict_plot_param={"color": "black",
+                                                  "linestyle": "--",
+                                                  "linewidth": 0.3,
+                                                  "markersize": 0,
+                                                  "label": f"Best model for fold nb {i}"
+                                                  })
 
 
 def _plot_validation_history(aplot, color_plot_orange, color_plot_red, linewidth, nb_trials, validation_acc,

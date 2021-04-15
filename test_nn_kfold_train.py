@@ -1,7 +1,7 @@
-from src.Neural_Network.NN_plot_history import nn_plot_train_loss_acc
-from src.Neural_Network.NN_kfold_training import nn_kfold_train
-from src.Neural_Network.NN_plots import *
-from src.Training_stopper.Early_stopper_vanilla import Early_stopper_vanilla
+from src.plot.NN_plot_history import nn_plot_train_loss_acc
+from src.train.NN_kfold_training import nn_kfold_train
+from src.plot.NN_plots import *
+from src.training_stopper.Early_stopper_vanilla import Early_stopper_vanilla
 
 
 def test_no_accuracy(train_X, train_Y, Class_Parametrized_NN, parameters_training, nb_split, percent_validation_for_1_fold,

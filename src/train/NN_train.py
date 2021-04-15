@@ -1,8 +1,8 @@
 from src.Neural_Network.NN_fcts import are_at_least_one_None, raise_if_not_all_None
 import numpy as np
 
-from src.Neural_Network.NN_fit import nn_fit
-from src.Training_stopper.Early_stopper_vanilla import Early_stopper_vanilla
+from src.train.NN_fit import nn_fit
+from src.training_stopper.Early_stopper_vanilla import Early_stopper_vanilla
 
 
 def nn_train(net, data_X, data_Y,
