@@ -10,12 +10,12 @@ from abc import abstractmethod, ABCMeta
 from priv_lib_error import Error_type_setter
 from priv_lib_util.tools import function_iterable
 
-#Savable_net
+# Savable_net
 from src.Neural_Network.Savable_net import Savable_net
 
 
 # the class of NN
-class Fully_connected_NN(Savable_net, metaclass= ABCMeta):
+class Fully_connected_NN(Savable_net, metaclass=ABCMeta):
     """
     Semantics:
         Abstract classes with virtual parameters that are initialized with the function *factory_parametrised_FC_NN*
@@ -37,15 +37,11 @@ class Fully_connected_NN(Savable_net, metaclass= ABCMeta):
             _predict_fct
     """
 
-
-
-
-    def __init__(self, *args, **kwargs):
+    def __init__(self, predict_fct, *args, **kwargs):
         """
         Constructor for Neural Network.
         """
-        super().__init__(*args, ** kwargs)
-
+        super().__init__(predict_fct, *args, **kwargs)
 
     # section ######################################################################
     #  #############################################################################
@@ -63,7 +59,7 @@ class Fully_connected_NN(Savable_net, metaclass= ABCMeta):
             raise Error_type_setter(f"Argument is not an {str(int)}.")
 
     @property
-    @abstractmethod # ABSTRACT FIELD
+    @abstractmethod  # ABSTRACT FIELD
     def list_hidden_sizes(self):
         return self._list_hidden_sizes
 
@@ -125,12 +121,6 @@ class Fully_connected_NN(Savable_net, metaclass= ABCMeta):
         else:
             raise Error_type_setter(f"Argument is not an {str(float)}.")
 
-
-
-
-
-
-
     # section ######################################################################
     #  #############################################################################
     # rest of methods
@@ -152,8 +142,7 @@ class Fully_connected_NN(Savable_net, metaclass= ABCMeta):
         # initialise dropout
         self._apply_dropout = nn.Dropout(p=self.dropout)
 
-        self.init_weights_of_model() # : init the weights in the xavier way.
-
+        self.init_weights_of_model()  # : init the weights in the xavier way.
 
     def forward(self, x):
         # pass through the input layer
@@ -168,26 +157,23 @@ class Fully_connected_NN(Savable_net, metaclass= ABCMeta):
         return out
 
 
-
 # section ######################################################################
 #  #############################################################################
 # CLASS FACTORY :  creates subclasses of FC NN
 
-def factory_parametrised_FC_NN(input_size, list_hidden_sizes, output_size,
-                               list_biases, activation_functions,
-                               dropout=0, predict_fct=None):
-    class parametrised_FC_NN(Fully_connected_NN):
+def factory_parametrised_FC_NN(param_input_size, param_list_hidden_sizes, param_output_size,
+                               param_list_biases, param_activation_functions,
+                               param_dropout=0, param_predict_fct=None):
+    class Parametrised_FC_NN(Fully_connected_NN):
+        input_size = param_input_size
+        list_hidden_sizes = param_list_hidden_sizes
+        output_size = param_output_size
+        list_biases = param_list_biases  # should always be defined after list_hidden_sizes.
+        activation_functions = param_activation_functions
+        dropout = param_dropout
         def __init__(self):
-            super().__init__()
-            self.input_size = input_size
-            self.list_hidden_sizes = list_hidden_sizes
-            self.output_size = output_size
-            self.list_biases = list_biases  # should always be defined after list_hidden_sizes.
-            self.activation_functions = activation_functions
-            self.dropout = dropout
-            self.predict_fct = predict_fct
-
+            super().__init__(predict_fct=param_predict_fct)
             self.set_layers()  #: mandatory call in the constructor,
-            #: to initialize all the layers and dropout with respect to the parameters created.
+            # :to initialize all the layers and dropout with respect to the parameters created.
 
-    return parametrised_FC_NN
+    return Parametrised_FC_NN

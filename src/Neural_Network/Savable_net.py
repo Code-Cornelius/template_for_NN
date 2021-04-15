@@ -31,11 +31,12 @@ class Savable_net(nn.Module):
     # : the hidden mark "_" is important to not pass through the setter.
     # we set the class variable, that is also defined as an object variable unless redefined!
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, predict_fct, *args, **kwargs):
         """
         Constructor for Neural Network.
         """
         super().__init__()
+        self.predict_fct = predict_fct
         # best parameters, keeps track in case of early stopping.
         self.best_weights = None  # init the field best weights.
         self.best_epoch = 0

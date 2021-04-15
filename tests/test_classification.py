@@ -73,12 +73,14 @@ if __name__ == '__main__':
     parameters_for_training = NNTrainParameters(batch_size=batch_size, epochs=epochs, device=device,
                                                 criterion=criterion, optimiser=optimiser,
                                                 dict_params_optimiser=dict_optimiser)
-    parametrized_NN = factory_parametrised_FC_NN(input_size=input_size, list_hidden_sizes=hidden_sizes,
-                                                 output_size=output_size,
-                                                 list_biases=biases, activation_functions=activation_functions,
-                                                 dropout=dropout, predict_fct=lambda out: torch.max(out, 1)[1])
+    Class_Parametrized_NN = factory_parametrised_FC_NN(param_input_size=input_size,
+                                                       param_list_hidden_sizes=hidden_sizes,
+                                                       param_output_size=output_size, param_list_biases=biases,
+                                                       param_activation_functions=activation_functions,
+                                                       param_dropout=dropout,
+                                                       param_predict_fct=lambda out: torch.max(out, 1)[1])
 
-    test_nn_kfold_train.test(train_X, train_Y, parametrized_NN, parameters_for_training,
+    test_nn_kfold_train.test(train_X, train_Y, Class_Parametrized_NN, parameters_for_training,
                              test_X, test_Y, early_stop_train, early_stop_valid,
                              SILENT,
                              compute_accuracy=True, plot_xx=None, plot_yy=None, plot_yy_noisy=None)
