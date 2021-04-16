@@ -64,14 +64,11 @@ def nn_train(net, data_X, data_Y,
         # essentially, we need to check what is the max epoch:
         epoch_best_net = nn_fit(net, X_train_on_device, Y_train_on_device, Y_train,
                                 params_training,
-                                training_losses,
-                                training_accuracy,
+                                training_losses, training_accuracy,
                                 early_stopper_validation=early_stopper_validation,
                                 early_stopper_training=early_stopper_training,
-                                X_val_on_device=X_val_on_device,
-                                Y_val_on_device=Y_val_on_device, Y_val=Y_val,
-                                validation_losses=validation_losses,
-                                validation_accuracy=validation_accuracy,
+                                X_val_on_device=X_val_on_device, Y_val_on_device=Y_val_on_device, Y_val=Y_val,
+                                validation_losses=validation_losses, validation_accuracy=validation_accuracy,
                                 compute_accuracy=compute_accuracy,
                                 silent=silent)
 

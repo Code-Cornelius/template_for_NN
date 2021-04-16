@@ -13,6 +13,9 @@ from priv_lib_util.tools import function_iterable
 
 class Savable_net(nn.Module):
     """
+    Semantics:
+        A savable net defines all the required members in order to save the best net,
+        and use a net with training_stoppers.
     Args:
         best_weights:
         best_epoch:
@@ -29,7 +32,7 @@ class Savable_net(nn.Module):
 
     # :default predict_fct. Can be masked with lower child class functions.
     # : the hidden mark "_" is important to not pass through the setter.
-    # we set the class variable, that is also defined as an object variable unless redefined!
+    # : we set the class variable, that is also defined as an object variable unless redefined!
 
     def __init__(self, predict_fct, *args, **kwargs):
         """
@@ -67,7 +70,8 @@ class Savable_net(nn.Module):
         return self
 
     def update_best_weights(self, epoch):
-        # : We decide to keep a copy instead of saving the model in a file because we might not want to save this model (E.G. if we do a K-FOLD)
+        # : We decide to keep a copy instead of saving the model in a file
+        # because we might not want to save this model (E.G. if we do a K-FOLD)
         self.best_weights = deepcopy(self.state_dict())
         self.best_epoch = epoch
 

@@ -14,10 +14,6 @@ import pandas as pd
 from src.Neural_Network.Fully_connected_NN import factory_parametrised_FC_NN
 from src.train.NNTrainParameters import NNTrainParameters
 from src.Neural_Network.NN_fcts import pytorch_device_setting
-from src.train.NN_predict import nn_predict
-from src.train.NN_kfold_training import nn_kfold_train
-from src.plot.NN_plots import confusion_matrix_creator
-from src.plot.NN_plot_history import nn_plot_train_loss_acc
 from src.training_stopper.Early_stopper_training import Early_stopper_training
 from src.training_stopper.Early_stopper_validation import Early_stopper_validation
 

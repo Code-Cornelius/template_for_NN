@@ -4,7 +4,6 @@ import torch
 import torch.cuda
 
 
-
 def are_at_least_one_None(list_parameters):
     """returns list_parameters.at least one.is_None"""
     for parameter in list_parameters:
@@ -33,6 +32,7 @@ def decorator_train_disable_no_grad(func):
     Returns:
 
     """
+
     @functools.wraps(func)
     def wrapper_decorator_train_disable_no_grad(net, *args, **kwargs):
         net.train(mode=False)  # Disable dropout and normalisation
@@ -60,5 +60,3 @@ def pytorch_device_setting(type=''):
     device = torch.device('cpu') if type == 'cpu' else torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
     print("Script running on device : ", device)
     return device
-
-

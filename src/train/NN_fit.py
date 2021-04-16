@@ -5,7 +5,7 @@ from tqdm import tqdm
 
 from src.Fast_tensor_dataloader import FastTensorDataLoader
 from src.Neural_Network.NN_fcts import are_at_least_one_None, raise_if_not_all_None, decorator_train_disable_no_grad
-from src.train.NN_predict import nn_predict, nn_predict_to_cpu
+from src.train.NN_predict import nn_predict, nn_predict_ans2cpu
 from src.training_stopper.Early_stopper_vanilla import Early_stopper_vanilla
 
 PLOT_WHILE_TRAIN = False
@@ -33,10 +33,10 @@ def nn_fit(net,
            validation_losses=None, validation_accuracy=None,
            compute_accuracy=False,
            silent=False):
-    #todo rename params_training into params_train
+    # todo rename params_training into params_train
     #  early_stopper_validation into early_stopper_valid
     #  early_stopper_training into early_stopper_train
-    #etc...
+    #  etc...
 
     """
 
@@ -66,43 +66,10 @@ def nn_fit(net,
 
     """
     # condition if we use validation set.
-    list_params_validat = [X_val_on_device, Y_val_on_device,
-                           Y_val, validation_losses,
-                           validation_accuracy]
-
-    is_validat_included = not are_at_least_one_None(list_params_validat)  #: equivalent to are all not None ?
-    # raise if there is a logic error.
-    if is_validat_included:  #: if we need validation
-        total_number_data = Y_train.shape[0], Y_val.shape[0]  # : constants for normalisation
-        # create data validat_loader : load validation data in batches
-        validat_loader_on_device = FastTensorDataLoader(
-            X_val_on_device, Y_val_on_device,
-            batch_size=params_training.batch_size, shuffle=False)  # SHUFFLE IS COSTLY!
-    else :
-        total_number_data = Y_train.shape[0], 0  # : constants for normalisation
-        raise_if_not_all_None(list_params_validat)
-        validat_loader_on_device = None  # in order to avoid referenced before assigment
-
-    # create data train_loader_on_device : load training data in batches
-    train_loader_on_device = FastTensorDataLoader(
-        X_train_on_device, Y_train_on_device,
-        batch_size=params_training.batch_size, shuffle=True)  # SHUFFLE IS COSTLY! it is the only shuffle really useful
-
-    train_loader = validat_loader = None  # in order to avoid referenced before assigment
-    # when we compute accuracy, we need a dataloader between X on device and Y on the CPU :
-    # because the accuracy is computed with sklearn that does not support GPU:
-    if compute_accuracy:
-        train_loader = FastTensorDataLoader(X_train_on_device, Y_train,
-                                            batch_size=params_training.batch_size,
-                                            shuffle=False)  # SHUFFLE IS COSTLY!
-        if is_validat_included:
-            validat_loader = FastTensorDataLoader(
-                X_val_on_device, Y_val,
-                batch_size=params_training.batch_size, shuffle=False)  # SHUFFLE IS COSTLY!
-
-    # pick loss function and optimizer
-    criterion = params_training.criterion
-    optimiser = params_training.optimiser(net.parameters(), **params_training.dict_params_optimiser)
+    (criterion, is_validat_included, optimiser, total_number_data, train_loader,
+     train_loader_on_device, validat_loader, validat_loader_on_device) = prepare_data_for_fit(
+        X_train_on_device, X_val_on_device, Y_train, Y_train_on_device, Y_val, Y_val_on_device,
+        compute_accuracy, net, params_training, validation_accuracy, validation_losses)
 
     epoch = 0
     for epoch in tqdm(range(params_training.epochs), disable=silent):  # disable unable the print.
@@ -159,6 +126,45 @@ def nn_fit(net,
     return _return_the_stop(net, epoch, early_stopper_validation, early_stopper_training)
 
 
+def prepare_data_for_fit(X_train_on_device, X_val_on_device, Y_train, Y_train_on_device, Y_val, Y_val_on_device,
+                         compute_accuracy, net, params_training, validation_accuracy, validation_losses):
+    list_params_validat = [X_val_on_device, Y_val_on_device,
+                           Y_val, validation_losses,
+                           validation_accuracy]
+    is_validat_included = not are_at_least_one_None(list_params_validat)  #: equivalent to are all not None ?
+    # raise if there is a logic error.
+    if is_validat_included:  #: if we need validation
+        total_number_data = Y_train.shape[0], Y_val.shape[0]  # : constants for normalisation
+        # create data validat_loader : load validation data in batches
+        validat_loader_on_device = FastTensorDataLoader(
+            X_val_on_device, Y_val_on_device,
+            batch_size=params_training.batch_size, shuffle=False)  # SHUFFLE IS COSTLY!
+    else:
+        total_number_data = Y_train.shape[0], 0  # : constants for normalisation
+        raise_if_not_all_None(list_params_validat)
+        validat_loader_on_device = None  # in order to avoid referenced before assigment
+    # create data train_loader_on_device : load training data in batches
+    train_loader_on_device = FastTensorDataLoader(
+        X_train_on_device, Y_train_on_device,
+        batch_size=params_training.batch_size, shuffle=True)
+    # : SHUFFLE IS COSTLY! it is the only shuffle really useful
+    train_loader = validat_loader = None  # in order to avoid referenced before assigment
+    # when we compute accuracy, we need a dataloader between X on device and Y on the CPU :
+    # because the accuracy is computed with sklearn that does not support GPU:
+    if compute_accuracy:
+        train_loader = FastTensorDataLoader(X_train_on_device, Y_train,
+                                            batch_size=params_training.batch_size,
+                                            shuffle=False)  # SHUFFLE IS COSTLY!
+        if is_validat_included:
+            validat_loader = FastTensorDataLoader(
+                X_val_on_device, Y_val,
+                batch_size=params_training.batch_size, shuffle=False)  # SHUFFLE IS COSTLY!
+    # pick loss function and optimizer
+    criterion = params_training.criterion
+    optimiser = params_training.optimiser(net.parameters(), **params_training.dict_params_optimiser)
+    return criterion, is_validat_included, optimiser, total_number_data, train_loader, train_loader_on_device, validat_loader, validat_loader_on_device
+
+
 def _update_history(net, compute_accuracy, criterion, epoch, is_valid_included, total_number_data, train_loader,
                     train_accuracy, validat_loader, validat_loader_on_device, valid_accuracy, valid_losses):
     ######################
@@ -186,7 +192,7 @@ def _update_validation_accuracy(epoch, net, total_number_data, valid_accuracy, v
     """ no need for wrapping !"""
     valid_accuracy[epoch] = 0  # :aggregate variable
     for batch_X, batch_y in validat_loader:  # batch X on device, batch_y on cpu.
-        valid_accuracy[epoch] += sklearn.metrics.accuracy_score(nn_predict_to_cpu(net, batch_X),
+        valid_accuracy[epoch] += sklearn.metrics.accuracy_score(nn_predict_ans2cpu(net, batch_X),
                                                                 batch_y.reshape(-1, 1),
                                                                 normalize=False
                                                                 )
@@ -206,11 +212,10 @@ def _update_validation_loss(net, criterion, epoch, total_number_data, valid_loss
 def _update_training_accuracy(epoch, net, total_number_data, train_accuracy, train_loader):
     """ no need for wrapping !"""
     train_accuracy[epoch] = 0  # :aggregate variable
-    for batch_X, batch_y in train_loader: #batch X on device, batch_y on cpu.
-        train_accuracy[epoch] += sklearn.metrics.accuracy_score(nn_predict_to_cpu(net, batch_X),
+    for batch_X, batch_y in train_loader:  # batch X on device, batch_y on cpu.
+        train_accuracy[epoch] += sklearn.metrics.accuracy_score(nn_predict_ans2cpu(net, batch_X),
                                                                 batch_y.reshape(-1, 1),
-                                                                normalize=False
-                                                                )
+                                                                normalize=False)
     train_accuracy[epoch] /= total_number_data[0]  # : normalisation
     # :here the reshape is assuming we use Cross Entropy and the data outside is set in the right format.
     # :sklearn can't access data on gpu.

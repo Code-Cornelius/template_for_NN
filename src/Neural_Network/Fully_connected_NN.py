@@ -165,15 +165,19 @@ def factory_parametrised_FC_NN(param_input_size, param_list_hidden_sizes, param_
                                param_list_biases, param_activation_functions,
                                param_dropout=0, param_predict_fct=None):
     class Parametrised_FC_NN(Fully_connected_NN):
+        # defining attributes this way shadows the abstract properties from parents.
         input_size = param_input_size
         list_hidden_sizes = param_list_hidden_sizes
         output_size = param_output_size
         list_biases = param_list_biases  # should always be defined after list_hidden_sizes.
         activation_functions = param_activation_functions
         dropout = param_dropout
+
         def __init__(self):
             super().__init__(predict_fct=param_predict_fct)
             self.set_layers()  #: mandatory call in the constructor,
             # :to initialize all the layers and dropout with respect to the parameters created.
 
     return Parametrised_FC_NN
+
+

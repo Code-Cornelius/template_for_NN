@@ -1,0 +1,55 @@
+Savable Net is the basis of nets, giving useful methods in order to save a neural network at the right time.
+Savable Net requires the parameter `predict_fct` to its init. If None is given, a default predict_fct is `used`.
+
+
+#A derived class from Savable net can have such architecture:
+
+```
+class NN(Savable_net, metaclass=ABCMeta):
+    def __init__(self, predict_fct, *args, **kwargs):
+        super().__init__(predict_fct, *args, **kwargs)
+
+    @property
+    def parameter(self):
+        return self._parameter
+
+    @parameter.setter
+    def parameter(self, new_parameter):
+        if isinstance(new_parameter, int):
+                self._parameter = new_parameter
+        else:
+            raise Error_type_setter(f"Argument is not an {str(int)}.")
+
+    def forward(self, x):
+        return x * parameter
+
+
+def factory_parametrised_NN(parameter, param_predict_fct):
+    class Parametrised_FC_NN(Fully_connected_NN):
+        # defining attributes this way shadows the abstract properties from parents.
+        parameter = param_parameter
+
+        def __init__(self):
+            super().__init__(predict_fct=param_predict_fct)
+            # :to initialize all the layers and dropout with respect to the parameters created.
+
+    return Parametrised_NN
+```
+
+The usage of a class factory is very interesting, as it allows to fix the architecture hyperparameters
+and be able to construct equivalent Neural Networks in parallel.
+
+
+#Training:
+
+One can use the helper NNTrainParameters that stores all the important hyperparameters for training.
+
+Then, the usual method to use is:
+
+nn_kfold_train(data_training_X, data_training_Y,
+                   model_NN, parameters_training,
+                   early_stopper_validation=Early_stopper_vanilla(),
+                   early_stopper_training=Early_stopper_vanilla(),
+                   nb_split=5, shuffle_kfold=True, percent_validation_for_1_fold=20,
+                   compute_accuracy=False,
+                   silent=False)

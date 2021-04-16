@@ -23,5 +23,5 @@ def nn_predict(net, data_to_predict):
     return data_predicted
 
 
-def nn_predict_to_cpu(net, data_to_predict):
+def nn_predict_ans2cpu(net, data_to_predict):
     return nn_predict(net, data_to_predict).cpu()

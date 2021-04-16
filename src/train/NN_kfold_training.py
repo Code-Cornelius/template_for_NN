@@ -72,7 +72,7 @@ def _nn_multiplefold_train(compute_accuracy, data_training_X, data_training_Y, e
                            early_stopper_validation, model_NN, nb_split, parameters_training, shuffle_kfold, silent,
                            training_data, validation_data):
     # for storing the network:
-    value_metric_for_best_NN = - np.Inf # :we set -\infty which can only be improved.
+    value_metric_for_best_NN = - np.Inf  # :we set -\infty which can only be improved.
     # :Recall, the two criterea are either accuracy (so any accuracy is better than a neg. number)
     # : and minus loss, and a loss is always closer to zero than - infinity.
     best_net = None
@@ -83,9 +83,9 @@ def _nn_multiplefold_train(compute_accuracy, data_training_X, data_training_Y, e
         # Kfold for nb_split > 1:
         skfold = sklearn.model_selection.StratifiedKFold(n_splits=nb_split, shuffle=shuffle_kfold, random_state=0)
         # : random_state is the seed of StratifiedKFold.
-        for i, (index_training, index_validation) in enumerate(
-                skfold.split(data_training_X,
-                             data_training_Y)):  # one can use tensors as they are convertible to numpy.
+        for i, (index_training, index_validation) in enumerate(skfold.split(data_training_X,
+                                                                            data_training_Y)):
+            # : one can use tensors as they are convertible to numpy.
             best_net, number_kfold_best_net = train_kfold_a_fold_after_split(best_epoch_of_NN, best_net,
                                                                              compute_accuracy, data_training_X,
                                                                              data_training_Y, early_stopper_training,
@@ -95,7 +95,7 @@ def _nn_multiplefold_train(compute_accuracy, data_training_X, data_training_Y, e
                                                                              parameters_training,
                                                                              value_metric_for_best_NN, silent,
                                                                              training_data, validation_data)
-    except ValueError:  # erro from skfold split.
+    except ValueError:  # error from skfold split, it happens when the kfold is continuous.
         # Kfold for nb_split > 1:
         kfold = sklearn.model_selection.KFold(n_splits=nb_split, shuffle=shuffle_kfold, random_state=0)
         # : random_state is the seed of StratifiedKFold.

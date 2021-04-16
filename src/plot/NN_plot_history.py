@@ -17,10 +17,7 @@ def nn_plot_train_loss_acc(training_loss, validation_loss=None, training_acc=Non
     nb_trials = training_loss.shape[0]
     xx = range(nb_of_epoch)
 
-    color_plot_blue = AColorsetContinuous('Blues', nb_trials, (0.3, 1))
-    color_plot_green = AColorsetContinuous('Greens', nb_trials, (0.3, 1))
-    color_plot_red = AColorsetContinuous('Reds', nb_trials, (0.3, 1))
-    color_plot_orange = AColorsetContinuous('Oranges', nb_trials, (0.3, 1))
+
 
     if log_axis_for_loss:
         yscale = "log"
@@ -29,8 +26,15 @@ def nn_plot_train_loss_acc(training_loss, validation_loss=None, training_acc=Non
     # adjusting the linewidth depending on nb of plots:
     if nb_trials < 3:
         linewidth = 2
+        interval_colors = (0.5,0.9)
     else:
         linewidth = 1
+        interval_colors = (0.3, 1.)
+
+    color_plot_blue = AColorsetContinuous('Blues', nb_trials, interval_colors)
+    color_plot_green = AColorsetContinuous('Greens', nb_trials, interval_colors)
+    color_plot_red = AColorsetContinuous('Reds', nb_trials, interval_colors)
+    color_plot_orange = AColorsetContinuous('Oranges', nb_trials, interval_colors)
 
     for i in range(nb_trials):
         dict_plot_param_loss_training = {"color": color_plot_green[i],
