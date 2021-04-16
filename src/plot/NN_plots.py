@@ -92,24 +92,25 @@ def result_function(title, data_train_Y, y_pred1, no_classes, data_test_Y=None, 
         print(metrics.classification_report(data_test_Y, y_pred2, target_names=target_names))
 
 
-def nn_plot_prediction_vs_true(net, plot_xx, plot_yy, plot_yy_noisy):
+def nn_plot_prediction_vs_true(net, plot_xx, plot_yy=None, plot_yy_noisy=None):
     # todo add a title to the graph
     aplot = APlot(how=(1, 1))
     plot_yy_pred = nn_predict_ans2cpu(net, plot_xx)
 
-    aplot.uni_plot(nb_ax=0, xx=plot_xx, yy=plot_yy_noisy,
-                   dict_plot_param={"color": "black",
-                                    "linestyle": "--",
-                                    "linewidth": 0.3,
-                                    "markersize": 0,
-                                    "label": "Noisy Trained over Solution"
-                                    })
-
-    aplot.uni_plot(nb_ax=0, xx=plot_xx, yy=plot_yy,
-                   dict_plot_param={"color": "orange",
-                                    "linewidth": 1,
-                                    "label": "Solution"
-                                    })
+    if plot_yy_noisy is not None:
+        aplot.uni_plot(nb_ax=0, xx=plot_xx, yy=plot_yy_noisy,
+                       dict_plot_param={"color": "black",
+                                        "linestyle": "--",
+                                        "linewidth": 0.3,
+                                        "markersize": 0,
+                                        "label": "Noisy Trained over Solution"
+                                        })
+    if plot_yy is not None:
+        aplot.uni_plot(nb_ax=0, xx=plot_xx, yy=plot_yy,
+                       dict_plot_param={"color": "orange",
+                                        "linewidth": 1,
+                                        "label": "Solution"
+                                        })
 
     aplot.uni_plot(nb_ax=0, xx=plot_xx, yy=plot_yy_pred,
                    dict_plot_param={"color": "c",

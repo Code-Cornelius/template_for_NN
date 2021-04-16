@@ -113,8 +113,7 @@ def nn_fit(net,
             if early_stopper_validation(net, validation_losses, epoch):
                 if not silent: print("Terminated epochs, with early stopper validation at epoch {}.".format(epoch))
                 break  # : get out of epochs
-        if early_stopper_training is not None:
-            if early_stopper_training(net, training_losses, epoch):
+        if early_stopper_training(net, training_losses, epoch):
                 if not silent: print("Terminated epochs, with early stopper training at epoch {}.".format(epoch))
                 break  # : get out of epochs.
 

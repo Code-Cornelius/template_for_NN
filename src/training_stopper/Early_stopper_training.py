@@ -15,10 +15,9 @@ class Early_stopper_training(Early_stopper):
         # we compute the relative difference in the training loss of the actual loss wrt to the previous losses.
         # with that, we see if there is any significant improvement in training (significant, more than delta).
         # if there is not, then stop.
-        current_loss = training_losses[epoch]
-        differences_percent = [self.diff_percent(previous_loss, current_loss)
-                               for previous_loss in training_losses[epoch - self._patience:epoch]]
-        cdt = epoch > self._patience and all(
-            difference_percent < self._delta for difference_percent in differences_percent
-        )
-        return cdt
+        if self._patience < epoch:
+            current_loss = training_losses[epoch]
+            differences_percent = [self.diff_percent(previous_loss, current_loss)
+                                   for previous_loss in training_losses[epoch - self._patience:epoch]]
+            cdt = epoch > self._patience and max(differences_percent) < self._delta
+            return cdt
