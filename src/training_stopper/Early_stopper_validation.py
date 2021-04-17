@@ -3,6 +3,7 @@ from src.training_stopper.Early_stopper import Early_stopper
 
 class Early_stopper_validation(Early_stopper):
     def __init__(self, patience=10, silent=True, delta=0.):
+        """Delta is the percent of changed one needs to observe wrt lowest loss."""
         super().__init__(patience=patience, silent=silent, delta=delta)
 
     def _is_early_stop(self, validation_losses, epoch):

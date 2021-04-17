@@ -259,5 +259,5 @@ def _nn_1fold_indices_creation(data_training_X, percent_validation_for_1_fold, s
         indic_validation = indices[training_size:]
     else:
         indic_train = torch.arange(training_size)
-        indic_validation = torch.arange(training_size, data_training_X.shape[1])
+        indic_validation = torch.arange(training_size, data_training_X.shape[0])
     return indic_train, indic_validation

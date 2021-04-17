@@ -3,6 +3,8 @@ from src.training_stopper.Early_stopper import Early_stopper
 
 class Early_stopper_training(Early_stopper):
     def __init__(self, patience=10, silent=True, delta=0.1):
+        """Delta is the percent of change with respect to the past. If smaller, then stop."""
+
         super().__init__(patience=patience, silent=silent, delta=delta)
         self._lowest_loss = 0
 

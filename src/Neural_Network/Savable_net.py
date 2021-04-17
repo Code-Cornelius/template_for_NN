@@ -23,12 +23,9 @@ class Savable_net(nn.Module):
         _predict_fct
     """
 
-    @staticmethod
-    def my_id(out):
-        return out
 
     # function that from the output returns the prediction. Depends on the problem:
-    _predict_fct = my_id
+    _predict_fct = nn.Identity()
 
     # :default predict_fct. Can be masked with lower child class functions.
     # : the hidden mark "_" is important to not pass through the setter.

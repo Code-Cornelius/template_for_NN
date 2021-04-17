@@ -115,7 +115,9 @@ def nn_plot_prediction_vs_true(net, plot_xx, plot_yy=None, plot_yy_noisy=None):
     aplot.uni_plot(nb_ax=0, xx=plot_xx, yy=plot_yy_pred,
                    dict_plot_param={"color": "c",
                                     "linewidth": 2,
-                                    "label": "Predicted Data used for Training"
+                                    "label": "Predicted Data used for Training",
+                                    "xlabel": "Time", "ylabel": "Estimation",
+                                    "title": "Visualization of prediction and true solution"
                                     })
     aplot.show_legend()
     return
