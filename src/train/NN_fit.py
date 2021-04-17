@@ -5,7 +5,6 @@ from tqdm import tqdm
 
 from src.Fast_tensor_dataloader import FastTensorDataLoader
 from src.Neural_Network.NN_fcts import are_at_least_one_None, raise_if_not_all_None, decorator_train_disable_no_grad
-from src.train.NN_predict import nn_predict, nn_predict_ans2cpu
 from src.training_stopper.Early_stopper_vanilla import Early_stopper_vanilla
 
 PLOT_WHILE_TRAIN = False
@@ -191,7 +190,7 @@ def _update_validation_accuracy(epoch, net, total_number_data, valid_accuracy, v
     """ no need for wrapping !"""
     valid_accuracy[epoch] = 0  # :aggregate variable
     for batch_X, batch_y in validat_loader:  # batch X on device, batch_y on cpu.
-        valid_accuracy[epoch] += sklearn.metrics.accuracy_score(nn_predict_ans2cpu(net, batch_X),
+        valid_accuracy[epoch] += sklearn.metrics.accuracy_score(net.nn_predict_ans2cpu(batch_X),
                                                                 batch_y.reshape(-1, 1),
                                                                 normalize=False
                                                                 )
@@ -212,7 +211,7 @@ def _update_training_accuracy(epoch, net, total_number_data, train_accuracy, tra
     """ no need for wrapping !"""
     train_accuracy[epoch] = 0  # :aggregate variable
     for batch_X, batch_y in train_loader:  # batch X on device, batch_y on cpu.
-        train_accuracy[epoch] += sklearn.metrics.accuracy_score(nn_predict_ans2cpu(net, batch_X),
+        train_accuracy[epoch] += sklearn.metrics.accuracy_score(net.nn_predict_ans2cpu(batch_X),
                                                                 batch_y.reshape(-1, 1),
                                                                 normalize=False)
     train_accuracy[epoch] /= total_number_data[0]  # : normalisation

@@ -68,8 +68,8 @@ def analyze_neural_network(data_X, data_Y,
     nn_plot(a, ta, b, tb)
 
     # compute the last accuracy
-    data_train_Y_pred = nn_predict(net, data_train_X)
-    data_test_Y_pred = nn_predict(net, data_test_X)
+    data_train_Y_pred = net.nn_predict(data_train_X)
+    data_test_Y_pred = net.nn_predict(data_test_X)
 
     # results of the performance
     result_function("Neural Network", data_train_Y, data_train_Y_pred, data_test_Y, data_test_Y_pred)

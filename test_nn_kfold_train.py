@@ -58,8 +58,8 @@ def test_accuracy(train_X, train_Y, Class_Parametrized_NN, parameters_training, 
     net.to(torch.device('cpu'))
     nn_plot_train_loss_acc(mean_training_losses, mean_validation_losses, mean_training_accuracy,
                            mean_validation_accuracy, best_epoch_of_NN=best_epoch_of_NN)
-    # confusion_matrix_creator(train_Y, nn_predict(net, train_X), range(10), title="Training Set")
-    # confusion_matrix_creator(testing_Y, nn_predict(net, testing_X), range(10), title="Test Set")
+    # confusion_matrix_creator(train_Y, net.nn_predict(train_X), range(10), title="Training Set")
+    # confusion_matrix_creator(testing_Y, net.nn_predict(testing_X), range(10), title="Test Set")
 
 
 def test_accuracy_no_validation(train_X, train_Y, Class_Parametrized_NN, parameters_training, nb_split,
@@ -77,8 +77,8 @@ def test_accuracy_no_validation(train_X, train_Y, Class_Parametrized_NN, paramet
                                                                                            silent=silent)
     net.to(torch.device('cpu'))
     nn_plot_train_loss_acc(mean_training_losses, None, mean_training_accuracy, None, best_epoch_of_NN=best_epoch_of_NN)
-    # confusion_matrix_creator(train_Y, nn_predict(net, train_X), range(10), title="Training Set")
-    # confusion_matrix_creator(testing_Y, nn_predict(net, testing_X), range(10), title="Test Set")
+    # confusion_matrix_creator(train_Y, net.nn_predict(train_X), range(10), title="Training Set")
+    # confusion_matrix_creator(testing_Y, net.nn_predict(testing_X), range(10), title="Test Set")
 
 
 def test(train_X, train_Y, Class_Parametrized_NN, parameters_training, testing_X, testing_Y, early_stop_train,

@@ -8,7 +8,7 @@ from abc import abstractmethod
 
 # my lib
 from priv_lib_error import Error_type_setter
-from priv_lib_util.tools import function_iterable
+from src.Neural_Network.NN_fcts import decorator_train_disable_no_grad
 
 
 class Savable_net(nn.Module):
@@ -22,7 +22,6 @@ class Savable_net(nn.Module):
     Class Args:
         _predict_fct
     """
-
 
     # function that from the output returns the prediction. Depends on the problem:
     _predict_fct = nn.Identity()
@@ -71,6 +70,34 @@ class Savable_net(nn.Module):
         # because we might not want to save this model (E.G. if we do a K-FOLD)
         self.best_weights = deepcopy(self.state_dict())
         self.best_epoch = epoch
+
+    # section ######################################################################
+    #  #############################################################################
+    # prediction
+
+    @decorator_train_disable_no_grad
+    def nn_predict(self, data_to_predict):
+        """
+        Semantics : pass data_to_predict through the neural network and returns its prediction.
+        The output data is going through the net.prediction() function.
+        Also, we request the device, where the input, the net, and output lies.
+
+        Condition: net has the method prediction.
+
+        Args:
+            net:
+            data_to_predict:
+
+        Returns:
+
+        """
+        # ~~~~~~~~~~~~~~~~~~ to device for optimal speed, though we take the data back with .cpu().
+        # we do not put the data on GPU! As the overhead might be too much.
+        data_predicted = self.prediction(self(data_to_predict))  # forward pass
+        return data_predicted
+
+    def nn_predict_ans2cpu(self, data_to_predict):
+        return self.nn_predict(data_to_predict).cpu()
 
     # section ######################################################################
     #  #############################################################################
