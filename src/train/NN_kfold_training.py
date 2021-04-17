@@ -7,6 +7,8 @@ import torch
 from src.train.NN_train import nn_train
 from src.training_stopper.Early_stopper_vanilla import Early_stopper_vanilla
 
+#todo untangle kfold with training.
+
 
 def nn_kfold_train(data_training_X, data_training_Y,
                    model_NN, parameters_training,

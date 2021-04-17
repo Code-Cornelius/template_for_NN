@@ -2,7 +2,7 @@ import functools
 
 import torch
 import torch.cuda
-
+import numpy as np
 
 def are_at_least_one_None(list_parameters):
     """returns list_parameters.at least one.is_None"""
@@ -60,3 +60,8 @@ def pytorch_device_setting(type=''):
     device = torch.device('cpu') if type == 'cpu' else torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
     print("Script running on device : ", device)
     return device
+
+
+def set_seeds(seed):
+    torch.manual_seed(seed)
+    np.random.seed(seed)
