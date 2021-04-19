@@ -14,8 +14,8 @@ if PLOT_WHILE_TRAIN:
 
 def plot_while_training(params_training, history):
     ax.clear()
-    plt.semilogy(range(params_training.epochs), history["training"]["loss"], 'b', label='Train Loss')
-    plt.semilogy(range(params_training.epochs), history["validation"]["loss"], 'r', label='Validation Loss')
+    plt.semilogy(range(params_training.epochs), history['training']['loss'], 'b', label='Train Loss')
+    plt.semilogy(range(params_training.epochs), history['validation']['loss'], 'r', label='Validation Loss')
     plt.legend(loc="best")
     plt.pause(0.0001)
 
@@ -92,7 +92,7 @@ def nn_fit(net,
             #: weight the loss accordingly. That is the reason why using average is flawed.
 
         # Normalize and save the loss over the current epoch:
-        history["training"]["loss"][epoch] = train_loss / total_number_data[0]
+        history['training']['loss'][epoch] = train_loss / total_number_data[0]
         _update_history(net, params_training.metrics, criterion, epoch, is_validat_included, total_number_data,
                         train_loader, validat_loader, validat_loader_on_device, history)
 
@@ -197,10 +197,10 @@ def _update_metric(metric, net, epoch, total_number_data, history, data_loader, 
 
 @decorator_train_disable_no_grad  # make sure we don't back propagate any loss over this data
 def _update_validation_loss(net, criterion, epoch, total_number_data, history, validat_loader_on_device):
-    history["validation"]["loss"][epoch] = 0  # :aggregate variable
+    history['validation']['loss'][epoch] = 0  # :aggregate variable
     for batch_X, batch_y in validat_loader_on_device:
-        history["validation"]["loss"][epoch] += criterion(net(batch_X), batch_y).item() * batch_X.shape[0]
-    history["validation"]["loss"][epoch] /= total_number_data[1]
+        history['validation']['loss'][epoch] += criterion(net(batch_X), batch_y).item() * batch_X.shape[0]
+    history['validation']['loss'][epoch] /= total_number_data[1]
 
 
 def _return_the_stop(net, current_epoch, early_stoppers):  # args should be early_stoppers (or none if not defined)

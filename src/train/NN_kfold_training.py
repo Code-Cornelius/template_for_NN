@@ -45,15 +45,15 @@ def nn_kfold_train(data_training_X, data_training_Y,
     # the nans are because we want to skip the plotting at places where we did not collect data.
 
     history = {
-        "training": {},
-        "validation": {}
+        'training': {},
+        'validation': {}
     }
-    history["training"]["loss"] = np.zeros((nb_split, parameters_training.epochs))
-    history["validation"]["loss"] = np.zeros((nb_split, parameters_training.epochs))
+    history['training']['loss'] = np.zeros((nb_split, parameters_training.epochs))
+    history['validation']['loss'] = np.zeros((nb_split, parameters_training.epochs))
 
     for metric in parameters_training.metrics:
-        history["training"][metric] = np.zeros((nb_split, parameters_training.epochs))
-        history["validation"][metric] = np.zeros((nb_split, parameters_training.epochs))
+        history['training'][metric] = np.zeros((nb_split, parameters_training.epochs))
+        history['validation'][metric] = np.zeros((nb_split, parameters_training.epochs))
 
 
     indices, compute_validation = _nn_kfold_indices_creation(data_training_X,
@@ -141,7 +141,7 @@ def train_kfold_a_fold_after_split(best_epoch_of_NN, best_net, compute_accuracy,
 
 def _new_best_model(best_epoch_of_NN, best_net, i, net, value_metric_for_best_NN, history, number_kfold_best_net):
 
-    rookie_perf = - history["validation"]["loss"][i, best_epoch_of_NN[i]]  #: -1 * ... bc we want to keep order below
+    rookie_perf = - history['validation']['loss'][i, best_epoch_of_NN[i]]  #: -1 * ... bc we want to keep order below
     if value_metric_for_best_NN < rookie_perf:
         best_net = net
         value_metric_for_best_NN = rookie_perf
@@ -156,12 +156,12 @@ def _set_history_from_nn_train(res, best_epoch_of_NN, history, index):
     kfold_history, kfold_best_epoch = res
     best_epoch_of_NN[index] = kfold_best_epoch
 
-    for metric_key in kfold_history["training"]:
-        history["training"][metric_key][index, :] = kfold_history["training"][metric_key]
+    for metric_key in kfold_history['training']:
+        history['training'][metric_key][index, :] = kfold_history['training'][metric_key]
 
-    if "validation" in kfold_history:
-        for metric_key in kfold_history["validation"]:
-            history["validation"][metric_key][index, :] = kfold_history["validation"][metric_key]
+    if 'validation' in kfold_history:
+        for metric_key in kfold_history['validation']:
+            history['validation'][metric_key][index, :] = kfold_history['validation'][metric_key]
 
 
 # section ######################################################################
