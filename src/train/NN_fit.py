@@ -20,13 +20,8 @@ def plot_while_training(params_training, history):
     plt.pause(0.0001)
 
 
-def nn_fit(net,
-           X_train_on_device, Y_train_on_device, Y_train,
-           params_training,
-           history,
-           early_stoppers=(Early_stopper_vanilla()),
-           X_val_on_device=None, Y_val_on_device=None, Y_val=None,
-           compute_accuracy=False,
+def nn_fit(net, X_train_on_device, Y_train_on_device, Y_train, params_training, history,
+           early_stoppers=(Early_stopper_vanilla()), X_val_on_device=None, Y_val_on_device=None, Y_val=None,
            silent=False):
     # todo rename params_training into params_train
     #  early_stopper_validation into early_stopper_valid
@@ -53,7 +48,6 @@ def nn_fit(net,
         Passed, even though compute_accuracy is false.
         early_stopper_training:
         early_stopper_validation:
-        compute_accuracy: if True, training_accuracy and valid_accuracy are not updated.
         silent: verbose.
 
     Returns: return epoch of best net and updates the value passed in
@@ -62,10 +56,12 @@ def nn_fit(net,
 
     """
     # condition if we use validation set.
-    (criterion, is_validat_included, optimiser, total_number_data, train_loader,
-     train_loader_on_device, validat_loader, validat_loader_on_device) = prepare_data_for_fit(
-        X_train_on_device, X_val_on_device, Y_train, Y_train_on_device, Y_val, Y_val_on_device,
-        compute_accuracy, net, params_training)
+    (criterion, is_validat_included, optimiser, total_number_data,
+     train_loader_on_device, validat_loader_on_device) = prepare_data_for_fit(X_train_on_device,
+                                                                                              X_val_on_device, Y_train,
+                                                                                              Y_train_on_device, Y_val,
+                                                                                              Y_val_on_device, net,
+                                                                                              params_training)
 
     epoch = 0
     for epoch in tqdm(range(params_training.epochs), disable=silent):  # disable unable the print.
@@ -94,7 +90,7 @@ def nn_fit(net,
         # Normalize and save the loss over the current epoch:
         history['training']['loss'][epoch] = train_loss / total_number_data[0]
         _update_history(net, params_training.metrics, criterion, epoch, is_validat_included, total_number_data,
-                        train_loader, validat_loader, validat_loader_on_device, history)
+                        train_loader_on_device, validat_loader_on_device, history)
 
         ######################
         #   Early Stopping   #
@@ -123,8 +119,8 @@ def _do_early_stop(net, early_stoppers, history, epoch, silent):
     return False
 
 
-def prepare_data_for_fit(X_train_on_device, X_val_on_device, Y_train, Y_train_on_device, Y_val, Y_val_on_device,
-                         compute_accuracy, net, params_training):
+def prepare_data_for_fit(X_train_on_device, X_val_on_device, Y_train, Y_train_on_device, Y_val, Y_val_on_device, net,
+                         params_training):
     list_params_validat = [X_val_on_device, Y_val_on_device,
                            Y_val]
 
@@ -145,31 +141,19 @@ def prepare_data_for_fit(X_train_on_device, X_val_on_device, Y_train, Y_train_on
         X_train_on_device, Y_train_on_device,
         batch_size=params_training.batch_size, shuffle=True)
     # : SHUFFLE IS COSTLY! it is the only shuffle really useful
-    train_loader = validat_loader = None  # in order to avoid referenced before assigment
-    # when we compute accuracy, we need a dataloader between X on device and Y on the CPU :
-    # because the accuracy is computed with sklearn that does not support GPU:
-    # todo: delete compute accuracy this and use to cpu on the lambda
-    if compute_accuracy:
-        train_loader = FastTensorDataLoader(X_train_on_device, Y_train,
-                                            batch_size=params_training.batch_size,
-                                            shuffle=False)  # SHUFFLE IS COSTLY!
-        if is_validat_included:
-            validat_loader = FastTensorDataLoader(
-                X_val_on_device, Y_val,
-                batch_size=params_training.batch_size, shuffle=False)  # SHUFFLE IS COSTLY!
+
     # pick loss function and optimizer
     criterion = params_training.criterion
     optimiser = params_training.optimiser(net.parameters(), **params_training.dict_params_optimiser)
-    return criterion, is_validat_included, optimiser, total_number_data, train_loader, train_loader_on_device, validat_loader, validat_loader_on_device
+    return criterion, is_validat_included, optimiser, total_number_data, train_loader_on_device, validat_loader_on_device
 
 
-def _update_history(net, metrics, criterion, epoch, is_valid_included, total_number_data, train_loader,
-                    validat_loader, validat_loader_on_device, history):
+def _update_history(net, metrics, criterion, epoch, is_valid_included, total_number_data, train_loader_on_device, validat_loader_on_device, history):
     ######################
     # Training Metrics  #
     ######################
     for metric in metrics:
-        _update_metric(metric, net, epoch, total_number_data, history, train_loader, 'training')
+        _update_metric(metric, net, epoch, total_number_data, history, train_loader_on_device, 'training')
 
     ######################
     #   Validation Loss  #
@@ -182,7 +166,7 @@ def _update_history(net, metrics, criterion, epoch, is_valid_included, total_num
         # Validation Accuracy #
         #######################
         for metric in metrics:
-            _update_metric(metric, net, epoch, total_number_data, history, validat_loader, 'validation')
+            _update_metric(metric, net, epoch, total_number_data, history, validat_loader_on_device, 'validation')
 
     return
 

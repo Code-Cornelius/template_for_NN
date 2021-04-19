@@ -63,15 +63,15 @@ if __name__ == '__main__':
     biases = [True, True]
     activation_functions = [F.relu]
     dropout = 0.2
-    epochs = 10
-    batch_size = 10
+    epochs = 1000
+    batch_size = 1000
     optimiser = torch.optim.SGD
     criterion = nn.CrossEntropyLoss()
     dict_optimiser = {"lr": 0.0005, "weight_decay": 0.00001}
 
     # metric lambdas
     accuracy_wrapper = lambda net, batch_X, batch_y: sklearn.metrics.accuracy_score(net.nn_predict_ans2cpu(batch_X),
-                                                                                    batch_y.reshape(-1, 1),
+                                                                                    batch_y.reshape(-1, 1).to('cpu'),
                                                                                     normalize=False)
     metrics = [accuracy_wrapper]
 

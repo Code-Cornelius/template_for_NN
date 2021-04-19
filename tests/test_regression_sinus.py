@@ -33,6 +33,7 @@ device = pytorch_device_setting('not_cpu_please')
 SILENT = False
 early_stop_train = Early_stopper_training(patience=20, silent=SILENT, delta=0.01)
 early_stop_valid = Early_stopper_validation(patience=20, silent=SILENT, delta=0.01)
+early_stoppers = [early_stop_train, early_stop_valid]
 #############################
 plot_xx = torch.linspace(0, 2 * np.pi, 1000).reshape(-1, 1)
 plot_yy = exact_solution(plot_xx).reshape(-1, )
@@ -71,6 +72,6 @@ if __name__ == '__main__':
                                                  param_predict_fct=None)
 
     test_nn_kfold_train.test(train_X, train_Y, parametrized_NN, parameters_training, testing_X, testing_Y,
-                             early_stop_train, early_stop_valid, SILENT, compute_accuracy=False, plot_xx=plot_xx,
+                             early_stoppers, SILENT, compute_accuracy=False, plot_xx=plot_xx,
                              plot_yy=plot_yy,
                              plot_yy_noisy=plot_yy_noisy)

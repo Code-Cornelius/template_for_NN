@@ -11,12 +11,9 @@ from src.training_stopper.Early_stopper_vanilla import Early_stopper_vanilla
 # todo untangle kfold with training.
 
 
-def nn_kfold_train(data_training_X, data_training_Y,
-                   model_NN, parameters_training,
-                   early_stoppers=(Early_stopper_vanilla()),
-                   nb_split=5, shuffle_kfold=True, percent_validation_for_1_fold=20,
-                   compute_accuracy=False,
-                   silent=False):
+def nn_kfold_train(data_training_X, data_training_Y, model_NN, parameters_training,
+                   early_stoppers=(Early_stopper_vanilla()), nb_split=5, shuffle_kfold=True,
+                   percent_validation_for_1_fold=20, silent=False):
     """
     # create main cross validation method
     # it returns the score during training,
@@ -25,7 +22,6 @@ def nn_kfold_train(data_training_X, data_training_Y,
     Args:
         model_NN: parametrised architecture,
         should be a Class (object type Class) and such that we can call constructor over it to create a net.
-        compute_accuracy:
         early_stopper_training:
         data_training_X: tensor
         data_training_Y: tensor
@@ -62,24 +58,16 @@ def nn_kfold_train(data_training_X, data_training_Y,
                                                              nb_split,
                                                              shuffle_kfold)
 
-    return _nn_multiplefold_train(compute_accuracy,
-                                  data_training_X, data_training_Y,
-                                  early_stoppers,
-                                  model_NN, nb_split, parameters_training, indices,
-                                  silent,
-                                  history)
+    return _nn_multiplefold_train(data_training_X, data_training_Y, early_stoppers, model_NN, nb_split,
+                                  parameters_training, indices, silent, history)
 
 
 # section ######################################################################
 #  #############################################################################
 # MULTIFOLD
 
-def _nn_multiplefold_train(compute_accuracy,
-                           data_training_X, data_training_Y,
-                           early_stoppers,
-                           model_NN, nb_split, parameters_training, indices,
-                           silent,
-                           history):
+def _nn_multiplefold_train(data_training_X, data_training_Y, early_stoppers, model_NN, nb_split, parameters_training,
+                           indices, silent, history):
 
     # for storing the network:
     value_metric_for_best_NN = - np.Inf  # :we set -\infty which can only be improved.
@@ -92,15 +80,12 @@ def _nn_multiplefold_train(compute_accuracy,
     # : random_state is the seed of StratifiedKFold.
     for i, (index_training, index_validation) in enumerate(indices):
         # : one can use tensors as they are convertible to numpy.
-        best_net, number_kfold_best_net = train_kfold_a_fold_after_split(best_epoch_of_NN, best_net,
-                                                                         compute_accuracy,
-                                                                         data_training_X, data_training_Y,
-                                                                         early_stoppers, i,
+        best_net, number_kfold_best_net = train_kfold_a_fold_after_split(best_epoch_of_NN, best_net, data_training_X,
+                                                                         data_training_Y, early_stoppers, i,
                                                                          index_training, index_validation, model_NN,
                                                                          nb_split, number_kfold_best_net,
-                                                                         parameters_training,
-                                                                         value_metric_for_best_NN, silent,
-                                                                         history)
+                                                                         parameters_training, value_metric_for_best_NN,
+                                                                         silent, history)
 
     if not silent:
         print("Finis the K-Fold, the best NN is the number {}".format(number_kfold_best_net))
@@ -108,11 +93,9 @@ def _nn_multiplefold_train(compute_accuracy,
     return best_net, history, best_epoch_of_NN
 
 
-def train_kfold_a_fold_after_split(best_epoch_of_NN, best_net, compute_accuracy,
-                                   data_training_X, data_training_Y,
-                                   early_stoppers, i, index_training,
-                                   index_validation, model_NN, nb_split, number_kfold_best_net, parameters_training,
-                                   value_metric_for_best_NN, silent, history):
+def train_kfold_a_fold_after_split(best_epoch_of_NN, best_net, data_training_X, data_training_Y, early_stoppers, i,
+                                   index_training, index_validation, model_NN, nb_split, number_kfold_best_net,
+                                   parameters_training, value_metric_for_best_NN, silent, history):
     if not silent:
         time.sleep(0.001)  # for printing order
         print(f"{i + 1}-th Fold out of {nb_split} Folds.")
@@ -124,10 +107,8 @@ def train_kfold_a_fold_after_split(best_epoch_of_NN, best_net, compute_accuracy,
 
     # train network and save results
     res = nn_train(net, data_X=data_training_X, data_Y=data_training_Y, params_training=parameters_training,
-                   indic_train_X=index_training, indic_train_Y=index_training,
-                   early_stoppers=early_stoppers,
-                   indic_validation_X=index_validation, indic_validation_Y=index_validation,
-                   compute_accuracy=compute_accuracy, silent=silent)
+                   indic_train_X=index_training, indic_train_Y=index_training, early_stoppers=early_stoppers,
+                   indic_validation_X=index_validation, indic_validation_Y=index_validation, silent=silent)
 
     _set_history_from_nn_train(res=res, best_epoch_of_NN=best_epoch_of_NN, history=history, index=i)
 

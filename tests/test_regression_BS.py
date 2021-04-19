@@ -1,3 +1,6 @@
+import numpy as np
+import pandas as pd
+
 def euro_vanilla(S, K, T, r, sigma, option='C'):
     # S: spot price
     # K: strike price

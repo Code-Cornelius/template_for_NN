@@ -5,13 +5,8 @@ from src.train.NN_fit import nn_fit
 from src.training_stopper.Early_stopper_vanilla import Early_stopper_vanilla
 
 
-def nn_train(net, data_X, data_Y,
-             params_training,
-             indic_train_X, indic_train_Y,
-             early_stoppers=(Early_stopper_vanilla()),
-             indic_validation_X=None, indic_validation_Y=None,
-             compute_accuracy=False,
-             silent=False):
+def nn_train(net, data_X, data_Y, params_training, indic_train_X, indic_train_Y,
+             early_stoppers=(Early_stopper_vanilla()), indic_validation_X=None, indic_validation_Y=None, silent=False):
     """
     Semantics : Given the net, we train it upon data.
     For optimisation reasons, we pass the indices.
@@ -26,7 +21,6 @@ def nn_train(net, data_X, data_Y,
         indic_validation_Y:
         early_stopper_training: early_stopper_training type,
         early_stopper_validation: early_stopper_validation type,
-        compute_accuracy: no impact here, impacts nn_fit.
         silent:
 
     Returns: the data with history of training and best epoch for training. Net is modified in the progress.
@@ -71,22 +65,14 @@ def nn_train(net, data_X, data_Y,
             history['validation'][metric] = np.full(epoch, np.nan)
 
         # essentially, we need to check what is the max epoch:
-        epoch_best_net = nn_fit(net, X_train_on_device, Y_train_on_device, Y_train,
-                                params_training,
-                                history,
-                                early_stoppers,
-                                X_val_on_device=X_val_on_device, Y_val_on_device=Y_val_on_device, Y_val=Y_val,
-                                compute_accuracy=compute_accuracy,
-                                silent=silent)
+        epoch_best_net = nn_fit(net, X_train_on_device, Y_train_on_device, Y_train, params_training, history,
+                                early_stoppers, X_val_on_device=X_val_on_device, Y_val_on_device=Y_val_on_device,
+                                Y_val=Y_val, silent=silent)
 
 
     # if no validation set
     else:
-        epoch_best_net = nn_fit(net, X_train_on_device, Y_train_on_device, Y_train,
-                                params_training,
-                                history,
-                                early_stoppers,
-                                compute_accuracy=compute_accuracy,
-                                silent=silent)
+        epoch_best_net = nn_fit(net, X_train_on_device, Y_train_on_device, Y_train, params_training, history,
+                                early_stoppers, silent=silent)
 
     return history, epoch_best_net
