@@ -3,7 +3,7 @@
 #  and save the model and use it to check the accuracy total.
 import sklearn
 
-from priv_lib_plot import APlot
+from metrics.Metric import Metric
 
 import test_nn_kfold_train
 
@@ -36,8 +36,9 @@ early_stoppers = (early_stop_train, early_stop_valid)
 accuracy_wrapper = lambda net, batch_X, batch_y: sklearn.metrics.accuracy_score(net.nn_predict_ans2cpu(batch_X),
                                                                                 batch_y.reshape(-1, 1).to('cpu'),
                                                                                 normalize=False
-                                                                                )
-metrics = (accuracy_wrapper)
+                                                          )
+accuracy_metric = Metric(name="accuracy", function=accuracy_wrapper)
+metrics = (accuracy_metric,)
 #############################
 
 

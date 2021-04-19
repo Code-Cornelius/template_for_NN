@@ -1,12 +1,11 @@
-from copy import deepcopy
-from abc import ABC, abstractmethod, ABCMeta
+from abc import abstractmethod, ABCMeta
 
 import numpy as np
 
-import torch
-import torch.utils.data
 
 # todo the path things, saving the NN.
+from priv_lib_error import Error_type_setter
+
 DEBUG = False
 
 
@@ -35,9 +34,13 @@ class Early_stopper(metaclass =ABCMeta):
 
     """
 
-    def __init__(self, typee, metric, patience=50, silent=True, delta=0.1):
+    def __init__(self, tipee, metric_name, patience=50, silent=True, delta=0.1):
         """
         Args:
+            tipee (str): the type of early stopper, for either training or validation
+
+            metric_name (str): the named used to identify the results of the metric in history
+
             patience (int): How long the stopper waits for improvement of the criterion.
 
             silent (bool):
@@ -56,35 +59,11 @@ class Early_stopper(metaclass =ABCMeta):
         self.has_improved_last_epoch = True
 
         # for retrieving information from the history
-        self.typee = typee
-        self.metric = metric
-
-        @property
-        def tipee(self):
-            return self._tipee
-
-        @tipee.setter
-        def tipee(self, new_tipee):
-            if isinstance(new_tipee, str):
-                    self._tipee = new_tipee
-            else:
-                raise Error_type_setter(f"Argument is not an {str(str)}.")
-
-        @property
-        def metric(self):
-            return self._metric
-
-        @metric.setter
-        def metric(self, new_metric):
-            if isinstance(new_metric, Metric):
-                    self._metric = new_metric
-            else:
-                raise Error_type_setter(f"Argument is not an {str(Metric)}.")
-
-
+        self._tipee = tipee
+        self._metric_name = metric_name
 
     def __call__(self, net, history, epoch):
-        if self._is_early_stop(history[self.typee][self.metric], epoch):
+        if self._is_early_stop(history[self._tipee][self._metric_name], epoch):
             self._counter += 1
             self.has_improved_last_epoch = False  # : flag giving information about the performance of the NN
             if DEBUG:
@@ -96,7 +75,7 @@ class Early_stopper(metaclass =ABCMeta):
                 return True
         else:
             self.has_improved_last_epoch = True  # : flag giving information about the performance of the NN
-            self._lowest_loss = min(history[self.typee][self.metric][epoch], self._lowest_loss)
+            self._lowest_loss = min(history[self._tipee][self._metric_name][epoch], self._lowest_loss)
             self._counter = 0
         return False
 
@@ -124,3 +103,27 @@ class Early_stopper(metaclass =ABCMeta):
         self.has_improved_last_epoch = True
         self._lowest_loss = np.Inf
         self._counter = 0
+
+
+    @property
+    def _tipee(self):
+        return self.__tipee
+
+    @_tipee.setter
+    def _tipee(self, new__tipee):
+        if isinstance(new__tipee, str):
+                self.__tipee = new__tipee
+        else:
+            raise Error_type_setter(f'Argument is not an {str(str)}.')
+
+    @property
+    def _metric_name(self):
+        return self.__metric_name
+
+    @_metric_name.setter
+    def _metric_name(self, new__metric_name):
+        if isinstance(new__metric_name, str):
+                self.__metric_name = new__metric_name
+        else:
+            raise Error_type_setter(f'Argument is not an {str(str)}.')
+

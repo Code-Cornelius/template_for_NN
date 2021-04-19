@@ -47,7 +47,7 @@ def nn_train(net, data_X, data_Y,
     history['training']['loss'] = np.full(epoch, np.nan)
 
     for metric in params_training.metrics:
-        history['training'][metric] = np.full(epoch, np.nan)
+        history['training'][metric.name] = np.full(epoch, np.nan)
 
     # condition if we use validation set:
     list_params_validation = [indic_validation_X, indic_validation_Y]
@@ -65,7 +65,7 @@ def nn_train(net, data_X, data_Y,
         history['validation']['loss'] = np.full(epoch, np.nan)
 
         for metric in params_training.metrics:
-            history['validation'][metric] = np.full(epoch, np.nan)
+            history['validation'][metric.name] = np.full(epoch, np.nan)
 
         # essentially, we need to check what is the max epoch:
         epoch_best_net = nn_fit(net, X_train_on_device, Y_train_on_device, Y_train, params_training, history,

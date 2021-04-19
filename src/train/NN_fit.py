@@ -172,11 +172,11 @@ def _update_history(net, metrics, criterion, epoch, is_valid_included, total_num
 
 
 def _update_metric(metric, net, epoch, total_number_data, history, data_loader, type):
-    history[type][metric][epoch] = 0
+    history[type][metric.name][epoch] = 0
     for batch_X, batch_y in data_loader:
-        history[type][metric][epoch] += metric(net, batch_X, batch_y)
+        history[type][metric.name][epoch] += metric(net, batch_X, batch_y)
 
-    history[type][metric][epoch] /= total_number_data[0] if type == 'training' else total_number_data[1]
+    history[type][metric.name][epoch] /= total_number_data[0] if type == 'training' else total_number_data[1]
 
 
 @decorator_train_disable_no_grad  # make sure we don't back propagate any loss over this data

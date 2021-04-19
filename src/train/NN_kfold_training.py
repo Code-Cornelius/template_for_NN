@@ -11,8 +11,10 @@ from src.training_stopper.Early_stopper_vanilla import Early_stopper_vanilla
 # todo untangle kfold with training.
 
 
-def nn_kfold_train(data_training_X, data_training_Y, model_NN, parameters_training,
-                   early_stoppers=(Early_stopper_vanilla()), nb_split=5, shuffle_kfold=True,
+def nn_kfold_train(data_training_X, data_training_Y,
+                   model_NN, parameters_training,
+                   early_stoppers=(Early_stopper_vanilla()),
+                   nb_split=5, shuffle_kfold=True,
                    percent_validation_for_1_fold=20, silent=False):
     """
     # create main cross validation method
@@ -20,19 +22,21 @@ def nn_kfold_train(data_training_X, data_training_Y, model_NN, parameters_traini
     # but also the best out of the k models, with respect to the accuracy over the whole set.
 
     Args:
-        model_NN: parametrised architecture,
-        should be a Class (object type Class) and such that we can call constructor over it to create a net.
-        early_stopper_training:
         data_training_X: tensor
         data_training_Y: tensor
-        parameters_training:
-        early_stopper_validation:
+        model_NN: parametrised architecture,
+            - should be a Class (object type Class) and such that we can call constructor over it to create a net.
+        parameters_training: contains the parameters used for training
+            - should be of type NNTrainParameters
+        early_stoppers: the stoppers
+            -- pre  -- iterable containing objects of type Early_stopper, preferably immutable
+            -- post -- the stoppers and the iterable will not be changed
         nb_split:
         shuffle_kfold:
         percent_validation_for_1_fold:
         silent:
 
-    Returns: net, loss train, loss validation, accuracy train, accuracy validation, best_epoch_for_model
+    Returns: net, history, best_epoch_for_model
 
     """
     # we distinguish the two cases, but in both we have a list of the result:
@@ -48,8 +52,8 @@ def nn_kfold_train(data_training_X, data_training_Y, model_NN, parameters_traini
     history['validation']['loss'] = np.zeros((nb_split, parameters_training.epochs))
 
     for metric in parameters_training.metrics:
-        history['training'][metric] = np.zeros((nb_split, parameters_training.epochs))
-        history['validation'][metric] = np.zeros((nb_split, parameters_training.epochs))
+        history['training'][metric.name] = np.zeros((nb_split, parameters_training.epochs))
+        history['validation'][metric.name] = np.zeros((nb_split, parameters_training.epochs))
 
 
     indices, compute_validation = _nn_kfold_indices_creation(data_training_X,
@@ -175,8 +179,13 @@ def _nn_kfold_indices_creation(data_training_X, data_training_Y, percent_validat
 
     else:
         try:
-            kfold = sklearn.model_selection.StratifiedKFold(n_splits=nb_split, shuffle=shuffle_kfold, random_state=0)
+            skfold = sklearn.model_selection.StratifiedKFold(n_splits=nb_split, shuffle=shuffle_kfold, random_state=0)
+            indices = skfold.split(data_training_X, data_training_Y)
+
+            # attempt to use the indices to check whether we can use stratified kfold
+            for _ in indices: break
+
         except ValueError:
             kfold = sklearn.model_selection.KFold(n_splits=nb_split, shuffle=shuffle_kfold, random_state=0)
-
-        return kfold.split(data_training_X, data_training_Y), True
+            indices = kfold.split(data_training_X, data_training_Y)
+        return indices, True
