@@ -1,5 +1,3 @@
-import sklearn.metrics
-import torch.utils
 from matplotlib import pyplot as plt
 from tqdm import tqdm
 
@@ -14,10 +12,10 @@ if PLOT_WHILE_TRAIN:
     FREQ_NEW_IMAGE = 40
 
 
-def plot_while_training(params_training, training_losses, validation_losses):
+def plot_while_training(params_training, history):
     ax.clear()
-    plt.semilogy(range(params_training.epochs), training_losses, 'b', label='Train Loss')
-    plt.semilogy(range(params_training.epochs), validation_losses, 'r', label='Validation Loss')
+    plt.semilogy(range(params_training.epochs), history["training"]["loss"], 'b', label='Train Loss')
+    plt.semilogy(range(params_training.epochs), history["validation"]["loss"], 'r', label='Validation Loss')
     plt.legend(loc="best")
     plt.pause(0.0001)
 
@@ -25,11 +23,9 @@ def plot_while_training(params_training, training_losses, validation_losses):
 def nn_fit(net,
            X_train_on_device, Y_train_on_device, Y_train,
            params_training,
-           training_losses, train_accuracy,
-           early_stopper_validation=Early_stopper_vanilla(),
-           early_stopper_training=Early_stopper_vanilla(),
+           history,
+           early_stoppers=(Early_stopper_vanilla()),
            X_val_on_device=None, Y_val_on_device=None, Y_val=None,
-           validation_losses=None, validation_accuracy=None,
            compute_accuracy=False,
            silent=False):
     # todo rename params_training into params_train
@@ -45,6 +41,7 @@ def nn_fit(net,
         Y_train_on_device:
         Y_train:
         params_training:
+        history: collection of results from metrics
         training_losses: always passed, numpy array where values are stored.
         train_accuracy: always passed, numpy array where values are stored.
         Passed, even though compute_accuracy is false.
@@ -68,14 +65,14 @@ def nn_fit(net,
     (criterion, is_validat_included, optimiser, total_number_data, train_loader,
      train_loader_on_device, validat_loader, validat_loader_on_device) = prepare_data_for_fit(
         X_train_on_device, X_val_on_device, Y_train, Y_train_on_device, Y_val, Y_val_on_device,
-        compute_accuracy, net, params_training, validation_accuracy, validation_losses)
+        compute_accuracy, net, params_training)
 
     epoch = 0
     for epoch in tqdm(range(params_training.epochs), disable=silent):  # disable unable the print.
         ###################
         # train the model #
         ###################
-        train_loss = 0  #:  aggregate variable
+        train_loss = 0  #: aggregate variable
         for i, (batch_X, batch_y) in enumerate(train_loader_on_device, 0):
             # closure needed for some algorithm.
             def closure():
@@ -93,42 +90,44 @@ def nn_fit(net,
             # you need to call again criterion, as we cannot store the criterion result:
             train_loss += criterion(net(batch_X), batch_y).item() * batch_X.shape[0]
             #: weight the loss accordingly. That is the reason why using average is flawed.
+
         # Normalize and save the loss over the current epoch:
-        training_losses[epoch] = train_loss / total_number_data[0]
-        _update_history(net, compute_accuracy, criterion, epoch, is_validat_included, total_number_data, train_loader,
-                        train_accuracy, validat_loader, validat_loader_on_device, validation_accuracy,
-                        validation_losses)
+        history["training"]["loss"][epoch] = train_loss / total_number_data[0]
+        _update_history(net, params_training.metrics, criterion, epoch, is_validat_included, total_number_data,
+                        train_loader, validat_loader, validat_loader_on_device, history)
 
         ######################
         #   Early Stopping   #
         ######################
         # Check if NN has not improved with respect to one of the two criteria.
         # If has not, we do not improve the best_weights of the NN
-        if early_stopper_validation.has_improved_last_epoch and early_stopper_training.has_improved_last_epoch:
+        if all(early_stopper.has_improved_last_epoch for early_stopper in early_stoppers):
             net.update_best_weights(epoch)
 
-        # Calculations to see if it's time to stop early:
-        if is_validat_included:
-            if early_stopper_validation(net, validation_losses, epoch):
-                if not silent: print("Terminated epochs, with early stopper validation at epoch {}.".format(epoch))
-                break  # : get out of epochs
-        if early_stopper_training(net, training_losses, epoch):
-                if not silent: print("Terminated epochs, with early stopper training at epoch {}.".format(epoch))
-                break  # : get out of epochs.
+        if _do_early_stop(net, early_stoppers, history, epoch, silent):
+            break
 
         if PLOT_WHILE_TRAIN:
             if epoch % FREQ_NEW_IMAGE == 0:
-                plot_while_training(params_training, training_losses, validation_losses)
+                plot_while_training(params_training, history)
 
     # ~~~~~~~~ end of the for in epoch. Training
-    return _return_the_stop(net, epoch, early_stopper_validation, early_stopper_training)
+    return _return_the_stop(net, epoch, early_stoppers)
+
+
+def _do_early_stop(net, early_stoppers, history, epoch, silent):
+    for early_stopper in early_stoppers:
+        if early_stopper(net, history, epoch):
+            if not silent: print("Terminated epochs, with early stopper training at epoch {}.".format(epoch))
+            return True
+    return False
 
 
 def prepare_data_for_fit(X_train_on_device, X_val_on_device, Y_train, Y_train_on_device, Y_val, Y_val_on_device,
-                         compute_accuracy, net, params_training, validation_accuracy, validation_losses):
+                         compute_accuracy, net, params_training):
     list_params_validat = [X_val_on_device, Y_val_on_device,
-                           Y_val, validation_losses,
-                           validation_accuracy]
+                           Y_val]
+
     is_validat_included = not are_at_least_one_None(list_params_validat)  #: equivalent to are all not None ?
     # raise if there is a logic error.
     if is_validat_included:  #: if we need validation
@@ -149,6 +148,7 @@ def prepare_data_for_fit(X_train_on_device, X_val_on_device, Y_train, Y_train_on
     train_loader = validat_loader = None  # in order to avoid referenced before assigment
     # when we compute accuracy, we need a dataloader between X on device and Y on the CPU :
     # because the accuracy is computed with sklearn that does not support GPU:
+    # todo: delete compute accuracy this and use to cpu on the lambda
     if compute_accuracy:
         train_loader = FastTensorDataLoader(X_train_on_device, Y_train,
                                             batch_size=params_training.batch_size,
@@ -163,67 +163,51 @@ def prepare_data_for_fit(X_train_on_device, X_val_on_device, Y_train, Y_train_on
     return criterion, is_validat_included, optimiser, total_number_data, train_loader, train_loader_on_device, validat_loader, validat_loader_on_device
 
 
-def _update_history(net, compute_accuracy, criterion, epoch, is_valid_included, total_number_data, train_loader,
-                    train_accuracy, validat_loader, validat_loader_on_device, valid_accuracy, valid_losses):
+def _update_history(net, metrics, criterion, epoch, is_valid_included, total_number_data, train_loader,
+                    validat_loader, validat_loader_on_device, history):
     ######################
-    # Training Accuracy  #
+    # Training Metrics  #
     ######################
-    if compute_accuracy:
-        _update_training_accuracy(epoch, net, total_number_data, train_accuracy, train_loader)
+    for metric in metrics:
+        _update_metric(metric, net, epoch, total_number_data, history, train_loader, 'training')
 
     ######################
     #   Validation Loss  #
     ######################
     # the advantage of computing it in this way is that we can load data while
     if is_valid_included:
-        _update_validation_loss(net, criterion, epoch, total_number_data, valid_losses, validat_loader_on_device)
+        _update_validation_loss(net, criterion, epoch, total_number_data, history, validat_loader_on_device)
 
         #######################
         # Validation Accuracy #
         #######################
-        if compute_accuracy:
-            _update_validation_accuracy(epoch, net, total_number_data, valid_accuracy, validat_loader)
+        for metric in metrics:
+            _update_metric(metric, net, epoch, total_number_data, history, validat_loader, 'validation')
+
     return
 
 
-def _update_validation_accuracy(epoch, net, total_number_data, valid_accuracy, validat_loader):
-    """ no need for wrapping !"""
-    valid_accuracy[epoch] = 0  # :aggregate variable
-    for batch_X, batch_y in validat_loader:  # batch X on device, batch_y on cpu.
-        valid_accuracy[epoch] += sklearn.metrics.accuracy_score(net.nn_predict_ans2cpu(batch_X),
-                                                                batch_y.reshape(-1, 1),
-                                                                normalize=False
-                                                                )
-        # :here the reshape is assuming we use Cross Entropy and the data outside is set in the right format.
-        # :sklearn can't access data on gpu.
-    valid_accuracy[epoch] /= total_number_data[1]  # : normalisation
+def _update_metric(metric, net, epoch, total_number_data, history, data_loader, type):
+    history[type][metric][epoch] = 0
+    for batch_X, batch_y in data_loader:
+        history[type][metric][epoch] += metric(net, batch_X, batch_y)
+
+    history[type][metric][epoch] /= total_number_data[0] if type == 'training' else total_number_data[1]
 
 
 @decorator_train_disable_no_grad  # make sure we don't back propagate any loss over this data
-def _update_validation_loss(net, criterion, epoch, total_number_data, valid_losses, validat_loader_on_device):
-    valid_losses[epoch] = 0  # :aggregate variable
+def _update_validation_loss(net, criterion, epoch, total_number_data, history, validat_loader_on_device):
+    history["validation"]["loss"][epoch] = 0  # :aggregate variable
     for batch_X, batch_y in validat_loader_on_device:
-        valid_losses[epoch] += criterion(net(batch_X), batch_y).item() * batch_X.shape[0]
-    valid_losses[epoch] /= total_number_data[1]
+        history["validation"]["loss"][epoch] += criterion(net(batch_X), batch_y).item() * batch_X.shape[0]
+    history["validation"]["loss"][epoch] /= total_number_data[1]
 
 
-def _update_training_accuracy(epoch, net, total_number_data, train_accuracy, train_loader):
-    """ no need for wrapping !"""
-    train_accuracy[epoch] = 0  # :aggregate variable
-    for batch_X, batch_y in train_loader:  # batch X on device, batch_y on cpu.
-        train_accuracy[epoch] += sklearn.metrics.accuracy_score(net.nn_predict_ans2cpu(batch_X),
-                                                                batch_y.reshape(-1, 1),
-                                                                normalize=False)
-    train_accuracy[epoch] /= total_number_data[0]  # : normalisation
-    # :here the reshape is assuming we use Cross Entropy and the data outside is set in the right format.
-    # :sklearn can't access data on gpu.
-
-
-def _return_the_stop(net, current_epoch, *args):  # args should be early_stoppers (or none if not defined)
+def _return_the_stop(net, current_epoch, early_stoppers):  # args should be early_stoppers (or none if not defined)
     # multiple early_stoppers can't break at the same time,
     # because there will be a first that breaks out the loop first.
     # if no early_stopper broke, return the current epoch.
-    for stopper in args:
+    for stopper in early_stoppers:
         if stopper.is_stopped():  #: check if the stopper is none or actually of type early stop.
             (net.load_state_dict(net.best_weights))  # .to(device)
             return net.best_epoch

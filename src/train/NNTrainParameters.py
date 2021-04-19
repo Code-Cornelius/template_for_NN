@@ -1,11 +1,12 @@
 class NNTrainParameters:
 
-    def __init__(self, batch_size, epochs, device, criterion, optimiser, dict_params_optimiser=None):
+    def __init__(self, batch_size, epochs, device, criterion, optimiser, metrics=[], dict_params_optimiser=None):
         self.batch_size = batch_size
         self.epochs = epochs
         self.device = device
         self.criterion = criterion
         self.optimiser = optimiser
+        self.metrics = metrics
 
         self.dict_params_optimiser = dict_params_optimiser
 
@@ -58,3 +59,11 @@ class NNTrainParameters:
     @optimiser.setter
     def optimiser(self, new_optimiser):
         self._optimiser = new_optimiser
+
+    @property
+    def metrics(self):
+        return self._metrics
+
+    @metrics.setter
+    def metrics(self, new_metrics):
+        self._metrics = new_metrics

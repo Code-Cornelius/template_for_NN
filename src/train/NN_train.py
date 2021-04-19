@@ -8,7 +8,7 @@ from src.training_stopper.Early_stopper_vanilla import Early_stopper_vanilla
 def nn_train(net, data_X, data_Y,
              params_training,
              indic_train_X, indic_train_Y,
-             early_stopper_validation=Early_stopper_vanilla(), early_stopper_training=Early_stopper_vanilla(),
+             early_stoppers=(Early_stopper_vanilla()),
              indic_validation_X=None, indic_validation_Y=None,
              compute_accuracy=False,
              silent=False):
@@ -43,9 +43,14 @@ def nn_train(net, data_X, data_Y,
     Y_train = data_Y[indic_train_Y]  # : useful for using it in order to compute accuracy.
     Y_train_on_device = Y_train.to(device)
 
+
     # prepare for iteration over epochs:
-    training_losses = np.full(epoch, np.nan)
-    training_accuracy = np.full(epoch, np.nan)
+    history = {}
+    history["training"] = {}
+    history["training"]["loss"] = np.full(epoch, np.nan)
+
+    for metric in params_training.metrics:
+        history["training"][metric] = np.full(epoch, np.nan)
 
     # condition if we use validation set:
     list_params_validation = [indic_validation_X, indic_validation_Y]
@@ -58,43 +63,30 @@ def nn_train(net, data_X, data_Y,
         X_val_on_device = data_X[indic_validation_X].to(device)
         Y_val = data_Y[indic_validation_Y]  # :useful for using it in order to compute accuracy.
         Y_val_on_device = Y_val.to(device)
-        validation_losses = np.full(epoch, np.nan)
-        validation_accuracy = np.full(epoch, np.nan)
+
+        history["validation"] = {}
+        history["validation"]["loss"] = np.full(epoch, np.nan)
+
+        for metric in params_training.metrics:
+            history["validation"][metric] = np.full(epoch, np.nan)
 
         # essentially, we need to check what is the max epoch:
         epoch_best_net = nn_fit(net, X_train_on_device, Y_train_on_device, Y_train,
                                 params_training,
-                                training_losses, training_accuracy,
-                                early_stopper_validation=early_stopper_validation,
-                                early_stopper_training=early_stopper_training,
+                                history,
+                                early_stoppers,
                                 X_val_on_device=X_val_on_device, Y_val_on_device=Y_val_on_device, Y_val=Y_val,
-                                validation_losses=validation_losses, validation_accuracy=validation_accuracy,
                                 compute_accuracy=compute_accuracy,
                                 silent=silent)
 
-        # return loss over epochs and accuracy
-        if early_stopper_validation is not None or early_stopper_training is not None:
-            return (training_accuracy, validation_accuracy,
-                    training_losses, validation_losses,
-                    epoch_best_net)
-        else:
-            return (training_accuracy, validation_accuracy,
-                    training_losses, validation_losses,
-                    epoch_best_net)
 
     # if no validation set
     else:
         epoch_best_net = nn_fit(net, X_train_on_device, Y_train_on_device, Y_train,
                                 params_training,
-                                training_losses, training_accuracy,
-                                early_stopper_validation=early_stopper_validation,
-                                early_stopper_training=early_stopper_training,
+                                history,
+                                early_stoppers,
                                 compute_accuracy=compute_accuracy,
                                 silent=silent)
-        # return loss over epochs and accuracy
-        if early_stopper_validation is not None or early_stopper_training is not None:
-            return (training_accuracy, training_losses,
-                    epoch_best_net)
-        else:
-            return (training_accuracy, training_losses,
-                    epoch_best_net)
+
+    return history, epoch_best_net

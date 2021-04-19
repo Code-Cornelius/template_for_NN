@@ -35,7 +35,7 @@ class Early_stopper(metaclass =ABCMeta):
 
     """
 
-    def __init__(self, patience=50, silent=True, delta=0.1):
+    def __init__(self, typee, metric, patience=50, silent=True, delta=0.1):
         """
         Args:
             patience (int): How long the stopper waits for improvement of the criterion.
@@ -55,8 +55,12 @@ class Early_stopper(metaclass =ABCMeta):
         self._early_stopped = False
         self.has_improved_last_epoch = True
 
-    def __call__(self, net, losses, epoch):
-        if self._is_early_stop(losses, epoch):
+        # for retrieving information from the history
+        self.typee = typee
+        self.metric = metric
+
+    def __call__(self, net, history, epoch):
+        if self._is_early_stop(history[self.typee][self.metric], epoch):
             self._counter += 1
             self.has_improved_last_epoch = False  # : flag giving information about the performance of the NN
             if DEBUG:
@@ -68,7 +72,7 @@ class Early_stopper(metaclass =ABCMeta):
                 return True
         else:
             self.has_improved_last_epoch = True  # : flag giving information about the performance of the NN
-            self._lowest_loss = min(losses[epoch], self._lowest_loss)
+            self._lowest_loss = min(history[self.typee][self.metric][epoch], self._lowest_loss)
             self._counter = 0
         return False
 

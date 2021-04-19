@@ -6,20 +6,18 @@ from src.training_stopper.Early_stopper_vanilla import Early_stopper_vanilla
 
 def test_no_accuracy(train_X, train_Y, Class_Parametrized_NN, parameters_training, nb_split, percent_validation_for_1_fold,
                      compute_accuracy, silent, plot_xx, plot_yy, plot_yy_noisy, testing_X, testing_Y,
-                     early_stop_train=Early_stopper_vanilla(),
-                     early_stop_valid=Early_stopper_vanilla()):
-    (net, mean_training_losses, mean_validation_losses, best_epoch_of_NN) = nn_kfold_train(train_X, train_Y,
+                     early_stoppers=[Early_stopper_vanilla()]):
+    (net, history, best_epoch_of_NN) = nn_kfold_train(train_X, train_Y,
                                                                                            Class_Parametrized_NN,
                                                                                            parameters_training=parameters_training,
-                                                                                           early_stopper_validation=early_stop_valid,
-                                                                                           early_stopper_training=early_stop_train,
+                                                                                           early_stoppers=early_stoppers,
                                                                                            nb_split=nb_split,
                                                                                            shuffle_kfold=True,
                                                                                            percent_validation_for_1_fold=percent_validation_for_1_fold,
                                                                                            compute_accuracy=compute_accuracy,
                                                                                            silent=silent)
     net.to(torch.device('cpu'))
-    nn_plot_train_loss_acc(training_loss=mean_training_losses, validation_loss=mean_validation_losses,
+    nn_plot_train_loss_acc(training_loss=history["training"]["loss"], validation_loss=history["validation"]["loss"],
                            best_epoch_of_NN=best_epoch_of_NN)
     nn_plot_prediction_vs_true(net, plot_xx, plot_yy, plot_yy_noisy)
     nn_print_errors(net, train_X, train_Y, testing_X, testing_Y)
@@ -27,62 +25,58 @@ def test_no_accuracy(train_X, train_Y, Class_Parametrized_NN, parameters_trainin
 
 def test_no_accuracy_no_validation(train_X, train_Y, Class_Parametrized_NN, parameters_training, nb_split,
                                    percent_validation_for_1_fold, compute_accuracy, silent, plot_xx, plot_yy,
-                                   plot_yy_noisy, testing_X, testing_Y, early_stop_train=Early_stopper_vanilla(),
-                                   early_stop_valid=Early_stopper_vanilla()):
-    (net, mean_training_losses, best_epoch_of_NN) = nn_kfold_train(train_X, train_Y, Class_Parametrized_NN,
+                                   plot_yy_noisy, testing_X, testing_Y, early_stoppers=[Early_stopper_vanilla()]):
+    (net, history, best_epoch_of_NN) = nn_kfold_train(train_X, train_Y, Class_Parametrized_NN,
                                                                    parameters_training=parameters_training,
-                                                                   early_stopper_validation=early_stop_valid,
-                                                                   early_stopper_training=early_stop_train,
+                                                                   early_stoppers=early_stoppers,
                                                                    nb_split=nb_split, shuffle_kfold=True,
                                                                    percent_validation_for_1_fold=percent_validation_for_1_fold,
                                                                    compute_accuracy=compute_accuracy, silent=silent)
     net.to(torch.device('cpu'))
-    nn_plot_train_loss_acc(training_loss=mean_training_losses, validation_loss=None, best_epoch_of_NN=best_epoch_of_NN)
+    nn_plot_train_loss_acc(training_loss=history["training"]["loss"], validation_loss=None, best_epoch_of_NN=best_epoch_of_NN)
     nn_plot_prediction_vs_true(net, plot_xx, plot_yy, plot_yy_noisy)
     nn_print_errors(net, train_X, train_Y, testing_X, testing_Y)
 
 
 def test_accuracy(train_X, train_Y, Class_Parametrized_NN, parameters_training, nb_split, percent_validation_for_1_fold,
-                  compute_accuracy, silent, testing_X, testing_Y, early_stop_train=Early_stopper_vanilla(),
-                  early_stop_valid=Early_stopper_vanilla()):
-    (net, mean_training_accuracy, mean_validation_accuracy,
-     mean_training_losses, mean_validation_losses, best_epoch_of_NN) = nn_kfold_train(train_X, train_Y, Class_Parametrized_NN,
+                  compute_accuracy, silent, testing_X, testing_Y, early_stoppers=[Early_stopper_vanilla()]):
+    (net, history, best_epoch_of_NN) = nn_kfold_train(train_X, train_Y, Class_Parametrized_NN,
                                                                                       parameters_training=parameters_training,
-                                                                                      early_stopper_validation=early_stop_valid,
-                                                                                      early_stopper_training=early_stop_train,
+                                                                                      early_stoppers=early_stoppers,
                                                                                       nb_split=nb_split,
                                                                                       shuffle_kfold=True,
                                                                                       percent_validation_for_1_fold=percent_validation_for_1_fold,
                                                                                       compute_accuracy=compute_accuracy,
                                                                                       silent=silent)
     net.to(torch.device('cpu'))
-    nn_plot_train_loss_acc(mean_training_losses, mean_validation_losses, mean_training_accuracy,
-                           mean_validation_accuracy, best_epoch_of_NN=best_epoch_of_NN)
+    accuracy_metric = parameters_training.metrics[0]
+    nn_plot_train_loss_acc(history["training"]["loss"], history["validation"]["loss"], history["training"][accuracy_metric],
+                           history["validation"][accuracy_metric], best_epoch_of_NN=best_epoch_of_NN)
     # confusion_matrix_creator(train_Y, net.nn_predict(train_X), range(10), title="Training Set")
     # confusion_matrix_creator(testing_Y, net.nn_predict(testing_X), range(10), title="Test Set")
 
 
 def test_accuracy_no_validation(train_X, train_Y, Class_Parametrized_NN, parameters_training, nb_split,
                                 percent_validation_for_1_fold, compute_accuracy, silent, testing_X, testing_Y,
-                                early_stop_train=Early_stopper_vanilla(), early_stop_valid=Early_stopper_vanilla()):
-    (net, mean_training_accuracy, mean_training_losses, best_epoch_of_NN) = nn_kfold_train(train_X, train_Y,
+                                early_stoppers=[Early_stopper_vanilla()]):
+    (net, history, best_epoch_of_NN) = nn_kfold_train(train_X, train_Y,
                                                                                            Class_Parametrized_NN,
                                                                                            parameters_training=parameters_training,
-                                                                                           early_stopper_validation=early_stop_valid,
-                                                                                           early_stopper_training=early_stop_train,
+                                                                                           early_stoppers=early_stoppers,
                                                                                            nb_split=nb_split,
                                                                                            shuffle_kfold=True,
                                                                                            percent_validation_for_1_fold=percent_validation_for_1_fold,
                                                                                            compute_accuracy=compute_accuracy,
                                                                                            silent=silent)
     net.to(torch.device('cpu'))
-    nn_plot_train_loss_acc(mean_training_losses, None, mean_training_accuracy, None, best_epoch_of_NN=best_epoch_of_NN)
+    accuracy_metric = parameters_training.metrics[0]
+    nn_plot_train_loss_acc(history["training"]["loss"], None, history["training"][accuracy_metric], None, best_epoch_of_NN=best_epoch_of_NN)
     # confusion_matrix_creator(train_Y, net.nn_predict(train_X), range(10), title="Training Set")
     # confusion_matrix_creator(testing_Y, net.nn_predict(testing_X), range(10), title="Test Set")
 
 
-def test(train_X, train_Y, Class_Parametrized_NN, parameters_training, testing_X, testing_Y, early_stop_train,
-         early_stop_valid, SILENT, compute_accuracy, plot_xx=None, plot_yy=None, plot_yy_noisy=None):
+def test(train_X, train_Y, Class_Parametrized_NN, parameters_training, testing_X, testing_Y, early_stoppers,
+         SILENT, compute_accuracy, plot_xx=None, plot_yy=None, plot_yy_noisy=None):
     print(" ~~~~~~~~~~Example 1 : Split 1~~~~~~~~~~ ")
     if not compute_accuracy:
         test_no_accuracy(train_X, train_Y, Class_Parametrized_NN, parameters_training,
@@ -96,14 +90,16 @@ def test(train_X, train_Y, Class_Parametrized_NN, parameters_training, testing_X
 
     print(" ~~~~~~~~~~Example 2 : Split 1 with both stopper~~~~~~~~~~ ")
     if not compute_accuracy:
-        test_no_accuracy(train_X, train_Y, Class_Parametrized_NN, parameters_training, early_stop_train=early_stop_train,
-                         early_stop_valid=early_stop_valid, nb_split=1, percent_validation_for_1_fold=20,
+        test_no_accuracy(train_X, train_Y, Class_Parametrized_NN, parameters_training,
+                         nb_split=1, percent_validation_for_1_fold=20,
                          compute_accuracy=False, silent=SILENT, plot_xx=plot_xx, plot_yy=plot_yy,
-                         plot_yy_noisy=plot_yy_noisy, testing_X=testing_X, testing_Y=testing_Y)
+                         plot_yy_noisy=plot_yy_noisy, testing_X=testing_X, testing_Y=testing_Y,
+                         early_stoppers=early_stoppers)
     if compute_accuracy:
-        test_accuracy(train_X, train_Y, Class_Parametrized_NN, parameters_training, early_stop_train=early_stop_train,
-                      early_stop_valid=early_stop_valid, nb_split=1, percent_validation_for_1_fold=20,
-                      compute_accuracy=True, silent=SILENT, testing_X=testing_X, testing_Y=testing_Y)
+        test_accuracy(train_X, train_Y, Class_Parametrized_NN, parameters_training,
+                      nb_split=1, percent_validation_for_1_fold=20,
+                      compute_accuracy=True, silent=SILENT, testing_X=testing_X, testing_Y=testing_Y,
+                      early_stoppers=early_stoppers)
 
     print(" ~~~~~~~~~~Example 3 : Split 3~~~~~~~~~~ ")
     if not compute_accuracy:
@@ -119,17 +115,17 @@ def test(train_X, train_Y, Class_Parametrized_NN, parameters_training, testing_X
 
     print(" ~~~~~~~~~~Example 3 : Split 5 with both stoppers~~~~~~~~~~ ")
     if not compute_accuracy:
-        test_no_accuracy(train_X, train_Y, Class_Parametrized_NN, parameters_training, early_stop_train=early_stop_train,
-                         early_stop_valid=early_stop_valid, nb_split=5, percent_validation_for_1_fold=0,
+        test_no_accuracy(train_X, train_Y, Class_Parametrized_NN, parameters_training,
+                         nb_split=5, percent_validation_for_1_fold=0,
                          compute_accuracy=False, silent=SILENT, plot_xx=plot_xx, plot_yy=plot_yy,
                          plot_yy_noisy=plot_yy_noisy,
-                         testing_X=testing_X, testing_Y=testing_Y)
+                         testing_X=testing_X, testing_Y=testing_Y, early_stoppers=early_stoppers)
 
     if compute_accuracy:
-        test_accuracy(train_X, train_Y, Class_Parametrized_NN, parameters_training, early_stop_train=early_stop_train,
-                      early_stop_valid=early_stop_valid, nb_split=5, percent_validation_for_1_fold=0,
+        test_accuracy(train_X, train_Y, Class_Parametrized_NN, parameters_training,
+                      nb_split=5, percent_validation_for_1_fold=0,
                       compute_accuracy=True, silent=SILENT,
-                      testing_X=testing_X, testing_Y=testing_Y)
+                      testing_X=testing_X, testing_Y=testing_Y, early_stoppers=early_stoppers)
 
     print(" ~~~~~~~~~~Example 4 : no validation for 1 split ~~~~~~~~~~ ")
     if not compute_accuracy:
