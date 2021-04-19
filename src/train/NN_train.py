@@ -5,8 +5,12 @@ from src.train.NN_fit import nn_fit
 from src.training_stopper.Early_stopper_vanilla import Early_stopper_vanilla
 
 
-def nn_train(net, data_X, data_Y, params_training, indic_train_X, indic_train_Y,
-             early_stoppers=(Early_stopper_vanilla()), indic_validation_X=None, indic_validation_Y=None, silent=False):
+def nn_train(net, data_X, data_Y,
+             params_training,
+             indic_train_X, indic_train_Y,
+             early_stoppers=(Early_stopper_vanilla()),
+             indic_validation_X=None, indic_validation_Y=None,
+             silent=False):
     """
     Semantics : Given the net, we train it upon data.
     For optimisation reasons, we pass the indices.
@@ -36,7 +40,6 @@ def nn_train(net, data_X, data_Y, params_training, indic_train_X, indic_train_Y,
     X_train_on_device = data_X[indic_train_X].to(device)
     Y_train = data_Y[indic_train_Y]  # : useful for using it in order to compute accuracy.
     Y_train_on_device = Y_train.to(device)
-
 
     # prepare for iteration over epochs:
     history = {}

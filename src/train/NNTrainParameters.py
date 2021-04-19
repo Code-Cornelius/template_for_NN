@@ -1,12 +1,12 @@
 class NNTrainParameters:
 
-    def __init__(self, batch_size, epochs, device, criterion, optimiser, metrics=[], dict_params_optimiser=None):
+    def __init__(self, batch_size, epochs, device, criterion, optimiser, metrics=() , dict_params_optimiser=None):
         self.batch_size = batch_size
         self.epochs = epochs
         self.device = device
         self.criterion = criterion
         self.optimiser = optimiser
-        self.metrics = metrics
+        self.metrics = metrics # tuple
 
         self.dict_params_optimiser = dict_params_optimiser
 
@@ -22,16 +22,6 @@ class NNTrainParameters:
         else:
             raise TypeError(f"Argument is not an unsigned int.")
 
-    @property
-    def learning_rate(self):
-        return self._learning_rate
-
-    @learning_rate.setter
-    def learning_rate(self, new_learning_rate):
-        if isinstance(new_learning_rate, float):
-            self._learning_rate = new_learning_rate
-        else:
-            raise TypeError(f"Argument is not an float.")
 
     @property
     def epochs(self):

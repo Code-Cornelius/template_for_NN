@@ -33,6 +33,11 @@ SILENT = False
 early_stop_train = Early_stopper_training(patience=20, silent=SILENT, delta=-0.05)
 early_stop_valid = Early_stopper_validation(patience=20, silent=SILENT, delta=-0.05)
 early_stoppers = (early_stop_train, early_stop_valid)
+accuracy_wrapper = lambda net, batch_X, batch_y: sklearn.metrics.accuracy_score(net.nn_predict_ans2cpu(batch_X),
+                                                                                batch_y.reshape(-1, 1).to('cpu'),
+                                                                                normalize=False
+                                                                                )
+metrics = (accuracy_wrapper)
 #############################
 
 
@@ -69,16 +74,10 @@ if __name__ == '__main__':
     criterion = nn.CrossEntropyLoss()
     dict_optimiser = {"lr": 0.0005, "weight_decay": 0.00001}
 
-    # metric lambdas
-    accuracy_wrapper = lambda net, batch_X, batch_y: sklearn.metrics.accuracy_score(net.nn_predict_ans2cpu(batch_X),
-                                                                                    batch_y.reshape(-1, 1).to('cpu'),
-                                                                                    normalize=False)
-    metrics = [accuracy_wrapper]
-
-    parameters_for_training = NNTrainParameters(batch_size=batch_size, epochs=epochs, device=device,
-                                                criterion=criterion, optimiser=optimiser,
-                                                dict_params_optimiser=dict_optimiser,
-                                                metrics=metrics)
+    param_training = NNTrainParameters(batch_size=batch_size, epochs=epochs, device=device,
+                                       criterion=criterion, optimiser=optimiser,
+                                       dict_params_optimiser=dict_optimiser,
+                                       metrics=metrics)
     Class_Parametrized_NN = factory_parametrised_FC_NN(param_input_size=input_size,
                                                        param_list_hidden_sizes=hidden_sizes,
                                                        param_output_size=output_size, param_list_biases=biases,
@@ -86,7 +85,7 @@ if __name__ == '__main__':
                                                        param_dropout=dropout,
                                                        param_predict_fct=lambda out: torch.max(out, 1)[1])
 
-    test_nn_kfold_train.test(train_X, train_Y, Class_Parametrized_NN, parameters_for_training,
+    test_nn_kfold_train.test(train_X, train_Y, Class_Parametrized_NN, param_training,
                              test_X, test_Y, early_stoppers,
                              SILENT,
                              compute_accuracy=True, plot_xx=None, plot_yy=None, plot_yy_noisy=None)

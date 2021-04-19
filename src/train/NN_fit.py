@@ -150,7 +150,7 @@ def prepare_data_for_fit(X_train_on_device, X_val_on_device, Y_train, Y_train_on
 
 def _update_history(net, metrics, criterion, epoch, is_valid_included, total_number_data, train_loader_on_device, validat_loader_on_device, history):
     ######################
-    # Training Metrics  #
+    # Training Metrics   #
     ######################
     for metric in metrics:
         _update_metric(metric, net, epoch, total_number_data, history, train_loader_on_device, 'training')
@@ -163,7 +163,7 @@ def _update_history(net, metrics, criterion, epoch, is_valid_included, total_num
         _update_validation_loss(net, criterion, epoch, total_number_data, history, validat_loader_on_device)
 
         #######################
-        # Validation Accuracy #
+        # Validation Metrics  #
         #######################
         for metric in metrics:
             _update_metric(metric, net, epoch, total_number_data, history, validat_loader_on_device, 'validation')

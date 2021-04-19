@@ -59,6 +59,30 @@ class Early_stopper(metaclass =ABCMeta):
         self.typee = typee
         self.metric = metric
 
+        @property
+        def tipee(self):
+            return self._tipee
+
+        @tipee.setter
+        def tipee(self, new_tipee):
+            if isinstance(new_tipee, str):
+                    self._tipee = new_tipee
+            else:
+                raise Error_type_setter(f"Argument is not an {str(str)}.")
+
+        @property
+        def metric(self):
+            return self._metric
+
+        @metric.setter
+        def metric(self, new_metric):
+            if isinstance(new_metric, Metric):
+                    self._metric = new_metric
+            else:
+                raise Error_type_setter(f"Argument is not an {str(Metric)}.")
+
+
+
     def __call__(self, net, history, epoch):
         if self._is_early_stop(history[self.typee][self.metric], epoch):
             self._counter += 1
