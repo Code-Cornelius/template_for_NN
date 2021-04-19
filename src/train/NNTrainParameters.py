@@ -1,12 +1,14 @@
 class NNTrainParameters:
 
-    def __init__(self, batch_size, epochs, device, criterion, optimiser, metrics=() , dict_params_optimiser=None):
+    def __init__(self, batch_size, epochs, device, criterion, optimiser, metrics=(), dict_params_optimiser=None):
         self.batch_size = batch_size
         self.epochs = epochs
         self.device = device
         self.criterion = criterion
         self.optimiser = optimiser
-        self.metrics = metrics # tuple
+
+        # iterable containing objects of type Metric
+        self.metrics = metrics
 
         self.dict_params_optimiser = dict_params_optimiser
 

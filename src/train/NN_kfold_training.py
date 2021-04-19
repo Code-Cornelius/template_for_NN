@@ -13,7 +13,7 @@ from src.training_stopper.Early_stopper_vanilla import Early_stopper_vanilla
 
 def nn_kfold_train(data_training_X, data_training_Y,
                    model_NN, parameters_training,
-                   early_stoppers=(Early_stopper_vanilla()),
+                   early_stoppers=(Early_stopper_vanilla(),),
                    nb_split=5, shuffle_kfold=True,
                    percent_validation_for_1_fold=20, silent=False):
     """
@@ -28,7 +28,7 @@ def nn_kfold_train(data_training_X, data_training_Y,
             - should be a Class (object type Class) and such that we can call constructor over it to create a net.
         parameters_training: contains the parameters used for training
             - should be of type NNTrainParameters
-        early_stoppers: the stoppers
+        early_stoppers: used for deciding if the training should stop early
             -- pre  -- iterable containing objects of type Early_stopper, preferably immutable
             -- post -- the stoppers and the iterable will not be changed
         nb_split:
@@ -106,6 +106,8 @@ def train_kfold_a_fold_after_split(best_epoch_of_NN, best_net, data_training_X, 
         time.sleep(0.001)  # for printing order
 
     net = model_NN().to(parameters_training.device)
+
+    # reset the early stoppers for the following fold
     for early_stopper in early_stoppers:
         early_stopper.reset()
 
@@ -139,11 +141,15 @@ def _new_best_model(best_epoch_of_NN, best_net, i, net, value_metric_for_best_NN
 # HISTORY FUNCTION
 def _set_history_from_nn_train(res, best_epoch_of_NN, history, index):
     kfold_history, kfold_best_epoch = res
+
+    # save the best epoch for the fold
     best_epoch_of_NN[index] = kfold_best_epoch
 
+    # update the history with the results from the fold training
     for metric_key in kfold_history['training']:
         history['training'][metric_key][index, :] = kfold_history['training'][metric_key]
 
+    # if validation is performed, update the history with the results from the fold validation
     if 'validation' in kfold_history:
         for metric_key in kfold_history['validation']:
             history['validation'][metric_key][index, :] = kfold_history['validation'][metric_key]
@@ -177,15 +183,18 @@ def _nn_kfold_indices_creation(data_training_X, data_training_Y, percent_validat
             indic_validation = torch.arange(training_size, data_training_X.shape[0])
         return [(indic_train, indic_validation)], True
 
+    # multiple folds
     else:
         try:
-            skfold = sklearn.model_selection.StratifiedKFold(n_splits=nb_split, shuffle=shuffle_kfold, random_state=0)
-            indices = skfold.split(data_training_X, data_training_Y)
+            # classification
+            kfold = sklearn.model_selection.StratifiedKFold(n_splits=nb_split, shuffle=shuffle_kfold, random_state=0)
 
             # attempt to use the indices to check whether we can use stratified kfold
-            for _ in indices: break
+            for _ in kfold.split(data_training_X, data_training_Y):
+                break
 
         except ValueError:
+            # regression
             kfold = sklearn.model_selection.KFold(n_splits=nb_split, shuffle=shuffle_kfold, random_state=0)
-            indices = kfold.split(data_training_X, data_training_Y)
-        return indices, True
+
+        return kfold.split(data_training_X, data_training_Y), True

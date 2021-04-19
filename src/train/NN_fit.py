@@ -20,48 +20,35 @@ def plot_while_training(params_training, history):
     plt.pause(0.0001)
 
 
-def nn_fit(net, X_train_on_device, Y_train_on_device, Y_train, params_training, history,
-           early_stoppers=(Early_stopper_vanilla()), X_val_on_device=None, Y_val_on_device=None, Y_val=None,
+def nn_fit(net, X_train_on_device, Y_train_on_device,
+           params_training, history,
+           early_stoppers=(Early_stopper_vanilla(),),
+           X_val_on_device=None, Y_val_on_device=None,
            silent=False):
-    # todo rename params_training into params_train
-    #  early_stopper_validation into early_stopper_valid
-    #  early_stopper_training into early_stopper_train
-    #  etc...
-
     """
 
     Args:
         net: model
         X_train_on_device:
         Y_train_on_device:
-        Y_train:
-        params_training:
+        params_training: the parameters used in training
+            -- pre -- of type NNTrainParameters
         history: collection of results from metrics
-        training_losses: always passed, numpy array where values are stored.
-        train_accuracy: always passed, numpy array where values are stored.
-        Passed, even though compute_accuracy is false.
+        early_stoppers: used for deciding if the training should stop early
+            -- pre  -- iterable containing objects of type Early_stopper, preferably immutable
+            -- post -- the stoppers and the iterable will not be changed
         X_val_on_device:
         Y_val_on_device:
-        Y_val:
-        validation_losses: always passed, numpy array where values are stored. Full of nan at init.
-        validation_accuracy: always passed, numpy array where values are stored.
-        Passed, even though compute_accuracy is false.
-        early_stopper_training:
-        early_stopper_validation:
         silent: verbose.
 
-    Returns: return epoch of best net and updates the value passed in
-    training_losses, training_accuracy,
-    valid_losses, valid_accuracy, max_through_epoch.
-
+    Returns: epoch of the best net and updates the history
     """
+
     # condition if we use validation set.
     (criterion, is_validat_included, optimiser, total_number_data,
-     train_loader_on_device, validat_loader_on_device) = prepare_data_for_fit(X_train_on_device,
-                                                                                              X_val_on_device, Y_train,
-                                                                                              Y_train_on_device, Y_val,
-                                                                                              Y_val_on_device, net,
-                                                                                              params_training)
+     train_loader_on_device, validat_loader_on_device) = prepare_data_for_fit(X_train_on_device, X_val_on_device,
+                                                                              Y_train_on_device, Y_val_on_device, net,
+                                                                              params_training)
 
     epoch = 0
     for epoch in tqdm(range(params_training.epochs), disable=silent):  # disable unable the print.
@@ -119,21 +106,19 @@ def _do_early_stop(net, early_stoppers, history, epoch, silent):
     return False
 
 
-def prepare_data_for_fit(X_train_on_device, X_val_on_device, Y_train, Y_train_on_device, Y_val, Y_val_on_device, net,
-                         params_training):
-    list_params_validat = [X_val_on_device, Y_val_on_device,
-                           Y_val]
+def prepare_data_for_fit(X_train_on_device, X_val_on_device, Y_train_on_device, Y_val_on_device, net, params_training):
+    list_params_validat = [X_val_on_device, Y_val_on_device]
 
     is_validat_included = not are_at_least_one_None(list_params_validat)  #: equivalent to are all not None ?
     # raise if there is a logic error.
     if is_validat_included:  #: if we need validation
-        total_number_data = Y_train.shape[0], Y_val.shape[0]  # : constants for normalisation
+        total_number_data = Y_train_on_device.shape[0], Y_val_on_device.shape[0]  # : constants for normalisation
         # create data validat_loader : load validation data in batches
         validat_loader_on_device = FastTensorDataLoader(
             X_val_on_device, Y_val_on_device,
             batch_size=params_training.batch_size, shuffle=False)  # SHUFFLE IS COSTLY!
     else:
-        total_number_data = Y_train.shape[0], 0  # : constants for normalisation
+        total_number_data = Y_train_on_device.shape[0], 0  # : constants for normalisation
         raise_if_not_all_None(list_params_validat)
         validat_loader_on_device = None  # in order to avoid referenced before assigment
     # create data train_loader_on_device : load training data in batches

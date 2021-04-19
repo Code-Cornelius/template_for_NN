@@ -33,10 +33,10 @@ SILENT = False
 early_stop_train = Early_stopper_training(patience=20, silent=SILENT, delta=-0.05)
 early_stop_valid = Early_stopper_validation(patience=20, silent=SILENT, delta=-0.05)
 early_stoppers = (early_stop_train, early_stop_valid)
-accuracy_wrapper = lambda net, batch_X, batch_y: sklearn.metrics.accuracy_score(net.nn_predict_ans2cpu(batch_X),
-                                                                                batch_y.reshape(-1, 1).to('cpu'),
-                                                                                normalize=False
-                                                          )
+accuracy_wrapper = lambda net, xx, yy: sklearn.metrics.accuracy_score(net.nn_predict_ans2cpu(xx),
+                                                                      yy.reshape(-1, 1).to('cpu'),
+                                                                      normalize=False
+                                                                      )
 accuracy_metric = Metric(name="accuracy", function=accuracy_wrapper)
 metrics = (accuracy_metric,)
 #############################

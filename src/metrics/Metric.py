@@ -13,7 +13,7 @@ class Metric(object):
         Constructor.
         Args:
             name: a name that should be used to refer to the metric
-            function: a lambda function taking 3 parameters: net, batch_X and batch_y, and 
+            function: a lambda function taking 3 parameters: net, xx and yy, and
                 defines all the parameters used to compute the metric
         """
         self.name = name
