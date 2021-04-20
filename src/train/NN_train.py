@@ -40,11 +40,8 @@ def nn_train(net, data_X, data_Y,
     X_train_on_device = data_X[indic_train_X].to(device)
     Y_train_on_device = data_Y[indic_train_Y].to(device)
 
-    # prepare for iteration over epochs:
-
     # initialise the training history for loss and any other metric included
-    history = {}
-    history['training'] = {}
+    history = {'training': {}}
     history['training']['loss'] = np.full(epoch, np.nan)
 
     for metric in params_training.metrics:
@@ -62,16 +59,17 @@ def nn_train(net, data_X, data_Y,
         Y_val_on_device = data_Y[indic_validation_Y].to(device)
 
         # initialise the validation history for loss and any other metrics included
+        # initialise with nans such that no plot if no value.
         history['validation'] = {}
         history['validation']['loss'] = np.full(epoch, np.nan)
 
         for metric in params_training.metrics:
+            # initialise with nans such that no plot if no value.
             history['validation'][metric.name] = np.full(epoch, np.nan)
 
         # essentially, we need to check what is the max epoch:
         epoch_best_net = nn_fit(net, X_train_on_device, Y_train_on_device, params_training, history, early_stoppers,
                                 X_val_on_device=X_val_on_device, Y_val_on_device=Y_val_on_device, silent=silent)
-
 
     # if no validation set
     else:

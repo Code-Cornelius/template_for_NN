@@ -3,7 +3,7 @@
 #  and save the model and use it to check the accuracy total.
 import sklearn
 
-from metric.Metric import Metric
+from src.metric.Metric import Metric
 
 import test_nn_kfold_train
 

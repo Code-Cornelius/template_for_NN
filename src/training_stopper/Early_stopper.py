@@ -49,7 +49,7 @@ class Early_stopper(metaclass=ABCMeta):
     def __init__(self, tipee, metric_name, patience=50, silent=True, delta=0.1):
         """
         Args:
-            tipee (str): the type of early stopper, used for accessing history in training.
+            tipee (str): the type of early stopper, used for accessing history in NN training. 'training', 'validation'
             metric_name (str): the named used to identify the results of the metric in history
             patience (int): How long the stopper waits for improvement of the criterion.
             silent (bool):
@@ -104,6 +104,9 @@ class Early_stopper(metaclass=ABCMeta):
 
     def is_stopped(self):
         return self._early_stopped
+
+    def is_validation(self):
+        return self._tipee == 'validation'
 
     def reset(self):
         """ Allows to reset the log of the early stopper between kfold for example."""

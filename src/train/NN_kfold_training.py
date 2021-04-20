@@ -8,9 +8,6 @@ from src.train.NN_train import nn_train
 from src.training_stopper.Early_stopper_vanilla import Early_stopper_vanilla
 
 
-# todo untangle kfold with training.
-
-
 def nn_kfold_train(data_training_X, data_training_Y,
                    model_NN, parameters_training,
                    early_stoppers=(Early_stopper_vanilla(),),
@@ -35,31 +32,34 @@ def nn_kfold_train(data_training_X, data_training_Y,
         percent_validation_for_1_fold:
         silent:
 
-    Returns: net, history, best_epoch_for_model
+    Returns: net, history_kfold, best_epoch_for_model
 
     Post-condition :
         early_stoppers not changed.
     """
     # place where logs of trainings with respect to the metrics are stored.
-    history = {
-        'training': {},
-        'validation': {}
-    }
-    history['training']['loss'] = np.zeros((nb_split, parameters_training.epochs))
-    history['validation']['loss'] = np.zeros((nb_split, parameters_training.epochs))
-
-    for metric in parameters_training.metrics:
-        history['training'][metric.name] = np.zeros((nb_split, parameters_training.epochs))
-        history['validation'][metric.name] = np.zeros((nb_split, parameters_training.epochs))
-
     indices, compute_validation = _nn_kfold_indices_creation(data_training_X,
                                                              data_training_Y,
                                                              percent_validation_for_1_fold,
                                                              nb_split,
                                                              shuffle_kfold)
+    history_kfold = {'training': {}}
+    history_kfold['training']['loss'] = np.zeros((nb_split, parameters_training.epochs))
+    for metric in parameters_training.metrics:
+        history_kfold['training'][metric.name] = np.zeros((nb_split, parameters_training.epochs))
+
+    if compute_validation:
+        history_kfold['validation'] = {}
+        history_kfold['validation']['loss'] = np.zeros((nb_split, parameters_training.epochs))
+        for metric in parameters_training.metrics:
+            history_kfold['validation'][metric.name] = np.zeros((nb_split, parameters_training.epochs))
+
+    else:  # : testing that no early validation stopper given.
+        for stop in early_stoppers:
+            assert stop.is_validation(), "Input validation stopper while no validation set given."
 
     return _nn_multiplefold_train(data_training_X, data_training_Y, early_stoppers, model_NN, nb_split,
-                                  parameters_training, indices, silent, history)
+                                  parameters_training, indices, silent, history_kfold)
 
 
 # section ######################################################################

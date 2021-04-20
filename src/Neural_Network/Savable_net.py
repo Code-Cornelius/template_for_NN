@@ -4,7 +4,6 @@ from copy import deepcopy
 import torch
 import torch.nn as nn
 
-
 # my lib
 from priv_lib_error import Error_type_setter
 from src.Neural_Network.NN_fcts import decorator_train_disable_no_grad
@@ -84,7 +83,6 @@ class Savable_net(nn.Module):
         Condition: net has the method prediction.
 
         Args:
-            net:
             data_to_predict:
 
         Returns:

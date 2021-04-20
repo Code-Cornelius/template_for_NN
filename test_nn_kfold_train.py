@@ -23,6 +23,8 @@ def test_no_accuracy(train_X, train_Y, Class_Parametrized_NN, parameters_trainin
 def test_no_accuracy_no_validation(train_X, train_Y, Class_Parametrized_NN, parameters_training, nb_split,
                                    percent_validation_for_1_fold, silent, plot_xx, plot_yy, plot_yy_noisy, testing_X,
                                    testing_Y, early_stoppers=[Early_stopper_vanilla()]):
+    print("coucou problem")
+    print( early_stoppers[0].is_validation())
     (net, history, best_epoch_of_NN) = nn_kfold_train(train_X, train_Y, Class_Parametrized_NN,
                                                       parameters_training=parameters_training,
                                                       early_stoppers=early_stoppers, nb_split=nb_split,
