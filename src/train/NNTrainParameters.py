@@ -1,6 +1,7 @@
-from metric.Metric import Metric
+# from metric.Metric import Metric
 from priv_lib_util.tools import function_iterable
 
+from src.metric.Metric import Metric
 
 class NNTrainParameters:
 
@@ -74,8 +75,6 @@ class NNTrainParameters:
     def metrics(self, new_metrics):
         assert function_iterable.is_iterable(new_metrics), "argument should be iterable."
         for new_metric in new_metrics:
-            print(new_metric)
-            print(isinstance(new_metric, Metric))
             if isinstance(new_metric, Metric):
                 pass
             else:

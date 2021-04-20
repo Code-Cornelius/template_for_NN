@@ -165,6 +165,19 @@ class Fully_connected_NN(Savable_net, metaclass=ABCMeta):
 def factory_parametrised_FC_NN(param_input_size, param_list_hidden_sizes, param_output_size,
                                param_list_biases, param_activation_functions,
                                param_dropout=0, param_predict_fct=None):
+    """
+    Examples:
+            input_size = 1
+            hidden_sizes = [500, 500, 500, 500, 500]
+            output_size = 1
+            biases = [True, True, True, True, True, True]
+            activation_functions = [torch.tanh, torch.tanh, torch.tanh, torch.tanh, torch.tanh]
+            # example of activation functions : torch.celu, torch.relu, torch.tanh
+            dropout = 0.0
+            epochs = 500
+            batch_size = len(rescaled_train_X)
+            predict_fct = nn.Identity()
+    """
     assert len(param_list_biases) == len(param_list_hidden_sizes) + 1, "wrong dimensions for biases and hidden layers."
 
     class Parametrised_FC_NN(Fully_connected_NN):

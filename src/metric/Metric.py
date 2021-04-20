@@ -14,6 +14,8 @@ class Metric(object):
         Args:
             name: a name that should be used to refer to the metric
             function: a callable taking 3 parameters: net, xx and yy. It returns a float.
+            Be careful about how the data is computed,
+            as net is on device, xx is on device, and yy is also on device.
         """
         self.name = name
         self._function = function

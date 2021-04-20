@@ -4,7 +4,6 @@ from copy import deepcopy
 import torch
 import torch.nn as nn
 
-from abc import abstractmethod
 
 # my lib
 from priv_lib_error import Error_type_setter
