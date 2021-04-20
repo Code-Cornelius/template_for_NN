@@ -14,6 +14,8 @@ from src.Neural_Network.NN_fcts import pytorch_device_setting
 from src.training_stopper.Early_stopper_training import Early_stopper_training
 from src.training_stopper.Early_stopper_validation import Early_stopper_validation
 
+from src.metric.Metric import Metric
+
 # set seed for pytorch.
 torch.manual_seed(42)
 np.random.seed(42)
@@ -68,6 +70,12 @@ if __name__ == '__main__':
                                        criterion=criterion, optimiser=optimiser,
                                        dict_params_optimiser=dict_optimiser,
                                        metrics=metrics)
+    le = Metric("coucou", lambda x, y: np.exp(x))
+    x = (le, le)
+    for new_metric in x:
+        print(isinstance(new_metric, Metric))
+
+    param_training.metrics = (le, le)
     parametrized_NN = factory_parametrised_FC_NN(param_input_size=input_size, param_list_hidden_sizes=hidden_sizes,
                                                  param_output_size=output_size, param_list_biases=biases,
                                                  param_activation_functions=activation_functions, param_dropout=dropout,

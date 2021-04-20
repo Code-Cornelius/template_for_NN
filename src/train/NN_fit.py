@@ -26,22 +26,22 @@ def nn_fit(net, X_train_on_device, Y_train_on_device,
            X_val_on_device=None, Y_val_on_device=None,
            silent=False):
     """
-
     Args:
         net: model
         X_train_on_device:
         Y_train_on_device:
-        params_training: the parameters used in training
-            -- pre -- of type NNTrainParameters
+        params_training: type NNTrainParameters, the parameters used in training
         history: collection of results from metrics
-        early_stoppers: used for deciding if the training should stop early
-            -- pre  -- iterable containing objects of type Early_stopper, preferably immutable
-            -- post -- the stoppers and the iterable will not be changed
+        early_stoppers: iterable of Early_stopper. Used for deciding if the training should stop early.
+            Preferably immutable to insure no changes.
         X_val_on_device:
         Y_val_on_device:
         silent: verbose.
 
     Returns: epoch of the best net and updates the history
+
+    Post-condition :
+        early_stoppers not changed.
     """
 
     # condition if we use validation set.
@@ -114,17 +114,16 @@ def prepare_data_for_fit(X_train_on_device, X_val_on_device, Y_train_on_device, 
     if is_validat_included:  #: if we need validation
         total_number_data = Y_train_on_device.shape[0], Y_val_on_device.shape[0]  # : constants for normalisation
         # create data validat_loader : load validation data in batches
-        validat_loader_on_device = FastTensorDataLoader(
-            X_val_on_device, Y_val_on_device,
-            batch_size=params_training.batch_size, shuffle=False)  # SHUFFLE IS COSTLY!
+        validat_loader_on_device = FastTensorDataLoader(X_val_on_device, Y_val_on_device,
+                                                        batch_size=params_training.batch_size,
+                                                        shuffle=False)  # SHUFFLE IS COSTLY!
     else:
         total_number_data = Y_train_on_device.shape[0], 0  # : constants for normalisation
         raise_if_not_all_None(list_params_validat)
         validat_loader_on_device = None  # in order to avoid referenced before assigment
     # create data train_loader_on_device : load training data in batches
-    train_loader_on_device = FastTensorDataLoader(
-        X_train_on_device, Y_train_on_device,
-        batch_size=params_training.batch_size, shuffle=True)
+    train_loader_on_device = FastTensorDataLoader(X_train_on_device, Y_train_on_device,
+                                                  batch_size=params_training.batch_size, shuffle=True)
     # : SHUFFLE IS COSTLY! it is the only shuffle really useful
 
     # pick loss function and optimizer
@@ -133,7 +132,8 @@ def prepare_data_for_fit(X_train_on_device, X_val_on_device, Y_train_on_device, 
     return criterion, is_validat_included, optimiser, total_number_data, train_loader_on_device, validat_loader_on_device
 
 
-def _update_history(net, metrics, criterion, epoch, is_valid_included, total_number_data, train_loader_on_device, validat_loader_on_device, history):
+def _update_history(net, metrics, criterion, epoch, is_valid_included, total_number_data, train_loader_on_device,
+                    validat_loader_on_device, history):
     ######################
     # Training Metrics   #
     ######################
@@ -172,7 +172,8 @@ def _update_validation_loss(net, criterion, epoch, total_number_data, history, v
     history['validation']['loss'][epoch] /= total_number_data[1]
 
 
-def _return_the_stop(net, current_epoch, early_stoppers):  # args should be early_stoppers (or none if not defined)
+def _return_the_stop(net, current_epoch, early_stoppers):
+    # args should be early_stoppers (or none if not defined)
     # multiple early_stoppers can't break at the same time,
     # because there will be a first that breaks out the loop first.
     # if no early_stopper broke, return the current epoch.

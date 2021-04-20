@@ -19,18 +19,17 @@ def nn_kfold_train(data_training_X, data_training_Y,
     """
     # create main cross validation method
     # it returns the score during training,
-    # but also the best out of the k models, with respect to the accuracy over the whole set.
+    # but also the best out of the nb_split models, with respect to the loss over the whole set.
+
 
     Args:
         data_training_X: tensor
         data_training_Y: tensor
         model_NN: parametrised architecture,
-            - should be a Class (object type Class) and such that we can call constructor over it to create a net.
-        parameters_training: contains the parameters used for training
-            - should be of type NNTrainParameters
-        early_stoppers: used for deciding if the training should stop early
-            -- pre  -- iterable containing objects of type Early_stopper, preferably immutable
-            -- post -- the stoppers and the iterable will not be changed
+            type the Class with architecture we want to KFold over. Requirements: call constructor over it to create a net.
+        parameters_training: NNTrainParameters. contains the parameters used for training
+        early_stoppers: iterable of Early_stopper. Used for deciding if the training should stop early.
+            Preferably immutable to insure no changes.
         nb_split:
         shuffle_kfold:
         percent_validation_for_1_fold:
@@ -38,12 +37,10 @@ def nn_kfold_train(data_training_X, data_training_Y,
 
     Returns: net, history, best_epoch_for_model
 
+    Post-condition :
+        early_stoppers not changed.
     """
-    # we distinguish the two cases, but in both we have a list of the result:
-    # by inclusivity of else into if compute_accuracy, [0] should be loss and [1] accuracy:
-
-    # the nans are because we want to skip the plotting at places where we did not collect data.
-
+    # place where logs of trainings with respect to the metrics are stored.
     history = {
         'training': {},
         'validation': {}
@@ -54,7 +51,6 @@ def nn_kfold_train(data_training_X, data_training_Y,
     for metric in parameters_training.metrics:
         history['training'][metric.name] = np.zeros((nb_split, parameters_training.epochs))
         history['validation'][metric.name] = np.zeros((nb_split, parameters_training.epochs))
-
 
     indices, compute_validation = _nn_kfold_indices_creation(data_training_X,
                                                              data_training_Y,
@@ -72,7 +68,6 @@ def nn_kfold_train(data_training_X, data_training_Y,
 
 def _nn_multiplefold_train(data_training_X, data_training_Y, early_stoppers, model_NN, nb_split, parameters_training,
                            indices, silent, history):
-
     # for storing the network:
     value_metric_for_best_NN = - np.Inf  # :we set -\infty which can only be improved.
     # :Recall, the two criterea are either accuracy (so any accuracy is better than a neg. number)
@@ -127,7 +122,6 @@ def train_kfold_a_fold_after_split(best_epoch_of_NN, best_net, data_training_X, 
 
 
 def _new_best_model(best_epoch_of_NN, best_net, i, net, value_metric_for_best_NN, history, number_kfold_best_net):
-
     rookie_perf = - history['validation']['loss'][i, best_epoch_of_NN[i]]  #: -1 * ... bc we want to keep order below
     if value_metric_for_best_NN < rookie_perf:
         best_net = net

@@ -9,7 +9,6 @@ from sklearn import metrics
 
 import seaborn as sns
 
-
 sns.set()
 
 
@@ -115,8 +114,8 @@ def nn_plot_prediction_vs_true(net, plot_xx, plot_yy=None, plot_yy_noisy=None):
                    dict_plot_param={"color": "c",
                                     "linewidth": 2,
                                     "label": "Predicted Data used for Training"
-                                    }, dict_ax= {"xlabel": "Time", "ylabel": "Estimation",
-                                    "title": "Visualization of prediction and true solution"})
+                                    }, dict_ax={"xlabel": "Time", "ylabel": "Estimation",
+                                                "title": "Visualization of prediction and true solution"})
     aplot.show_legend()
     return
 

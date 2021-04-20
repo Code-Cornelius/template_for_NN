@@ -18,19 +18,20 @@ def nn_train(net, data_X, data_Y,
         net:
         data_X: tensor
         data_Y: tensor
-        params_training: parameters used for training
-            -- pre -- of type NNTrainParameters
+        params_training: NNTrainParameters. parameters used for training
         indic_train_X: indices of values from data_X to be used for training
         indic_train_Y: indices of values from data_Y to be used for training
-        early_stoppers: used for deciding if the training should stop early
-            -- pre  -- iterable containing objects of type Early_stopper, preferably immutable
-            -- post -- the stoppers and the iterable will not be changed
+        early_stoppers: iterable of Early_stopper. Used for deciding if the training should stop early.
+            Preferably immutable to insure no changes.
         indic_validation_X: indices of values from data_X to be used for validation, None if validation is not performed
         indic_validation_Y: indices of values from data_Y to be used for validation, None if validation is not performed
         silent: verbose.
 
     Returns: the data with history of training and all other metrics
              and best epoch for training. Net is modified in the progress.
+
+    Post-condition :
+        early_stoppers not changed.
     """
 
     # Prepare Training set

@@ -26,7 +26,7 @@ class Fully_connected_NN(Savable_net, metaclass=ABCMeta):
         list_hidden_sizes: iterable the input sizes for each hidden layer + output of last hidden layer.
         output_size: the output size of the neural network.
         list_biases: list of booleans for specifying which layers use biases.
-        activation_functions: list of activation functions for each layer.
+        activation_functions: list of activation functions for each layer. list of modules / callables.
         dropout: dropout rate for all layers. We do not dropout the first and last layer (input and output layer).
 
     Inherited :
@@ -91,7 +91,8 @@ class Fully_connected_NN(Savable_net, metaclass=ABCMeta):
     @list_biases.setter
     def list_biases(self, new_list_biases):
         if function_iterable.is_iterable(new_list_biases):
-            assert len(new_list_biases) == len(self.list_hidden_sizes) + 1
+            assert len(new_list_biases) == len(
+                self.list_hidden_sizes) + 1, "wrong dimensions for biases and hidden layers."
             # :security that the right parameters are given.
             self._list_biases = new_list_biases
         else:
@@ -164,6 +165,8 @@ class Fully_connected_NN(Savable_net, metaclass=ABCMeta):
 def factory_parametrised_FC_NN(param_input_size, param_list_hidden_sizes, param_output_size,
                                param_list_biases, param_activation_functions,
                                param_dropout=0, param_predict_fct=None):
+    assert len(param_list_biases) == len(param_list_hidden_sizes) + 1, "wrong dimensions for biases and hidden layers."
+
     class Parametrised_FC_NN(Fully_connected_NN):
         # defining attributes this way shadows the abstract properties from parents.
         input_size = param_input_size
@@ -179,5 +182,3 @@ def factory_parametrised_FC_NN(param_input_size, param_list_hidden_sizes, param_
             # :to initialize all the layers and dropout with respect to the parameters created.
 
     return Parametrised_FC_NN
-
-

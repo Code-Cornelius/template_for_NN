@@ -1,4 +1,6 @@
 import torch
+
+
 # TESTED AND I WAS I NOTICE IS HUGE SPEEDUP, RESULTS EXACTLY IDENTICAL FOR 1-FOLD and SHUFFLING IS DIFFERENT
 
 class FastTensorDataLoader:
@@ -21,7 +23,7 @@ class FastTensorDataLoader:
             iterator is created out of this object.
         :returns: A FastTensorDataLoader.
         """
-        assert all(t.shape[0] == tensors[0].shape[0] for t in tensors)
+        assert all(t.shape[0] == tensors[0].shape[0] for t in tensors), "wrong shapes."
         self.tensors = tensors
 
         self.dataset_len = self.tensors[0].shape[0]

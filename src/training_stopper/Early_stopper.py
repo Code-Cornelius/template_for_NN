@@ -2,14 +2,13 @@ from abc import abstractmethod, ABCMeta
 
 import numpy as np
 
-
 # todo the path things, saving the NN.
 from priv_lib_error import Error_type_setter
 
 DEBUG = False
 
 
-class Early_stopper(metaclass =ABCMeta):
+class Early_stopper(metaclass=ABCMeta):
     """
     Abstract class of an early stopper. Given to a training, allows for stopping earlier with respect to some criteria.
 
@@ -32,19 +31,28 @@ class Early_stopper(metaclass =ABCMeta):
     One should check two things. Early_stopped allows to know whether we early_stopped.
     has_improved_last_epoch is a flag showing whether the stopper wishes to save the model or not (because the new model is better since the last check).
 
+    Pre-condition:
+        history in training must exists. Has the form:
+
+            history = {
+                'training': {},
+                'validation': {}
+            }
+            history['training']['loss'] = np.zeros((nb_split, parameters_training.epochs))
+            history['validation']['loss'] = np.zeros((nb_split, parameters_training.epochs))
+
+            for metric in parameters_training.metrics:
+                history['training'][metric.name] = np.zeros((nb_split, parameters_training.epochs))
+                history['validation'][metric.name] = np.zeros((nb_split, parameters_training.epochs))
     """
 
     def __init__(self, tipee, metric_name, patience=50, silent=True, delta=0.1):
         """
         Args:
-            tipee (str): the type of early stopper, for either training or validation
-
+            tipee (str): the type of early stopper, used for accessing history in training.
             metric_name (str): the named used to identify the results of the metric in history
-
             patience (int): How long the stopper waits for improvement of the criterion.
-
             silent (bool):
-
             delta (float): Minimum change in the monitored quantity to qualify as an improvement. In percent.
                             Default: 0.1
         """
@@ -58,7 +66,7 @@ class Early_stopper(metaclass =ABCMeta):
         self._early_stopped = False
         self.has_improved_last_epoch = True
 
-        # for retrieving information from the history
+        # for retrieving information from the history, private arguments
         self._tipee = tipee
         self._metric_name = metric_name
 
@@ -104,26 +112,24 @@ class Early_stopper(metaclass =ABCMeta):
         self._lowest_loss = np.Inf
         self._counter = 0
 
-
     @property
-    def _tipee(self):
+    def _tipee(self):  # un-mangling
         return self.__tipee
 
     @_tipee.setter
     def _tipee(self, new__tipee):
         if isinstance(new__tipee, str):
-                self.__tipee = new__tipee
+            self.__tipee = new__tipee
         else:
             raise Error_type_setter(f'Argument is not an {str(str)}.')
 
     @property
-    def _metric_name(self):
+    def _metric_name(self):  # un-mangling
         return self.__metric_name
 
     @_metric_name.setter
-    def _metric_name(self, new__metric_name):
-        if isinstance(new__metric_name, str):
-                self.__metric_name = new__metric_name
+    def _metric_name(self, new_metric_name):
+        if isinstance(new_metric_name, str):
+            self.__metric_name = new_metric_name
         else:
             raise Error_type_setter(f'Argument is not an {str(str)}.')
-

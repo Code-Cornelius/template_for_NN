@@ -4,6 +4,7 @@ import torch
 import torch.cuda
 import numpy as np
 
+
 def are_at_least_one_None(list_parameters):
     """returns list_parameters.at least one.is_None"""
     for parameter in list_parameters:

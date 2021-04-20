@@ -1,6 +1,21 @@
+from metric.Metric import Metric
+from priv_lib_util.tools import function_iterable
+
+
 class NNTrainParameters:
 
     def __init__(self, batch_size, epochs, device, criterion, optimiser, metrics=(), dict_params_optimiser=None):
+        """
+
+        Args:
+            batch_size:
+            epochs:
+            device:
+            criterion:
+            optimiser:
+            metrics:  iterable containing objects of type Metric.
+            dict_params_optimiser:
+        """
         self.batch_size = batch_size
         self.epochs = epochs
         self.device = device
@@ -23,7 +38,6 @@ class NNTrainParameters:
             self._batch_size = new_batch_size
         else:
             raise TypeError(f"Argument is not an unsigned int.")
-
 
     @property
     def epochs(self):
@@ -58,4 +72,12 @@ class NNTrainParameters:
 
     @metrics.setter
     def metrics(self, new_metrics):
+        assert function_iterable.is_iterable(new_metrics), "argument should be iterable."
+        for new_metric in new_metrics:
+            print(new_metric)
+            print(isinstance(new_metric, Metric))
+            if isinstance(new_metric, Metric):
+                pass
+            else:
+                raise TypeError(f"Argument is not a metric.")
         self._metrics = new_metrics

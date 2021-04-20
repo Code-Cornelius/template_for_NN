@@ -17,8 +17,6 @@ def nn_plot_train_loss_acc(training_loss, validation_loss=None, training_acc=Non
     nb_trials = training_loss.shape[0]
     xx = range(nb_of_epoch)
 
-
-
     if log_axis_for_loss:
         yscale = "log"
     else:
@@ -26,7 +24,7 @@ def nn_plot_train_loss_acc(training_loss, validation_loss=None, training_acc=Non
     # adjusting the linewidth depending on nb of plots:
     if nb_trials < 3:
         linewidth = 2
-        interval_colors = (0.5,0.9)
+        interval_colors = (0.5, 0.9)
     else:
         linewidth = 1
         interval_colors = (0.3, 1.)
