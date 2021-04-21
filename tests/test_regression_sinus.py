@@ -10,8 +10,7 @@ from src.train.NNTrainParameters import NNTrainParameters
 from src.Neural_Network.NN_fcts import pytorch_device_setting
 from src.training_stopper.Early_stopper_training import Early_stopper_training
 from src.training_stopper.Early_stopper_validation import Early_stopper_validation
-from src.metric.Metric import Metric
-
+from train.NN_kfold_training import nn_kfold_train
 
 # set seed for pytorch.
 torch.manual_seed(42)
@@ -72,7 +71,9 @@ if __name__ == '__main__':
                                                  param_activation_functions=activation_functions, param_dropout=dropout,
                                                  param_predict_fct=None)
 
-    test_nn_kfold_train.test(train_X, train_Y, parametrized_NN, param_training, testing_X, testing_Y,
-                             early_stoppers, SILENT, compute_accuracy=False, plot_xx=plot_xx,
-                             plot_yy=plot_yy,
-                             plot_yy_noisy=plot_yy_noisy)
+    (net, history, best_epoch_of_NN) = nn_kfold_train(train_X, train_Y, parametrized_NN,
+                                                      parameters_training=param_training,
+                                                      early_stoppers=early_stoppers, nb_split=1,
+                                                      shuffle_kfold=True,
+                                                      percent_validation_for_1_fold=10,
+                                                      silent=False)
