@@ -54,7 +54,7 @@ def test_accuracy(train_X, train_Y, Class_Parametrized_NN, parameters_training, 
 
 def test_accuracy_no_validation(train_X, train_Y, Class_Parametrized_NN, parameters_training, nb_split,
                                 percent_validation_for_1_fold, silent, testing_X, testing_Y,
-                                early_stoppers=[Early_stopper_vanilla()]):
+                                early_stoppers=(Early_stopper_vanilla(),)):
     (net, history, best_epoch_of_NN) = nn_kfold_train(train_X, train_Y, Class_Parametrized_NN,
                                                       parameters_training=parameters_training,
                                                       early_stoppers=early_stoppers, nb_split=nb_split,
@@ -68,8 +68,8 @@ def test_accuracy_no_validation(train_X, train_Y, Class_Parametrized_NN, paramet
     # confusion_matrix_creator(testing_Y, net.nn_predict(testing_X), range(10), title="Test Set")
 
 
-def test(train_X, train_Y, Class_Parametrized_NN, parameters_training, testing_X, testing_Y, early_stoppers,
-         SILENT, compute_accuracy, plot_xx=None, plot_yy=None, plot_yy_noisy=None):
+def test(train_X, train_Y, Class_Parametrized_NN, parameters_training, testing_X, testing_Y, early_stoppers_train,
+         early_stoppers_valid, SILENT, compute_accuracy, plot_xx=None, plot_yy=None, plot_yy_noisy=None):
     print(" ~~~~~~~~~~Example 1 : Split 1~~~~~~~~~~ ")
     if not compute_accuracy:
         test_no_accuracy(train_X, train_Y, Class_Parametrized_NN, parameters_training, nb_split=1,
@@ -84,11 +84,11 @@ def test(train_X, train_Y, Class_Parametrized_NN, parameters_training, testing_X
         test_no_accuracy(train_X, train_Y, Class_Parametrized_NN, parameters_training, nb_split=1,
                          percent_validation_for_1_fold=20, silent=SILENT, plot_xx=plot_xx, plot_yy=plot_yy,
                          plot_yy_noisy=plot_yy_noisy, testing_X=testing_X, testing_Y=testing_Y,
-                         early_stoppers=early_stoppers)
+                         early_stoppers=early_stoppers_train+early_stoppers_valid)
     if compute_accuracy:
         test_accuracy(train_X, train_Y, Class_Parametrized_NN, parameters_training, nb_split=1,
                       percent_validation_for_1_fold=20, silent=SILENT, testing_X=testing_X, testing_Y=testing_Y,
-                      early_stoppers=early_stoppers)
+                      early_stoppers=early_stoppers_train+early_stoppers_valid)
 
     print(" ~~~~~~~~~~Example 3 : Split 3~~~~~~~~~~ ")
     if not compute_accuracy:
@@ -105,12 +105,12 @@ def test(train_X, train_Y, Class_Parametrized_NN, parameters_training, testing_X
         test_no_accuracy(train_X, train_Y, Class_Parametrized_NN, parameters_training, nb_split=5,
                          percent_validation_for_1_fold=0, silent=SILENT, plot_xx=plot_xx, plot_yy=plot_yy,
                          plot_yy_noisy=plot_yy_noisy, testing_X=testing_X, testing_Y=testing_Y,
-                         early_stoppers=early_stoppers)
+                         early_stoppers=early_stoppers_train+early_stoppers_valid)
 
     if compute_accuracy:
         test_accuracy(train_X, train_Y, Class_Parametrized_NN, parameters_training, nb_split=5,
                       percent_validation_for_1_fold=0, silent=SILENT, testing_X=testing_X, testing_Y=testing_Y,
-                      early_stoppers=early_stoppers)
+                      early_stoppers=early_stoppers_train+early_stoppers_valid)
 
     print(" ~~~~~~~~~~Example 4 : no validation for 1 split ~~~~~~~~~~ ")
     if not compute_accuracy:

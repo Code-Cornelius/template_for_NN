@@ -32,7 +32,9 @@ device = pytorch_device_setting('not_cpu_please')
 SILENT = False
 early_stop_train = Early_stopper_training(patience=20, silent=SILENT, delta=-0.05)
 early_stop_valid = Early_stopper_validation(patience=20, silent=SILENT, delta=-0.05)
-early_stoppers = (early_stop_train, early_stop_valid)
+early_stoppers_train = (early_stop_train,)
+early_stoppers_valid = (early_stop_valid,)
+
 accuracy_wrapper = lambda net, xx, yy: sklearn.metrics.accuracy_score(net.nn_predict_ans2cpu(xx),
                                                                       yy.reshape(-1, 1).to('cpu'),
                                                                       normalize=False
@@ -87,7 +89,7 @@ if __name__ == '__main__':
                                                        param_predict_fct=lambda out: torch.max(out, 1)[1])
 
     test_nn_kfold_train.test(train_X, train_Y, Class_Parametrized_NN, param_training,
-                             test_X, test_Y, early_stoppers,
+                             test_X, test_Y, early_stoppers_train, early_stoppers_valid,
                              SILENT,
                              compute_accuracy=True, plot_xx=None, plot_yy=None, plot_yy_noisy=None)
 

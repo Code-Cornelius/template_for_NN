@@ -56,7 +56,7 @@ def nn_kfold_train(data_training_X, data_training_Y,
 
     else:  # : testing that no early validation stopper given.
         for stop in early_stoppers:
-            assert stop.is_validation(), "Input validation stopper while no validation set given."
+            assert not stop.is_validation(), "Input validation stopper while no validation set given."
 
     return _nn_multiplefold_train(data_training_X, data_training_Y, early_stoppers, model_NN, nb_split,
                                   parameters_training, indices, silent, history_kfold)
@@ -122,7 +122,8 @@ def train_kfold_a_fold_after_split(best_epoch_of_NN, best_net, data_training_X, 
 
 
 def _new_best_model(best_epoch_of_NN, best_net, i, net, value_metric_for_best_NN, history, number_kfold_best_net):
-    rookie_perf = - history['validation']['loss'][i, best_epoch_of_NN[i]]  #: -1 * ... bc we want to keep order below
+    # todo: fix criteria
+    rookie_perf = - history['training']['loss'][i, best_epoch_of_NN[i]]  #: -1 * ... bc we want to keep order below
     if value_metric_for_best_NN < rookie_perf:
         best_net = net
         value_metric_for_best_NN = rookie_perf
