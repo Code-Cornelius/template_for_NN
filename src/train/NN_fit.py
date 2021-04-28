@@ -71,7 +71,7 @@ def nn_fit(net, X_train_on_device, Y_train_on_device,
             optimiser.step(closure=closure)  # : update the weights
 
             # you need to call again criterion, as we cannot store the criterion result:
-            train_loss += criterion(net(batch_X), batch_y).item() * batch_X.shape[0]
+            train_loss += criterion(net(batch_X), batch_y).item()
             #: weight the loss accordingly. That is the reason why using average is flawed.
 
         # Normalize and save the loss over the current epoch:
@@ -168,7 +168,7 @@ def _update_metric(metric, net, epoch, total_number_data, history, data_loader, 
 def _update_validation_loss(net, criterion, epoch, total_number_data, history, validat_loader_on_device):
     history['validation']['loss'][epoch] = 0  # :aggregate variable
     for batch_X, batch_y in validat_loader_on_device:
-        history['validation']['loss'][epoch] += criterion(net(batch_X), batch_y).item() * batch_X.shape[0]
+        history['validation']['loss'][epoch] += criterion(net(batch_X), batch_y).item()
     history['validation']['loss'][epoch] /= total_number_data[1]
 
 

@@ -1,13 +1,16 @@
+# global libraries
+import math
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import torch
-
 from IPython.core.display import display
-from priv_lib_plot import APlot
 from sklearn import metrics
-
 import seaborn as sns
+
+# my libraries
+from priv_lib_plot import APlot
+
 
 sns.set()
 
@@ -122,14 +125,16 @@ def nn_plot_prediction_vs_true(net, plot_xx, plot_yy=None, plot_yy_noisy=None):
 
 def nn_print_errors(net, train_X, train_Y, testing_X, testing_Y):
     # Compute the relative validation error
-    relative_error_train = torch.mean((net.nn_predict_ans2cpu(train_X) - train_Y) ** 2) / torch.mean(train_Y ** 2)
-    print("Relative Training Error: ", relative_error_train.numpy() ** 0.5 * 100, "%")
+    diff_train = (net.nn_predict_ans2cpu(train_X) - train_Y)
+    relative_error_train = torch.mean(diff_train * diff_train) / torch.mean(train_Y * train_Y)
+    print("Relative Training Error: ", math.sqrt(relative_error_train.numpy()) * 100, "%")
 
     # Compute the relative validation error
     # relative_error_val = torch.mean((net.nn_predict(validation_X) - validation_Y) ** 2) / torch.mean(validation_Y ** 2)
     # print("Relative Validation Error: ", relative_error_val.numpy() ** 0.5 * 100, "%")
 
     # Compute the relative L2 error norm (generalization error)
-    relative_error_test = torch.mean((net.nn_predict_ans2cpu(testing_X) - testing_Y) ** 2) / torch.mean(testing_Y ** 2)
-    print("Relative Testing Error: ", relative_error_test.numpy() ** 0.5 * 100, "%")
+    diff_test = (net.nn_predict_ans2cpu(testing_X) - testing_Y)
+    relative_error_test = torch.mean(diff_test * diff_test) / torch.mean(testing_Y * testing_Y)
+    print("Relative Testing Error: ", math.sqrt(relative_error_test.numpy()) * 100, "%")
     return

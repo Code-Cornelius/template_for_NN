@@ -23,7 +23,7 @@ class Fully_connected_NN(Savable_net, metaclass=ABCMeta):
 
     Abstract args:
         input_size: the size of the input layer.
-        list_hidden_sizes: iterable the input sizes for each hidden layer + output of last hidden layer.
+        list_hidden_sizes: iterable the input sizes for each hidden layer + output of last hidden layer. At least one hidden layer.
         output_size: the output size of the neural network.
         list_biases: list of booleans for specifying which layers use biases.
         activation_functions: list of activation functions for each layer. list of modules / callables.
@@ -150,7 +150,7 @@ class Fully_connected_NN(Savable_net, metaclass=ABCMeta):
         out = self.activation_functions[0](self._layers[0](x))
 
         # pass through the hidden layers
-        for layer_index in range(1, len(self.list_hidden_sizes) - 1):
+        for layer_index in range(1, len(self.list_hidden_sizes)):
             out = self.activation_functions[layer_index](self._apply_dropout(self._layers[layer_index](out)))
 
         # pass through the output layer

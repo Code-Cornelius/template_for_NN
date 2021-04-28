@@ -87,7 +87,7 @@ def _nn_multiplefold_train(data_training_X, data_training_Y, early_stoppers, mod
                                                                          silent, history)
 
     if not silent:
-        print("Finis the K-Fold, the best NN is the number {}".format(number_kfold_best_net))
+        print("Finished the K-Fold Training, the best NN is the number {}".format(number_kfold_best_net))
 
     return best_net, history, best_epoch_of_NN
 
