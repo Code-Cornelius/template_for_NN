@@ -4,7 +4,6 @@ from priv_lib_util.tools import function_iterable
 from src.metric.Metric import Metric
 
 class NNTrainParameters:
-
     def __init__(self, batch_size, epochs, device, criterion, optimiser, metrics=(), dict_params_optimiser=None):
         """
 
@@ -15,6 +14,7 @@ class NNTrainParameters:
             criterion:
             optimiser:
             metrics:  iterable containing objects of type Metric.
+            The history is computed by computing over each batch and at the end dividing by total length of data.
             dict_params_optimiser:
         """
         self.batch_size = batch_size

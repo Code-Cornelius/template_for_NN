@@ -88,8 +88,7 @@ if __name__ == '__main__':
                                                       percent_validation_for_1_fold=10,
                                                       silent=False)
     net.to(torch.device('cpu'))
-    nn_plot_train_loss_acc(training_loss=history['training']['loss'], validation_loss=history['validation']['loss'],
-                           best_epoch_of_NN=best_epoch_of_NN)
+    nn_plot_train_loss_acc(history, flag_valid=True, log_axis_for_loss= True, best_epoch_of_NN=best_epoch_of_NN)
     nn_plot_prediction_vs_true(net, plot_xx, plot_yy, plot_yy_noisy)
     nn_print_errors(net, train_X, train_Y, testing_X, testing_Y)
     APlot.show_plot()

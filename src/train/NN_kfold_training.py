@@ -32,7 +32,16 @@ def nn_kfold_train(data_training_X, data_training_Y,
         percent_validation_for_1_fold:
         silent:
 
-    Returns: net, history_kfold, best_epoch_for_model
+    Returns: net, history_kfold, best_epoch_for_model.
+
+        history_kfold has the form:
+            history = {'training': {},'validation': {}}
+            history['training']['loss'] = np.zeros((nb_split, parameters_training.epochs))
+            history['validation']['loss'] = np.zeros((nb_split, parameters_training.epochs))
+            for metric in parameters_training.metrics:
+                history['training'][metric.name] = np.zeros((nb_split, parameters_training.epochs))
+                history['validation'][metric.name] = np.zeros((nb_split, parameters_training.epochs))
+    best_epoch_for_model looks like: [10,200,5]
 
     Post-condition :
         early_stoppers not changed.
@@ -122,7 +131,6 @@ def train_kfold_a_fold_after_split(best_epoch_of_NN, best_net, data_training_X, 
 
 
 def _new_best_model(best_epoch_of_NN, best_net, i, net, value_metric_for_best_NN, history, number_kfold_best_net):
-    # todo: fix criteria
     rookie_perf = - history['training']['loss'][i, best_epoch_of_NN[i]]  #: -1 * ... bc we want to keep order below
     if value_metric_for_best_NN < rookie_perf:
         best_net = net
