@@ -70,18 +70,13 @@ if __name__ == '__main__':
     optimiser = torch.optim.Adam
     criterion = nn.MSELoss(reduction = 'sum')
 
-    scheduler = torch.optim.lr_scheduler.StepLR
-
-    param_scheduler = {"step_size":30, "gamma":0.1}
 
 
     dict_optimiser = {"lr": 0.001, "weight_decay": 0.0000001}
     param_training = NNTrainParameters(batch_size=batch_size, epochs=epochs, device=device,
                                        criterion=criterion, optimiser=optimiser,
-                                       scheduler=scheduler,
                                        metrics=metrics,
-                                       dict_params_optimiser=dict_optimiser,
-                                       dict_params_scheduler=param_scheduler)
+                                       dict_params_optimiser=dict_optimiser,)
 
     parametrized_NN = factory_parametrised_FC_NN(param_input_size=input_size, param_list_hidden_sizes=hidden_sizes,
                                                  param_output_size=output_size, param_list_biases=biases,
