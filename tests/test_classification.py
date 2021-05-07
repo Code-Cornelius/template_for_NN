@@ -71,7 +71,7 @@ if __name__ == '__main__':
     biases = [True, True]
     activation_functions = [F.relu]
     dropout = 0.2
-    epochs = 1000
+    epochs = 10
     batch_size = 1000
     optimiser = torch.optim.SGD
     criterion = nn.CrossEntropyLoss(reduction = 'sum')

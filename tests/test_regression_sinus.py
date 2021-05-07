@@ -70,11 +70,18 @@ if __name__ == '__main__':
     optimiser = torch.optim.Adam
     criterion = nn.MSELoss(reduction = 'sum')
 
+    scheduler = torch.optim.lr_scheduler.StepLR
+
+    param_scheduler = {"step_size":30, "gamma":0.1}
+
+
     dict_optimiser = {"lr": 0.001, "weight_decay": 0.0000001}
     param_training = NNTrainParameters(batch_size=batch_size, epochs=epochs, device=device,
                                        criterion=criterion, optimiser=optimiser,
+                                       scheduler=scheduler,
+                                       metrics=metrics,
                                        dict_params_optimiser=dict_optimiser,
-                                       metrics=metrics)
+                                       dict_params_scheduler=param_scheduler)
 
     parametrized_NN = factory_parametrised_FC_NN(param_input_size=input_size, param_list_hidden_sizes=hidden_sizes,
                                                  param_output_size=output_size, param_list_biases=biases,
@@ -88,7 +95,7 @@ if __name__ == '__main__':
                                                       percent_validation_for_1_fold=10,
                                                       silent=False)
     net.to(torch.device('cpu'))
-    nn_plot_train_loss_acc(history, flag_valid=True, log_axis_for_loss= True, best_epoch_of_NN=best_epoch_of_NN)
+    # nn_plot_train_loss_acc(history, flag_valid=True, log_axis_for_loss= True, best_epoch_of_NN=best_epoch_of_NN)
     nn_plot_prediction_vs_true(net, plot_xx, plot_yy, plot_yy_noisy)
     nn_print_errors(net, train_X, train_Y, testing_X, testing_Y)
     APlot.show_plot()

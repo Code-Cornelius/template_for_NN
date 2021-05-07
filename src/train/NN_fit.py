@@ -75,7 +75,6 @@ def nn_fit(net, X_train_on_device, Y_train_on_device,
             #: weight the loss accordingly. That is the reason why using average is flawed.
 
         # adjust the learning rate if a scheduler is used, must be called after optimiser.step was called
-
         params_training.scheduler()
 
         # Normalize and save the loss over the current epoch:
@@ -132,8 +131,8 @@ def prepare_data_for_fit(X_train_on_device, X_val_on_device, Y_train_on_device, 
 
     # pick loss function and optimizer
     criterion = params_training.criterion
-    params_training.optimiser.initialise_optim(net)
-    params_training.scheduler.initialise_optim(params_training.optimiser)
+    params_training.optimiser.initialise_optim(net.parameters())
+    params_training.scheduler.initialise_optim(params_training.optimiser.optim)
     return criterion, is_validat_included, total_number_data, train_loader_on_device, validat_loader_on_device
 
 

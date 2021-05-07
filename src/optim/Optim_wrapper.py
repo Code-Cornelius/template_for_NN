@@ -9,7 +9,7 @@ class Optim_wrapper(object):
         assert self.optim is not None
         assert self.parameters is not None
 
-        self.optim = self.optim(later_parameters.parameters(), **self.parameters)
+        self.optim = self.optim(later_parameters, **self.parameters)
 
     def __call__(self, closure):
         self.optim.step(closure)
