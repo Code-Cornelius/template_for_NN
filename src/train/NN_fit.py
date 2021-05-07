@@ -45,7 +45,7 @@ def nn_fit(net, X_train_on_device, Y_train_on_device,
     """
 
     # condition if we use validation set.
-    (criterion, is_validat_included, optimiser, total_number_data,
+    (criterion, is_validat_included, total_number_data,
      train_loader_on_device, validat_loader_on_device) = prepare_data_for_fit(X_train_on_device, X_val_on_device,
                                                                               Y_train_on_device, Y_val_on_device, net,
                                                                               params_training)
@@ -60,7 +60,7 @@ def nn_fit(net, X_train_on_device, Y_train_on_device,
             # closure needed for some algorithm.
             def closure():
                 # set gradients to zero
-                optimiser.zero_grad()  # https://stackoverflow.com/questions/48001598/why-do-we-need-to-call-zero-grad-in-pytorch
+                params_training.optimiser.zero_grad()  # https://stackoverflow.com/questions/48001598/why-do-we-need-to-call-zero-grad-in-pytorch
 
                 # Do forward and backward pass
                 loss = criterion(net(batch_X), batch_y)  #: compute the loss : difference of result and expectation
@@ -68,11 +68,15 @@ def nn_fit(net, X_train_on_device, Y_train_on_device,
                 return loss
 
             # Optimisation step
-            optimiser.step(closure=closure)  # : update the weights
+            params_training.optimiser(closure=closure)  # : update the weights
 
             # you need to call again criterion, as we cannot store the criterion result:
             train_loss += criterion(net(batch_X), batch_y).item() * batch_X.shape[0]
             #: weight the loss accordingly. That is the reason why using average is flawed.
+
+        # adjust the learning rate if a scheduler is used, must be called after optimiser.step was called
+
+        params_training.scheduler()
 
         # Normalize and save the loss over the current epoch:
         history['training']['loss'][epoch] = train_loss / total_number_data[0]
@@ -128,8 +132,9 @@ def prepare_data_for_fit(X_train_on_device, X_val_on_device, Y_train_on_device, 
 
     # pick loss function and optimizer
     criterion = params_training.criterion
-    optimiser = params_training.optimiser(net.parameters(), **params_training.dict_params_optimiser)
-    return criterion, is_validat_included, optimiser, total_number_data, train_loader_on_device, validat_loader_on_device
+    params_training.optimiser.initialise_optim(net)
+    params_training.scheduler.initialise_optim(params_training.optimiser)
+    return criterion, is_validat_included, total_number_data, train_loader_on_device, validat_loader_on_device
 
 
 def _update_history(net, metrics, criterion, epoch, is_valid_included, total_number_data, train_loader_on_device,

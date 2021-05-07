@@ -1,11 +1,14 @@
 # from metric.Metric import Metric
+from optim.Optim_schedule_wrapper import Optim_scheduler_wrapper
+from optim.Optim_wrapper import Optim_wrapper
 from priv_lib_util.tools import function_iterable
 
 from src.metric.Metric import Metric
 
 class NNTrainParameters:
 
-    def __init__(self, batch_size, epochs, device, criterion, optimiser, metrics=(), dict_params_optimiser=None):
+    def __init__(self, batch_size, epochs, device, criterion, optimiser, scheduler=None,
+                 metrics=(), dict_params_optimiser=None, dict_params_scheduler=None):
         """
 
         Args:
@@ -14,6 +17,7 @@ class NNTrainParameters:
             device:
             criterion:
             optimiser:
+            scheduler: Optional parameter, used to adjust the learning rate
             metrics:  iterable containing objects of type Metric.
             dict_params_optimiser:
         """
@@ -21,12 +25,12 @@ class NNTrainParameters:
         self.epochs = epochs
         self.device = device
         self.criterion = criterion
-        self.optimiser = optimiser
+        self.optimiser = Optim_wrapper(optimiser, dict_params_optimiser)
+        self.scheduler = Optim_scheduler_wrapper(scheduler, dict_params_scheduler)
 
         # iterable containing objects of type Metric
         self.metrics = metrics
 
-        self.dict_params_optimiser = dict_params_optimiser
 
     # SETTERS GETTERS
     @property
