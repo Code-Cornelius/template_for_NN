@@ -5,7 +5,13 @@ from priv_lib_error import Error_type_setter
 
 class Metric(object):
     """
-    Metric wrapper.   
+    Metric wrapper.
+    Examples
+        def L4loss(net,xx,yy):
+            return torch.norm(net.nn_predict(xx) - yy, 4)
+        L4metric = Metric('L4',L4loss)
+        metrics = (L4metric,)
+
     """
 
     def __init__(self, name, function):

@@ -1,6 +1,6 @@
-# for neural networks
+# global libraries
+import os
 from copy import deepcopy
-
 import torch
 import torch.nn as nn
 
@@ -56,6 +56,10 @@ class Savable_net(nn.Module):
             layer.bias.data.fill_(0)
 
     def save_net(self, path):
+        """Create a directory if the net is saved in a place where the directory does not exists."""
+        directory_where_to_save = os.path.dirname(path)
+        if not os.path.exists(directory_where_to_save):
+            os.makedirs(directory_where_to_save)
         torch.save(self.state_dict(), path)
         return self
 

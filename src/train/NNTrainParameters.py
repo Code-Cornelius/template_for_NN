@@ -19,6 +19,7 @@ class NNTrainParameters:
             optimiser:
             scheduler: Optional parameter, used to adjust the learning rate
             metrics:  iterable containing objects of type Metric.
+            The history is computed by computing over each batch and at the end dividing by total length of data.
             dict_params_optimiser:
         """
         self.batch_size = batch_size

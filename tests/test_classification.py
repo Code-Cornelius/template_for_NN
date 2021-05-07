@@ -74,7 +74,7 @@ if __name__ == '__main__':
     epochs = 1000
     batch_size = 1000
     optimiser = torch.optim.SGD
-    criterion = nn.CrossEntropyLoss()
+    criterion = nn.CrossEntropyLoss(reduction = 'sum')
     dict_optimiser = {"lr": 0.0005, "weight_decay": 0.00001}
 
     param_training = NNTrainParameters(batch_size=batch_size, epochs=epochs, device=device,
