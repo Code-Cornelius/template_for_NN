@@ -132,7 +132,7 @@ def prepare_data_for_fit(X_train_on_device, X_val_on_device, Y_train_on_device, 
     # pick loss function and optimizer
     criterion = params_training.criterion
     params_training.optimiser.initialise_optim(net.parameters())
-    params_training.scheduler.initialise_optim(params_training.optimiser.optim)
+    params_training.scheduler.initialise_optim(params_training.optimiser.Optim)
     return criterion, is_validat_included, total_number_data, train_loader_on_device, validat_loader_on_device
 
 

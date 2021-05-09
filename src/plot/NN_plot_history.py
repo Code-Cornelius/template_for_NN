@@ -8,7 +8,8 @@ from priv_lib_plot import AColorsetContinuous
 def nn_plot_train_loss_acc(
         history, key_for_second_axis_plot=None, flag_valid=True,
         log_axis_for_loss=True, best_epoch_of_NN=None,
-        title=''):
+        log_axis_for_second_axis=False, title=''):
+    # if there is another key, we create a plot with two y-axis but only one x-axis.
     if key_for_second_axis_plot is not None:
         aplot = APlot(how=(1, 1), sharex=True)
     else:
@@ -53,13 +54,12 @@ def nn_plot_train_loss_acc(
                                                  "label": f"{key_for_second_axis_plot} for Training nb {i}"
                                                  }
             aplot.uni_plot_ax_bis(nb_ax=0, xx=xx, yy=history['training'][key_for_second_axis_plot][i, :],
-                                  dict_plot_param=dict_plot_param_accuracy_training)
+                                  dict_plot_param=dict_plot_param_accuracy_training,
+                                  dict_ax={'ylabel': key_for_second_axis_plot})
 
-    if flag_valid:
-        _plot_validation_history(aplot, color_plot_orange, color_plot_red, linewidth,
-                                 nb_trials, history['validation']['loss'],
-                                 history['validation'][key_for_second_axis_plot], xx,
-                                 key_for_second_axis_plot)
+    _plot_validation_history(aplot, color_plot_orange, color_plot_red, flag_valid, history, key_for_second_axis_plot,
+                             linewidth, nb_trials, xx, log_axis_for_second_axis)
+
     # plot lines of best NN:
     if best_epoch_of_NN is not None:
         _plot_best_epoch_NN(aplot, best_epoch_of_NN, nb_trials)
@@ -72,6 +72,31 @@ def nn_plot_train_loss_acc(
     return
 
 
+def _plot_validation_history(aplot, color_plot_loss_validation, color_plot_red, flag_valid, history,
+                             key_for_second_axis_plot, linewidth, nb_trials, xx, log_axis_for_second_axis):
+    if flag_valid:
+        if log_axis_for_second_axis:
+            dict_ax = {'yscale': 'log'}
+        else:
+            dict_ax = None
+
+        for i in range(nb_trials):
+            dict_plot_param_loss_validation = {"color": color_plot_loss_validation[i],
+                                               "linewidth": linewidth,
+                                               "label": f"Loss for Validation nb {i}"
+                                               }
+            aplot.uni_plot(nb_ax=0, xx=xx, yy=history['validation']['loss'][i, :],
+                           dict_plot_param=dict_plot_param_loss_validation)
+            if key_for_second_axis_plot is not None:
+                dict_plot_param_accuracy_validation = {"color": color_plot_red[i],
+                                                       "linewidth": linewidth,
+                                                       "label": f"{key_for_second_axis_plot} for Validation nb {i}"
+                                                       }
+                aplot.uni_plot_ax_bis(nb_ax=0, xx=xx, yy=history['validation'][key_for_second_axis_plot][i, :],
+                                      dict_plot_param=dict_plot_param_accuracy_validation,
+                                      dict_ax=dict_ax)
+
+
 def _plot_best_epoch_NN(aplot, best_epoch_of_NN, nb_trials):
     yy = np.array(aplot.get_y_lim(nb_ax=0))
     for i in range(nb_trials):
@@ -82,20 +107,3 @@ def _plot_best_epoch_NN(aplot, best_epoch_of_NN, nb_trials):
                                                   "markersize": 0,
                                                   "label": f"Best model for fold nb {i}"
                                                   })
-
-
-def _plot_validation_history(aplot, color_plot_orange, color_plot_red, linewidth, nb_trials, validation_metric,
-                             validation_loss, xx, key_for_second_axis_plot):
-    for i in range(nb_trials):
-        dict_plot_param_loss_validation = {"color": color_plot_orange[i],
-                                           "linewidth": linewidth,
-                                           "label": f"Loss for Validation nb {i}"
-                                           }
-        aplot.uni_plot(nb_ax=0, xx=xx, yy=validation_loss[i, :], dict_plot_param=dict_plot_param_loss_validation)
-        if validation_metric is not None:
-            dict_plot_param_accuracy_validation = {"color": color_plot_red[i],
-                                                   "linewidth": linewidth,
-                                                   "label": f"{key_for_second_axis_plot} for Validation nb {i}"
-                                                   }
-            aplot.uni_plot_ax_bis(nb_ax=0, xx=xx, yy=validation_metric[i, :],
-                                  dict_plot_param=dict_plot_param_accuracy_validation)

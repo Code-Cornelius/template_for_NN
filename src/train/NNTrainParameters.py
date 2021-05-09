@@ -9,6 +9,16 @@ class NNTrainParameters:
 
     def __init__(self, batch_size, epochs, device, criterion, optimiser, scheduler=None,
                  metrics=(), dict_params_optimiser=None, dict_params_scheduler=None):
+        # TODO
+        #  change the parameters such that it takes the wrapers directly. The default wrapper should be one you create with nones.
+        #  also, can you put setters that prevent from changing the inside ? that way you make sure that the two wrappers are immutable.
+        #       in order to do this you simply say you can't access getter neither setter. That way the dicts are closed inside.
+        #  could you do the same for metrics :))?
+        #  adapt the comments below.
+
+        # TODO
+        #  finally it makes sense i believe to put optim scheduler INSIDE optim wrapper.
+        #
         """
 
         Args:
@@ -17,10 +27,11 @@ class NNTrainParameters:
             device:
             criterion:
             optimiser:
-            scheduler: Optional parameter, used to adjust the learning rate
+            scheduler: Adjust the learning rate, from the optim library.
             metrics:  iterable containing objects of type Metric.
             The history is computed by computing over each batch and at the end dividing by total length of data.
             dict_params_optimiser:
+            dict_params_scheduler:
         """
         self.batch_size = batch_size
         self.epochs = epochs

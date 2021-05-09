@@ -6,6 +6,7 @@ import torch.nn as nn
 
 # my lib
 from priv_lib_error import Error_type_setter
+from priv_lib_util.tools.src.function_writer import list_of_dicts_to_json
 from src.Neural_Network.NN_fcts import decorator_train_disable_no_grad
 
 
@@ -61,6 +62,20 @@ class Savable_net(nn.Module):
         if not os.path.exists(directory_where_to_save):
             os.makedirs(directory_where_to_save)
         torch.save(self.state_dict(), path)
+        return self
+
+    def save_data(self, history, path_save_nets, best_epoch_of_NN, number_epoch_between_savings):
+        # history looks like a dict of dict with entries being numpy arrays.
+
+        self.save_net(path_save_nets)
+        # converting every numpy array to a list.
+        for key, value in history.items():
+            for key_loss, value_loss in value.items():
+                value[key_loss] = value_loss[::number_epoch_between_savings].tolist()
+        history['best_epoch'] = best_epoch_of_NN
+
+        # write a list of dicts into a JSON, we compress the data.
+        list_of_dicts_to_json(parameter_options=history, file_name=path_save_nets, compress=True)
         return self
 
     def load_net(self, path):

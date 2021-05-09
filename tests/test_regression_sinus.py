@@ -71,6 +71,14 @@ if __name__ == '__main__':
     criterion = nn.MSELoss(reduction = 'sum')
 
 
+    def L4loss(net, xx, yy):
+        return torch.norm(net.nn_predict(xx) - yy, 4)
+
+
+    from src.metric.Metric import Metric
+
+    L4metric = Metric('L4', L4loss)
+    metrics = (L4metric,)
 
     dict_optimiser = {"lr": 0.001, "weight_decay": 0.0000001}
     param_training = NNTrainParameters(batch_size=batch_size, epochs=epochs, device=device,
@@ -90,7 +98,8 @@ if __name__ == '__main__':
                                                       percent_validation_for_1_fold=10,
                                                       silent=False)
     net.to(torch.device('cpu'))
-    # nn_plot_train_loss_acc(history, flag_valid=True, log_axis_for_loss= True, best_epoch_of_NN=best_epoch_of_NN)
+    nn_plot_train_loss_acc(history, flag_valid=True, log_axis_for_loss= True, best_epoch_of_NN=best_epoch_of_NN,
+                           key_for_second_axis_plot = 'L4', log_axis_for_second_axis = True)
     nn_plot_prediction_vs_true(net, plot_xx, plot_yy, plot_yy_noisy)
     nn_print_errors(net, train_X, train_Y, testing_X, testing_Y)
     APlot.show_plot()
