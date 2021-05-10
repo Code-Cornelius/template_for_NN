@@ -60,7 +60,7 @@ def nn_fit(net, X_train_on_device, Y_train_on_device,
             # closure needed for some algorithm.
             def closure():
                 # set gradients to zero
-                params_training.optimiser.zero_grad()  # https://stackoverflow.com/questions/48001598/why-do-we-need-to-call-zero-grad-in-pytorch
+                params_training.optim_wrapper.zero_grad()  # https://stackoverflow.com/questions/48001598/why-do-we-need-to-call-zero-grad-in-pytorch
 
                 # Do forward and backward pass
                 loss = criterion(net(batch_X), batch_y)  #: compute the loss : difference of result and expectation
@@ -68,14 +68,14 @@ def nn_fit(net, X_train_on_device, Y_train_on_device,
                 return loss
 
             # Optimisation step
-            params_training.optimiser(closure=closure)  # : update the weights
+            params_training.optim_wrapper(closure=closure)  # : update the weights
 
             # you need to call again criterion, as we cannot store the criterion result:
             train_loss += criterion(net(batch_X), batch_y).item()
             #: weight the loss accordingly. That is the reason why using average is flawed.
 
         # adjust the learning rate if a scheduler is used, must be called after optimiser.step was called
-        params_training.scheduler()
+        params_training.optim_wrapper.update_learning_rate()
 
         # Normalize and save the loss over the current epoch:
         history['training']['loss'][epoch] = train_loss / total_number_data[0]
@@ -131,8 +131,7 @@ def prepare_data_for_fit(X_train_on_device, X_val_on_device, Y_train_on_device, 
 
     # pick loss function and optimizer
     criterion = params_training.criterion
-    params_training.optimiser.initialise_optim(net.parameters())
-    params_training.scheduler.initialise_optim(params_training.optimiser.Optim)
+    params_training.optim_wrapper.initialise_optimiser(net.parameters())
     return criterion, is_validat_included, total_number_data, train_loader_on_device, validat_loader_on_device
 
 

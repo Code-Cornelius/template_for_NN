@@ -1,24 +1,11 @@
 # from metric.Metric import Metric
-from optim.Optim_schedule_wrapper import Optim_scheduler_wrapper
-from optim.Optim_wrapper import Optim_wrapper
 from priv_lib_util.tools import function_iterable
 
 from src.metric.Metric import Metric
 
 class NNTrainParameters:
 
-    def __init__(self, batch_size, epochs, device, criterion, optimiser, scheduler=None,
-                 metrics=(), dict_params_optimiser=None, dict_params_scheduler=None):
-        # TODO
-        #  change the parameters such that it takes the wrapers directly. The default wrapper should be one you create with nones.
-        #  also, can you put setters that prevent from changing the inside ? that way you make sure that the two wrappers are immutable.
-        #       in order to do this you simply say you can't access getter neither setter. That way the dicts are closed inside.
-        #  could you do the same for metrics :))?
-        #  adapt the comments below.
-
-        # TODO
-        #  finally it makes sense i believe to put optim scheduler INSIDE optim wrapper.
-        #
+    def __init__(self, batch_size, epochs, device, criterion, optim_wrapper, metrics=()):
         """
 
         Args:
@@ -26,19 +13,16 @@ class NNTrainParameters:
             epochs:
             device:
             criterion:
-            optimiser:
-            scheduler: Adjust the learning rate, from the optim library.
+            optimiser_wrapper: contains the optimiser object with the parameters to initialise it.
+                It can also contain a scheduler for updating the learning rate
             metrics:  iterable containing objects of type Metric.
             The history is computed by computing over each batch and at the end dividing by total length of data.
-            dict_params_optimiser:
-            dict_params_scheduler:
         """
         self.batch_size = batch_size
         self.epochs = epochs
         self.device = device
         self.criterion = criterion
-        self.optimiser = Optim_wrapper(optimiser, dict_params_optimiser)
-        self.scheduler = Optim_scheduler_wrapper(scheduler, dict_params_scheduler)
+        self.optim_wrapper = optim_wrapper
 
         # iterable containing objects of type Metric
         self.metrics = metrics

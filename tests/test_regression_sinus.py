@@ -1,3 +1,4 @@
+from optim.Optim_wrapper import Optim_wrapper
 from priv_lib_plot import APlot
 
 import test_nn_kfold_train
@@ -70,7 +71,6 @@ if __name__ == '__main__':
     optimiser = torch.optim.Adam
     criterion = nn.MSELoss(reduction = 'sum')
 
-
     def L4loss(net, xx, yy):
         return torch.norm(net.nn_predict(xx) - yy, 4)
 
@@ -81,10 +81,11 @@ if __name__ == '__main__':
     metrics = (L4metric,)
 
     dict_optimiser = {"lr": 0.001, "weight_decay": 0.0000001}
+    optim_wrapper = Optim_wrapper(optimiser, dict_optimiser)
+
     param_training = NNTrainParameters(batch_size=batch_size, epochs=epochs, device=device,
-                                       criterion=criterion, optimiser=optimiser,
-                                       metrics=metrics,
-                                       dict_params_optimiser=dict_optimiser,)
+                                       criterion=criterion, optim_wrapper=optim_wrapper,
+                                       metrics=metrics)
 
     parametrized_NN = factory_parametrised_FC_NN(param_input_size=input_size, param_list_hidden_sizes=hidden_sizes,
                                                  param_output_size=output_size, param_list_biases=biases,

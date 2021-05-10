@@ -3,6 +3,7 @@
 #  and save the model and use it to check the accuracy total.
 import sklearn
 
+from optim.Optim_wrapper import Optim_wrapper
 from src.metric.Metric import Metric
 
 import test_nn_kfold_train
@@ -76,10 +77,10 @@ if __name__ == '__main__':
     optimiser = torch.optim.SGD
     criterion = nn.CrossEntropyLoss(reduction = 'sum')
     dict_optimiser = {"lr": 0.0005, "weight_decay": 0.00001}
+    optim_wrapper = Optim_wrapper(optimiser, dict_optimiser)
 
     param_training = NNTrainParameters(batch_size=batch_size, epochs=epochs, device=device,
-                                       criterion=criterion, optimiser=optimiser,
-                                       dict_params_optimiser=dict_optimiser,
+                                       criterion=criterion, optim_wrapper=optim_wrapper,
                                        metrics=metrics)
     Class_Parametrized_NN = factory_parametrised_FC_NN(param_input_size=input_size,
                                                        param_list_hidden_sizes=hidden_sizes,
