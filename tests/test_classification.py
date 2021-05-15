@@ -16,13 +16,12 @@ import pandas as pd
 
 from src.Neural_Network.Fully_connected_NN import factory_parametrised_FC_NN
 from src.train.NNTrainParameters import NNTrainParameters
-from src.Neural_Network.NN_fcts import pytorch_device_setting
+from src.Neural_Network.NN_fcts import pytorch_device_setting, set_seeds
 from src.training_stopper.Early_stopper_training import Early_stopper_training
 from src.training_stopper.Early_stopper_validation import Early_stopper_validation
 
 # set seed for pytorch.
-torch.manual_seed(42)
-np.random.seed(42)
+set_seeds(42)
 
 ############################## GLOBAL PARAMETERS
 # Number of training samples

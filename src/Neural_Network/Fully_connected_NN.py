@@ -51,76 +51,30 @@ class Fully_connected_NN(Savable_net, metaclass=ABCMeta):
     def input_size(self):
         return self._input_size
 
-    @input_size.setter
-    def input_size(self, new_input_size):
-        if isinstance(new_input_size, int):
-            self._input_size = new_input_size
-        else:
-            raise Error_type_setter(f"Argument is not an {str(int)}.")
-
     @property
     @abstractmethod  # ABSTRACT FIELD
     def list_hidden_sizes(self):
         return self._list_hidden_sizes
-
-    @list_hidden_sizes.setter
-    def list_hidden_sizes(self, new_list_hidden_sizes):
-        if function_iterable.is_iterable(new_list_hidden_sizes):
-            self._list_hidden_sizes = new_list_hidden_sizes
-        else:
-            raise Error_type_setter(f"Argument is not an Iterable.")
 
     @property
     @abstractmethod  # ABSTRACT FIELD
     def output_size(self):
         return self._output_size
 
-    @output_size.setter
-    def output_size(self, new_output_size):
-        if isinstance(new_output_size, int):
-            self._output_size = new_output_size
-        else:
-            raise Error_type_setter(f"Argument is not an {str(int)}.")
-
     @property
     @abstractmethod  # ABSTRACT FIELD
     def list_biases(self):
         return self._list_biases
-
-    # always set list_biases after list_hidden_sizes:
-    @list_biases.setter
-    def list_biases(self, new_list_biases):
-        if function_iterable.is_iterable(new_list_biases):
-            assert len(new_list_biases) == len(
-                self.list_hidden_sizes) + 1, "wrong dimensions for biases and hidden layers."
-            # :security that the right parameters are given.
-            self._list_biases = new_list_biases
-        else:
-            raise Error_type_setter(f"Argument is not an iterable.")
 
     @property
     @abstractmethod  # ABSTRACT FIELD
     def activation_functions(self):
         return self._activation_functions
 
-    @activation_functions.setter
-    def activation_functions(self, new_activation_functions):
-        if function_iterable.is_iterable(new_activation_functions):
-            self._activation_functions = new_activation_functions
-        else:
-            raise Error_type_setter(f"Argument is not an iterable.")
-
     @property
     @abstractmethod  # ABSTRACT FIELD
     def dropout(self):
         return self._dropout
-
-    @dropout.setter
-    def dropout(self, new_dropout):
-        if isinstance(new_dropout, float) and 0 <= new_dropout < 1:  # : dropout should be a percent between 0 and 1.
-            self._dropout = new_dropout
-        else:
-            raise Error_type_setter(f"Argument is not an {str(float)}.")
 
     # section ######################################################################
     #  #############################################################################
@@ -178,20 +132,95 @@ def factory_parametrised_FC_NN(param_input_size, param_list_hidden_sizes, param_
             batch_size = len(rescaled_train_X)
             predict_fct = nn.Identity()
     """
-    assert len(param_list_biases) == len(param_list_hidden_sizes) + 1, "wrong dimensions for biases and hidden layers."
+    assert len(param_list_biases) == len(param_list_hidden_sizes) + 1, \
+        "wrong dimensions for biases and hidden layers."
 
     class Parametrised_FC_NN(Fully_connected_NN):
-        # defining attributes this way shadows the abstract properties from parents.
-        input_size = param_input_size
-        list_hidden_sizes = param_list_hidden_sizes
-        output_size = param_output_size
-        list_biases = param_list_biases  # should always be defined after list_hidden_sizes.
-        activation_functions = param_activation_functions
-        dropout = param_dropout
 
         def __init__(self):
+            self.input_size = param_input_size
+            self.list_hidden_sizes = param_list_hidden_sizes
+            self.output_size = param_output_size
+            self.list_biases = param_list_biases  # should always be defined after list_hidden_sizes.
+            self.activation_functions = param_activation_functions
+            self.dropout = param_dropout
+
             super().__init__(predict_fct=param_predict_fct)
             self.set_layers()  #: mandatory call in the constructor,
             # :to initialize all the layers and dropout with respect to the parameters created.
+
+        # section ######################################################################
+        #  #############################################################################
+        #  SETTERS / GETTERS
+        @property
+        def input_size(self):
+            return self._input_size
+
+        @input_size.setter
+        def input_size(self, new_input_size):
+            if isinstance(new_input_size, int):
+                self._input_size = new_input_size
+            else:
+                raise Error_type_setter(f"Argument is not an {str(int)}.")
+
+        @property
+        def list_hidden_sizes(self):
+            return self._list_hidden_sizes
+
+        @list_hidden_sizes.setter
+        def list_hidden_sizes(self, new_list_hidden_sizes):
+            if function_iterable.is_iterable(new_list_hidden_sizes):
+                self._list_hidden_sizes = new_list_hidden_sizes
+            else:
+                raise Error_type_setter(f"Argument is not an Iterable.")
+
+        @property
+        def output_size(self):
+            return self._output_size
+
+        @output_size.setter
+        def output_size(self, new_output_size):
+            if isinstance(new_output_size, int):
+                self._output_size = new_output_size
+            else:
+                raise Error_type_setter(f"Argument is not an {str(int)}.")
+
+        @property
+        def list_biases(self):
+            return self._list_biases
+
+        # always set list_biases after list_hidden_sizes:
+        @list_biases.setter
+        def list_biases(self, new_list_biases):
+            if function_iterable.is_iterable(new_list_biases):
+                assert len(new_list_biases) == len(
+                    self.list_hidden_sizes) + 1, "wrong dimensions for biases and hidden layers."
+                # :security that the right parameters are given.
+                self._list_biases = new_list_biases
+            else:
+                raise Error_type_setter(f"Argument is not an iterable.")
+
+        @property
+        def activation_functions(self):
+            return self._activation_functions
+
+        @activation_functions.setter
+        def activation_functions(self, new_activation_functions):
+            if function_iterable.is_iterable(new_activation_functions):
+                self._activation_functions = new_activation_functions
+            else:
+                raise Error_type_setter(f"Argument is not an iterable.")
+
+        @property
+        def dropout(self):
+            return self._dropout
+
+        @dropout.setter
+        def dropout(self, new_dropout):
+            if isinstance(new_dropout, float) and 0 <= new_dropout < 1:
+                # : dropout should be a percent between 0 and 1.
+                self._dropout = new_dropout
+            else:
+                raise Error_type_setter(f"Argument is not an {str(float)}.")
 
     return Parametrised_FC_NN

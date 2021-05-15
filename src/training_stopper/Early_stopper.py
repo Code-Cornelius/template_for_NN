@@ -11,6 +11,7 @@ DEBUG = False
 class Early_stopper(metaclass=ABCMeta):
     """
     Abstract class of an early stopper. Given to a training, allows for stopping earlier with respect to some criteria.
+    Used to stop training earlier given some criteria. Undefined behaviour when patience is greater than nb of epoch.
 
     The requirements for children class is:
         redefine _is_early_stop

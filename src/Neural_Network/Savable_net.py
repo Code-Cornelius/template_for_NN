@@ -24,9 +24,8 @@ class Savable_net(nn.Module):
 
     # function that from the output returns the prediction. Depends on the problem:
     _predict_fct = nn.Identity()
-
-    # :default predict_fct. Can be masked with lower child class functions.
-    # : the hidden mark "_" is important to not pass through the setter.
+    # : default predict_fct. Can be masked with lower child class functions.
+    # : the hidden mark "_" is important to not pass through the setter but directly to the parameter.
     # : we set the class variable, that is also defined as an object variable unless redefined!
 
     def __init__(self, predict_fct, *args, **kwargs):
@@ -51,6 +50,7 @@ class Savable_net(nn.Module):
     @staticmethod
     def init_weights(layer):
         """gets called in init_weights_of_model"""
+        # if linear, if the weights needs to be changed as well as bias.
         if type(layer) == nn.Linear and layer.weight.requires_grad and layer.bias.requires_grad:
             gain = nn.init.calculate_gain('tanh')
             torch.nn.init.xavier_uniform_(layer.weight, gain=gain)

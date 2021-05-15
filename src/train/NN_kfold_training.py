@@ -8,11 +8,9 @@ from src.train.NN_train import nn_train
 from src.training_stopper.Early_stopper_vanilla import Early_stopper_vanilla
 
 
-def nn_kfold_train(data_training_X, data_training_Y,
-                   model_NN, parameters_training,
-                   early_stoppers=(Early_stopper_vanilla(),),
-                   nb_split=5, shuffle_kfold=True,
-                   percent_validation_for_1_fold=20, silent=False):
+def nn_kfold_train(data_training_X, data_training_Y, Model_NN,
+                   parameters_training, early_stoppers=(Early_stopper_vanilla(),), nb_split=5,
+                   shuffle_kfold=True, percent_validation_for_1_fold=20, silent=False):
     """
     # create main cross validation method
     # it returns the score during training,
@@ -22,12 +20,12 @@ def nn_kfold_train(data_training_X, data_training_Y,
     Args:
         data_training_X: tensor
         data_training_Y: tensor
-        model_NN: parametrised architecture,
+        Model_NN: parametrised architecture constructible without parameters,
             type the Class with architecture we want to KFold over. Requirements: call constructor over it to create a net.
         parameters_training: NNTrainParameters. contains the parameters used for training
         early_stoppers: iterable of Early_stopper. Used for deciding if the training should stop early.
             Preferably immutable to insure no changes.
-        nb_split:
+        nb_split: 1 is no split.
         shuffle_kfold:
         percent_validation_for_1_fold:
         silent:
@@ -47,16 +45,24 @@ def nn_kfold_train(data_training_X, data_training_Y,
         early_stoppers not changed.
     """
     # place where logs of trainings with respect to the metrics are stored.
-    indices, compute_validation = _nn_kfold_indices_creation(data_training_X,
-                                                             data_training_Y,
-                                                             percent_validation_for_1_fold,
-                                                             nb_split,
-                                                             shuffle_kfold)
+    indices, compute_validation = _nn_kfold_indices_creation_random(data_training_X,
+                                                                    data_training_Y,
+                                                                    percent_validation_for_1_fold,
+                                                                    nb_split,
+                                                                    shuffle_kfold)
+    history_kfold = create_history_kfold(compute_validation, early_stoppers, nb_split, parameters_training)
+
+    return _nn_multiplefold_train(data_training_X, data_training_Y, early_stoppers, Model_NN, nb_split,
+                                  parameters_training, indices, silent, history_kfold)
+
+
+def create_history_kfold(compute_validation, early_stoppers, nb_split, parameters_training):
+    """ nb of split at least 1, 1 means no split.  """
+    # todo change parameters_training for params_training
     history_kfold = {'training': {}}
     history_kfold['training']['loss'] = np.zeros((nb_split, parameters_training.epochs))
     for metric in parameters_training.metrics:
         history_kfold['training'][metric.name] = np.zeros((nb_split, parameters_training.epochs))
-
     if compute_validation:
         history_kfold['validation'] = {}
         history_kfold['validation']['loss'] = np.zeros((nb_split, parameters_training.epochs))
@@ -66,17 +72,15 @@ def nn_kfold_train(data_training_X, data_training_Y,
     else:  # : testing that no early validation stopper given.
         for stop in early_stoppers:
             assert not stop.is_validation(), "Input validation stopper while no validation set given."
-
-    return _nn_multiplefold_train(data_training_X, data_training_Y, early_stoppers, model_NN, nb_split,
-                                  parameters_training, indices, silent, history_kfold)
+    return history_kfold
 
 
 # section ######################################################################
 #  #############################################################################
 # MULTIFOLD
 
-def _nn_multiplefold_train(data_training_X, data_training_Y, early_stoppers, model_NN, nb_split, parameters_training,
-                           indices, silent, history):
+def _nn_multiplefold_train(data_training_X, data_training_Y, early_stoppers, Model_NN, nb_split,
+                           parameters_training, indices, silent, history_kfold):
     # for storing the network:
     value_metric_for_best_NN = - np.Inf  # :we set -\infty which can only be improved.
     # :Recall, the two criterea are either accuracy (so any accuracy is better than a neg. number)
@@ -87,29 +91,61 @@ def _nn_multiplefold_train(data_training_X, data_training_Y, early_stoppers, mod
 
     # : random_state is the seed of StratifiedKFold.
     for i, (index_training, index_validation) in enumerate(indices):
+        if not silent:
+            time.sleep(0.0001)  # for printing order
+            print(f"{i + 1}-th Fold out of {nb_split} Folds.")
+            time.sleep(0.0001)  # for printing order
+
         # : one can use tensors as they are convertible to numpy.
-        best_net, number_kfold_best_net = train_kfold_a_fold_after_split(best_epoch_of_NN, best_net, data_training_X,
-                                                                         data_training_Y, early_stoppers, i,
-                                                                         index_training, index_validation, model_NN,
-                                                                         nb_split, number_kfold_best_net,
-                                                                         parameters_training, value_metric_for_best_NN,
-                                                                         silent, history)
+        best_net, number_kfold_best_net = train_kfold_a_fold_after_split(data_training_X, data_training_Y,
+                                                                         index_training, index_validation, Model_NN,
+                                                                         parameters_training, history_kfold,
+                                                                         early_stoppers, value_metric_for_best_NN,
+                                                                         number_kfold_best_net, best_net,
+                                                                         best_epoch_of_NN, i, silent)
 
     if not silent:
         print("Finished the K-Fold Training, the best NN is the number {}".format(number_kfold_best_net))
 
-    return best_net, history, best_epoch_of_NN
+    return best_net, history_kfold, best_epoch_of_NN
 
 
-def train_kfold_a_fold_after_split(best_epoch_of_NN, best_net, data_training_X, data_training_Y, early_stoppers, i,
-                                   index_training, index_validation, model_NN, nb_split, number_kfold_best_net,
-                                   parameters_training, value_metric_for_best_NN, silent, history):
-    if not silent:
-        time.sleep(0.001)  # for printing order
-        print(f"{i + 1}-th Fold out of {nb_split} Folds.")
-        time.sleep(0.001)  # for printing order
+def train_kfold_a_fold_after_split(data_training_X, data_training_Y, index_training, index_validation, Model_NN,
+                                   parameters_training, history_kfold, best_epoch_of_NN,
+                                   early_stoppers=(Early_stopper_vanilla(),), value_metric_for_best_NN=-np.Inf,
+                                   number_kfold_best_net=1, best_net=None, i=0, silent=False):
+    """
 
-    net = model_NN().to(parameters_training.device)
+    Args:
+        data_training_X:
+        data_training_Y:
+        index_training: format such that it is possible to slice data like: data[index]
+        index_validation:
+        Model_NN:
+        parameters_training:
+        history_kfold:
+        best_epoch_of_NN (list): length nb of splits. Stores an integer with best epoch.
+        early_stoppers: a list of early_stoppers
+        value_metric_for_best_NN:
+        number_kfold_best_net:
+        best_net: can be pass None, is it for comparison. Otherwise, should be a net.
+        i (unsigned int): number for positions in list. Should correspond to the iterable in range(nb_of_split)
+        silent:
+
+    Returns:
+        best_net, number_kfold_best_net
+
+    Post-conditions:
+        history_kfold is updated to contain the training.
+        early stoppers are not modified.
+        value_metric_for_best_NN is modified.
+        number_kfold_best_net is updated.
+        best_net is modified for the new net.
+        best_epoch_of_NN is modified.
+        i is not modified.
+
+    """
+    net = Model_NN().to(parameters_training.device)
 
     # reset the early stoppers for the following fold
     for early_stopper in early_stoppers:
@@ -120,18 +156,19 @@ def train_kfold_a_fold_after_split(best_epoch_of_NN, best_net, data_training_X, 
                    indic_train_X=index_training, indic_train_Y=index_training, early_stoppers=early_stoppers,
                    indic_validation_X=index_validation, indic_validation_Y=index_validation, silent=silent)
 
-    _set_history_from_nn_train(res=res, best_epoch_of_NN=best_epoch_of_NN, history=history, index=i)
+    _set_history_from_nn_train(res=res, best_epoch_of_NN=best_epoch_of_NN, history=history_kfold, index=i)
 
     # storing the best network.
-    best_net, value_metric_for_best_NN, number_kfold_best_net = _new_best_model(best_epoch_of_NN, best_net,
-                                                                                i, net,
-                                                                                value_metric_for_best_NN,
-                                                                                history, number_kfold_best_net)
+    (best_net, value_metric_for_best_NN,
+     number_kfold_best_net) = _new_best_model(best_epoch_of_NN, best_net, i, net,
+                                              value_metric_for_best_NN, history_kfold,
+                                              number_kfold_best_net)
     return best_net, number_kfold_best_net
 
 
 def _new_best_model(best_epoch_of_NN, best_net, i, net, value_metric_for_best_NN, history, number_kfold_best_net):
-    rookie_perf = - history['training']['loss'][i, best_epoch_of_NN[i]]  #: -1 * ... bc we want to keep order below
+    rookie_perf = - history['training']['loss'][
+        i, best_epoch_of_NN[i]]  #: -1 * ... bc we want to keep order below of best is bigger.
     if value_metric_for_best_NN < rookie_perf:
         best_net = net
         value_metric_for_best_NN = rookie_perf
@@ -162,8 +199,10 @@ def _set_history_from_nn_train(res, best_epoch_of_NN, history, index):
 #  #############################################################################
 # INDICES
 
-def _nn_kfold_indices_creation(data_training_X, data_training_Y, percent_validation_for_1_fold, nb_split,
-                               shuffle_kfold):
+def _nn_kfold_indices_creation_random(data_training_X, data_training_Y,
+                                      percent_validation_for_1_fold,
+                                      nb_split, shuffle_kfold):
+    """ returns a list of tuples (a tuple per fold) and a bool = compute_validation"""
     # Only one fold
     if nb_split == 1:
         assert 0 <= percent_validation_for_1_fold < 100, "percent_validation_for_1_fold should be in [0,100[ !"
@@ -171,6 +210,7 @@ def _nn_kfold_indices_creation(data_training_X, data_training_Y, percent_validat
         # Without validation fold
         if percent_validation_for_1_fold == 0:
             return [(torch.arange(data_training_X.shape[0]), None)], False
+            # : kfold split hands back list of tuples. List container, a tuple for each fold.
 
         training_size = int((100. - percent_validation_for_1_fold) / 100. * data_training_X.shape[0])
         if shuffle_kfold:
@@ -185,6 +225,7 @@ def _nn_kfold_indices_creation(data_training_X, data_training_Y, percent_validat
             indic_train = torch.arange(training_size)
             indic_validation = torch.arange(training_size, data_training_X.shape[0])
         return [(indic_train, indic_validation)], True
+        # : kfold split hands back list of tuples. List container, a tuple for each fold.
 
     # multiple folds
     else:

@@ -12,14 +12,13 @@ from plot.NN_plot_history import nn_plot_train_loss_acc
 from plot.NN_plots import nn_plot_prediction_vs_true, nn_print_errors
 from src.Neural_Network.Fully_connected_NN import factory_parametrised_FC_NN
 from src.train.NNTrainParameters import NNTrainParameters
-from src.Neural_Network.NN_fcts import pytorch_device_setting
+from src.Neural_Network.NN_fcts import pytorch_device_setting, set_seeds
 from src.training_stopper.Early_stopper_training import Early_stopper_training
 from src.training_stopper.Early_stopper_validation import Early_stopper_validation
 from train.NN_kfold_training import nn_kfold_train
 
 # set seed for pytorch.
-torch.manual_seed(42)
-np.random.seed(42)
+set_seeds(42)
 
 
 # Define the exact solution
@@ -34,8 +33,8 @@ n_samples = 2000
 sigma = 0.01
 device = pytorch_device_setting('not_cpu_please')
 SILENT = False
-early_stop_train = Early_stopper_training(patience=20, silent=SILENT, delta=0.01)
-early_stop_valid = Early_stopper_validation(patience=20, silent=SILENT, delta=0.01)
+early_stop_train = Early_stopper_training(patience=20, silent=SILENT, delta=-int(1E-6))
+early_stop_valid = Early_stopper_validation(patience=20, silent=SILENT, delta=-int(1E-6))
 early_stoppers = (early_stop_train, early_stop_valid)
 metrics = ()
 #############################
@@ -74,7 +73,6 @@ if __name__ == '__main__':
     def L4loss(net, xx, yy):
         return torch.norm(net.nn_predict(xx) - yy, 4)
 
-
     from src.metric.Metric import Metric
 
     L4metric = Metric('L4', L4loss)
@@ -93,10 +91,8 @@ if __name__ == '__main__':
                                                  param_predict_fct=None)
 
     (net, history, best_epoch_of_NN) = nn_kfold_train(train_X, train_Y, parametrized_NN,
-                                                      parameters_training=param_training,
-                                                      early_stoppers=early_stoppers, nb_split=1,
-                                                      shuffle_kfold=True,
-                                                      percent_validation_for_1_fold=10,
+                                                      parameters_training=param_training, early_stoppers=early_stoppers,
+                                                      nb_split=1, shuffle_kfold=True, percent_validation_for_1_fold=10,
                                                       silent=False)
     net.to(torch.device('cpu'))
     nn_plot_train_loss_acc(history, flag_valid=True, log_axis_for_loss= True, best_epoch_of_NN=best_epoch_of_NN,
