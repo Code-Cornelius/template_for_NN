@@ -15,27 +15,50 @@ from src.training_stopper.Early_stopper_training import Early_stopper_training
 from src.training_stopper.Early_stopper_validation import Early_stopper_validation
 from src.train.NN_kfold_training import nn_kfold_train, train_kfold_a_fold_after_split, create_history_kfold
 from src.Neural_Network.LSTM import factory_parametrised_LSTM
-from src.data_processing_fct import create_input_sequences
+
 from priv_lib_plot import APlot
 
 
+def create_input_sequences(input_data, lookback_window, batch_first=True):
+    # from https://stackabuse.com/time-series-prediction-using-lstm-with-pytorch-in-python/?fbclid=IwAR17NoARUlBsBLzanKmyuvmCXfU6Rxc69T9BZpowXfSUSYQNEFzl2pfDhSo
+    # TODO add input dim.
+    L = len(input_data)
+    nb_of_data = L - lookback_window
 
+    assert lookback_window < L, f"lookback window is bigger than data. Window size : {lookback_window}, Data length : {L}."
+
+    if batch_first:
+        data_X = torch.zeros(nb_of_data, lookback_window, 1)
+        data_Y = torch.zeros(nb_of_data, 1)
+
+        for i in range(nb_of_data):
+            data_X[i, :, 0] = input_data[i:i + lookback_window]
+            data_Y[i, 0] = input_data[i + lookback_window]
+        return data_X, data_Y
+    else:
+        data_X = torch.zeros(lookback_window, nb_of_data, 1)
+        data_Y = torch.zeros(1, nb_of_data, 1)
+
+        for i in range(nb_of_data):
+            data_X[:, i, 0] = input_data[i:i + lookback_window]
+            data_Y[0, i] = input_data[i + lookback_window]
+        return data_X, data_Y
 
 
 # set seed for pytorch.
 set_seeds(42)
 
 ############### PARAMETERS:
-# time_series_len = lookback_window = 18
-time_series_len = lookback_window = 12
+time_series_len = lookback_window = 500
 ###############
 
+import pandas as pd
 
 validation_and_testing_data_size = lookback_window
 # Import Data
-flight_data = sns.load_dataset("flights")
+flight_data = pd.read_csv("../research_on_time_series_forecasting/daily-min-temperatures.csv")
 print(flight_data.head())
-data = flight_data['passengers'].values.astype(float)
+data = flight_data['Temp'].values.astype(float)
 
 train_data = data[:-validation_and_testing_data_size]
 
@@ -45,17 +68,6 @@ train_data_normalized = torch.FloatTensor(minimax.fit_transform(train_data.resha
 testing_data = data[-2 * validation_and_testing_data_size:].reshape(-1, 1)
 testing_data_normalised = torch.FloatTensor(minimax.transform(testing_data)).view(1, lookback_window * 2, 1)
 testing_data = torch.FloatTensor(testing_data).view(1, lookback_window * 2, 1)
-
-aplot = APlot()
-months_total = np.arange(0, len(data), 1)
-months_train = np.arange(0, len(train_data), 1)
-dict_ax = {'title': 'Presentation of the Data', 'xlabel': 'Month', 'ylabel': 'Passenger'}
-dict_plot_param = {'label': 'Data for Testing', 'color': 'black', 'linestyle': '-', 'linewidth': 3}
-aplot.uni_plot(0, months_total, data, dict_ax=dict_ax, dict_plot_param=dict_plot_param)
-dict_plot_param = {'label': 'Data Known at Training Time', 'color': 'gray', 'linestyle': '-', 'linewidth': 3}
-aplot.uni_plot(0, months_train, train_data, dict_ax=dict_ax, dict_plot_param=dict_plot_param)
-APlot.show_and_continue()
-
 
 
 def inverse_transform(arr):
@@ -70,8 +82,7 @@ early_stop_valid = Early_stopper_validation(patience=400, silent=SILENT, delta=-
 early_stoppers = (early_stop_train, early_stop_valid)
 metrics = ()
 #############################
-
-data_training_X, data_training_Y = create_input_sequences(train_data_normalized, lookback_window, data_input_dim = 1, output_dim = 1, batch_first = True, silent = False)
+data_training_X, data_training_Y = create_input_sequences(train_data_normalized, lookback_window)
 indices_train = torch.arange(len(data_training_X) - validation_and_testing_data_size)
 indices_valid = torch.arange(len(data_training_X) - validation_and_testing_data_size, len(data_training_X))
 print("shape of training : ", data_training_Y.shape)
@@ -79,13 +90,13 @@ print("shape of training : ", data_training_Y.shape)
 if __name__ == '__main__':
     # config of the architecture:
     input_size = 1
-    num_layers = 10
-    bidirectional = True
-    hidden_size = 32
+    num_layers = 5
+    bidirectional = False
+    hidden_size = 150
     output_size = 1
     dropout = 0.
     epochs = 8000
-    batch_size = 120
+    batch_size = 100
 
     optimiser = torch.optim.Adam
     criterion = nn.MSELoss(reduction='sum')
@@ -99,7 +110,7 @@ if __name__ == '__main__':
     parametrized_NN = factory_parametrised_LSTM(input_size=input_size, num_layers=num_layers,
                                                 bidirectional=bidirectional, time_series_len=time_series_len,
                                                 hidden_size=hidden_size, output_size=output_size, dropout=dropout,
-                                                activation_fct=nn.CELU(), hidden_FC=32)
+                                                activation_fct=nn.CELU(), hidden_FC=50)
 
     history = create_history_kfold(True, early_stoppers, 1, param_training)
     best_epoch_of_NN = [0]
@@ -111,11 +122,6 @@ if __name__ == '__main__':
     nn_plot_train_loss_acc(history, flag_valid=True, log_axis_for_loss=True,
                            best_epoch_of_NN=best_epoch_of_NN, key_for_second_axis_plot=None,
                            log_axis_for_second_axis=True)
-
-
-
-
-
 
     ########## prediction :
     # prediction by looking at the data we know about
@@ -147,7 +153,7 @@ if __name__ == '__main__':
                                 len(data_training_Y) + lookback_window + validation_and_testing_data_size * 2, 1)
 
     aplot = APlot()
-    dict_ax = {'title': 'Data and Prediction during Training and over Non Observed Data.', 'xlabel': 'month', 'ylabel': 'passenger'}
+    dict_ax = {'title': 'forecasting', 'xlabel': 'month', 'ylabel': 'passenger'}
     dict_plot_param = {'label': 'Data for Testing', 'color': 'black', 'linestyle': '-', 'linewidth': 3}
     aplot.uni_plot(0, months_total, data, dict_ax=dict_ax, dict_plot_param=dict_plot_param)
     dict_plot_param = {'label': 'Data Known at Training Time', 'color': 'gray', 'linestyle': '-', 'linewidth': 3}

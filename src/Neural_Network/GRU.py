@@ -11,7 +11,6 @@ class GRU(Savable_net, metaclass=ABCMeta):
         super().__init__(predict_fct=None)  # predict is identity
 
         self.nb_directions = int(self.bidirectional) + 1
-        self.hidden_layer_size = self.hidden_size * self.num_layers
 
         self.stacked_GRU = nn.GRU(self.input_size, self.hidden_size,
                                   num_layers=self.num_layers,
@@ -19,7 +18,7 @@ class GRU(Savable_net, metaclass=ABCMeta):
                                   bidirectional=self.bidirectional,
                                   batch_first=True)
 
-        self.linear_layer = nn.Linear(self.hidden_size, self.hidden_FC)
+        self.linear_layer = nn.Linear(self.hidden_size * self.nb_directions, self.hidden_FC)
         self.linear_layer_2 = nn.Linear(self.hidden_FC, self.output_size)
 
         self.hidden_state_0 = nn.Parameter(torch.randn(self.num_layers * self.nb_directions,

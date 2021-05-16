@@ -11,7 +11,6 @@ class LSTM(Savable_net, metaclass=ABCMeta):
         super().__init__(predict_fct=None)  # predict is identity
 
         self.nb_directions = int(self.bidirectional) + 1
-        self.hidden_layer_size = self.hidden_size * self.num_layers
 
         self.stacked_lstm = nn.LSTM(self.input_size, self.hidden_size,
                                     num_layers=self.num_layers,
@@ -19,15 +18,15 @@ class LSTM(Savable_net, metaclass=ABCMeta):
                                     bidirectional=self.bidirectional,
                                     batch_first=True)
 
-        self.linear_layer = nn.Linear(self.hidden_size, self.hidden_FC)
+        self.linear_layer = nn.Linear(self.hidden_size * self.nb_directions, self.hidden_FC)
         self.linear_layer_2 = nn.Linear(self.hidden_FC, self.output_size)
 
         self.hidden_state_0 = nn.Parameter(torch.randn(self.num_layers * self.nb_directions,
-                                                       self.input_size,
+                                                       self.input_size, # repeated later to have batch size
                                                        self.hidden_size),
                                            requires_grad=True)  # parameters are moved to device and learn.
         self.hidden_cell_0 = nn.Parameter(torch.randn(self.num_layers * self.nb_directions,
-                                                      self.input_size,
+                                                      self.input_size, # repeated later to have batch size
                                                       self.hidden_size),
                                           requires_grad=True)  # parameters are moved to device and learn.
 
@@ -42,10 +41,13 @@ class LSTM(Savable_net, metaclass=ABCMeta):
         # WIP is backpropagation doing the right job?
         h0, c0 = self.hidden_state_0.repeat(batch_size), self.hidden_cell_0.repeat(batch_size)
         out, _ = self.stacked_lstm(time_series, (h0, c0))  # shape of out is  N,L,Hidden_size * nb_direction
-
-        out = out[:, -1]  # filter lstm here
+        # out = out.view(time_series.shape[0], self.time_series_len, self.hidden_size, 2)
+        # print(out[:, :, -1, :].shape)
+        # print(out[:, :, 0, :].shape)
+        # out = torch.cat([out[:, :, -1,:], out[:, :, 0, :]])  # filter lstm here
         # : sliced into shape N,Hidden_size * nb_direction and taking only last output.
 
+        out = out[:,-1]
         out = self.linear_layer(out)
         out = self.activation_fct(out)
         out = self.linear_layer_2(out)
@@ -93,7 +95,7 @@ class LSTM(Savable_net, metaclass=ABCMeta):
 
 def factory_parametrised_LSTM(input_size=1, num_layers=1, bidirectional=False,
                               time_series_len=0, hidden_size=150, output_size=1, dropout=0.,
-                              activation_fct=nn.CELU(), hidden_FC=50):
+                              activation_fct=nn.CELU(), hidden_FC=16):
     class Parametrised_LSTM(LSTM):
         def __init__(self):
             self.input_size = input_size
