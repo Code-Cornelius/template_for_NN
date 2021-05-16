@@ -5,10 +5,10 @@ from priv_lib_plot import APlot
 from priv_lib_plot import AColorsetContinuous
 
 
-def nn_plot_train_loss_acc(
-        history, key_for_second_axis_plot=None, flag_valid=True,
-        log_axis_for_loss=True, best_epoch_of_NN=None,
-        log_axis_for_second_axis=False, title=''):
+def nn_plot_train_loss_acc(history, key_for_second_axis_plot=None, flag_valid=True,
+                           log_axis_for_loss=True, best_epoch_of_NN=None,
+                           log_axis_for_second_axis=False, title=''):
+    # TODO make sure that the labels are in different places.
     # if there is another key, we create a plot with two y-axis but only one x-axis.
     if key_for_second_axis_plot is not None:
         aplot = APlot(how=(1, 1), sharex=True)
