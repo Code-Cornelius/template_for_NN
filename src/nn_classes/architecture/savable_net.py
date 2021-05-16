@@ -7,7 +7,7 @@ import torch.nn as nn
 # my lib
 from priv_lib_error import Error_type_setter
 from priv_lib_util.tools.src.function_writer import list_of_dicts_to_json
-from src.Neural_Network.NN_fcts import decorator_train_disable_no_grad
+from src.nn_classes.architecture.nn_fcts import decorator_train_disable_no_grad
 
 
 class Savable_net(nn.Module):

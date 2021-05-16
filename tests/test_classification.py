@@ -3,8 +3,8 @@
 #  and save the model and use it to check the accuracy total.
 import sklearn
 
-from optim.Optim_wrapper import Optim_wrapper
-from src.metric.Metric import Metric
+from src.nn_classes.optim_wrapper import Optim_wrapper
+from src.nn_classes.metric.metric import Metric
 
 import test_nn_kfold_train
 
@@ -14,11 +14,11 @@ import numpy as np
 import torch.nn.functional as F
 import pandas as pd
 
-from src.Neural_Network.Fully_connected_NN import factory_parametrised_FC_NN
-from src.train.NNTrainParameters import NNTrainParameters
-from src.Neural_Network.NN_fcts import pytorch_device_setting, set_seeds
-from src.training_stopper.Early_stopper_training import Early_stopper_training
-from src.training_stopper.Early_stopper_validation import Early_stopper_validation
+from src.nn_classes.architecture.fully_connected import factory_parametrised_FC_NN
+from src.train.nntrainparameters import NNTrainParameters
+from src.nn_classes.architecture.nn_fcts import pytorch_device_setting, set_seeds
+from src.nn_classes.training_stopper.Early_stopper_training import Early_stopper_training
+from src.nn_classes.training_stopper.Early_stopper_validation import Early_stopper_validation
 
 # set seed for pytorch.
 set_seeds(42)

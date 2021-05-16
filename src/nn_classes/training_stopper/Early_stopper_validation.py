@@ -1,4 +1,4 @@
-from src.training_stopper.Early_stopper import Early_stopper
+from src.nn_classes.training_stopper.Early_stopper import Early_stopper
 
 
 class Early_stopper_validation(Early_stopper):

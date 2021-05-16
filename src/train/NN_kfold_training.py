@@ -5,7 +5,7 @@ import sklearn.model_selection
 import torch
 
 from src.train.NN_train import nn_train
-from src.training_stopper.Early_stopper_vanilla import Early_stopper_vanilla
+from src.nn_classes.training_stopper.Early_stopper_vanilla import Early_stopper_vanilla
 
 
 def nn_kfold_train(data_training_X, data_training_Y, Model_NN,
@@ -100,9 +100,9 @@ def _nn_multiplefold_train(data_training_X, data_training_Y, early_stoppers, Mod
         best_net, number_kfold_best_net = train_kfold_a_fold_after_split(data_training_X, data_training_Y,
                                                                          index_training, index_validation, Model_NN,
                                                                          parameters_training, history_kfold,
-                                                                         early_stoppers, value_metric_for_best_NN,
-                                                                         number_kfold_best_net, best_net,
-                                                                         best_epoch_of_NN, i, silent)
+                                                                         best_epoch_of_NN, early_stoppers,
+                                                                         value_metric_for_best_NN,
+                                                                         number_kfold_best_net, best_net, i, silent)
 
     if not silent:
         print("Finished the K-Fold Training, the best NN is the number {}".format(number_kfold_best_net))
@@ -231,7 +231,8 @@ def _nn_kfold_indices_creation_random(data_training_X, data_training_Y,
     else:
         try:
             # classification
-            kfold = sklearn.model_selection.StratifiedKFold(n_splits=nb_split, shuffle=shuffle_kfold, random_state=0)
+            kfold = sklearn.model_selection.StratifiedKFold(n_splits=nb_split, shuffle=shuffle_kfold,
+                                                            random_state=0)
 
             # attempt to use the indices to check whether we can use stratified kfold
             for _ in kfold.split(data_training_X, data_training_Y):
