@@ -8,14 +8,14 @@ from torch import nn
 import numpy as np
 import pandas as pd
 
-from plot.NN_plot_history import nn_plot_train_loss_acc
-from plot.NN_plots import nn_plot_prediction_vs_true, nn_print_errors
+from plot.nn_plot_history import nn_plot_train_loss_acc
+from plot.nn_plots import nn_plot_prediction_vs_true, nn_print_errors
 from src.nn_classes.architecture.fully_connected import factory_parametrised_FC_NN
 from src.train.nntrainparameters import NNTrainParameters
 from src.nn_classes.architecture.nn_fcts import pytorch_device_setting, set_seeds
 from src.nn_classes.training_stopper.Early_stopper_training import Early_stopper_training
 from src.nn_classes.training_stopper.Early_stopper_validation import Early_stopper_validation
-from train.NN_kfold_training import nn_kfold_train
+from train.nn_kfold_training import nn_kfold_train
 
 # set seed for pytorch.
 set_seeds(42)

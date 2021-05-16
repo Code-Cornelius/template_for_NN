@@ -1,7 +1,7 @@
 from src.nn_classes.architecture.nn_fcts import are_at_least_one_None, raise_if_not_all_None
 import numpy as np
 
-from src.train.NN_fit import nn_fit
+from src.train.nn_fit import nn_fit
 from src.nn_classes.training_stopper.Early_stopper_vanilla import Early_stopper_vanilla
 
 

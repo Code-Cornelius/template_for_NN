@@ -4,13 +4,15 @@ import numpy as np
 import sklearn.model_selection
 import torch
 
-from src.train.NN_train import nn_train
+from src.train.nn_train import nn_train
 from src.nn_classes.training_stopper.Early_stopper_vanilla import Early_stopper_vanilla
 
 
-def nn_kfold_train(data_training_X, data_training_Y, Model_NN,
-                   parameters_training, early_stoppers=(Early_stopper_vanilla(),), nb_split=5,
-                   shuffle_kfold=True, percent_validation_for_1_fold=20, silent=False):
+def nn_kfold_train(data_training_X, data_training_Y,
+                   Model_NN, parameters_training,
+                   early_stoppers=(Early_stopper_vanilla(),),
+                   nb_split=5, shuffle_kfold=True,
+                   percent_validation_for_1_fold=20, only_best_history=False, silent=False):
     """
     # create main cross validation method
     # it returns the score during training,
@@ -20,12 +22,12 @@ def nn_kfold_train(data_training_X, data_training_Y, Model_NN,
     Args:
         data_training_X: tensor
         data_training_Y: tensor
-        Model_NN: parametrised architecture constructible without parameters,
+        Model_NN: parametrised architecture,
             type the Class with architecture we want to KFold over. Requirements: call constructor over it to create a net.
         parameters_training: NNTrainParameters. contains the parameters used for training
         early_stoppers: iterable of Early_stopper. Used for deciding if the training should stop early.
             Preferably immutable to insure no changes.
-        nb_split: 1 is no split.
+        nb_split:
         shuffle_kfold:
         percent_validation_for_1_fold:
         silent:
@@ -53,7 +55,7 @@ def nn_kfold_train(data_training_X, data_training_Y, Model_NN,
     history_kfold = create_history_kfold(compute_validation, early_stoppers, nb_split, parameters_training)
 
     return _nn_multiplefold_train(data_training_X, data_training_Y, early_stoppers, Model_NN, nb_split,
-                                  parameters_training, indices, silent, history_kfold)
+                                  parameters_training, indices, silent, history_kfold, only_best_history)
 
 
 def create_history_kfold(compute_validation, early_stoppers, nb_split, parameters_training):
@@ -80,7 +82,7 @@ def create_history_kfold(compute_validation, early_stoppers, nb_split, parameter
 # MULTIFOLD
 
 def _nn_multiplefold_train(data_training_X, data_training_Y, early_stoppers, Model_NN, nb_split,
-                           parameters_training, indices, silent, history_kfold):
+                           parameters_training, indices, silent, history_kfold, only_best_history=False):
     # for storing the network:
     value_metric_for_best_NN = - np.Inf  # :we set -\infty which can only be improved.
     # :Recall, the two criterea are either accuracy (so any accuracy is better than a neg. number)
@@ -107,6 +109,10 @@ def _nn_multiplefold_train(data_training_X, data_training_Y, early_stoppers, Mod
     if not silent:
         print("Finished the K-Fold Training, the best NN is the number {}".format(number_kfold_best_net))
 
+    if only_best_history:
+        for key, value in history_kfold.items():
+            for key2, value2 in value.items():
+                value2 = value2[number_kfold_best_net - 1, :].reshape(1, -1)  # slicing for only best history.
     return best_net, history_kfold, best_epoch_of_NN
 
 
@@ -231,8 +237,7 @@ def _nn_kfold_indices_creation_random(data_training_X, data_training_Y,
     else:
         try:
             # classification
-            kfold = sklearn.model_selection.StratifiedKFold(n_splits=nb_split, shuffle=shuffle_kfold,
-                                                            random_state=0)
+            kfold = sklearn.model_selection.StratifiedKFold(n_splits=nb_split, shuffle=shuffle_kfold)  # set seed higher
 
             # attempt to use the indices to check whether we can use stratified kfold
             for _ in kfold.split(data_training_X, data_training_Y):
@@ -240,6 +245,6 @@ def _nn_kfold_indices_creation_random(data_training_X, data_training_Y,
 
         except ValueError:
             # regression
-            kfold = sklearn.model_selection.KFold(n_splits=nb_split, shuffle=shuffle_kfold, random_state=0)
+            kfold = sklearn.model_selection.KFold(n_splits=nb_split, shuffle=shuffle_kfold)  # set seed higher
 
         return kfold.split(data_training_X, data_training_Y), True

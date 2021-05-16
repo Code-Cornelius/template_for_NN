@@ -49,12 +49,12 @@ def nn_plot_train_loss_acc(
                                 'xscale': 'linear', 'yscale': yscale,
                                 'basey': 10})
         if key_for_second_axis_plot is not None:
-            dict_plot_param_accuracy_training = {"color": color_plot_blue[i],
-                                                 "linewidth": linewidth,
-                                                 "label": f"{key_for_second_axis_plot} for Training nb {i}"
-                                                 }
+            dict_plot_param_second_metric_training = {"color": color_plot_blue[i],
+                                                      "linewidth": linewidth,
+                                                      "label": f"{key_for_second_axis_plot} for Training nb {i}"
+                                                      }
             aplot.uni_plot_ax_bis(nb_ax=0, xx=xx, yy=history['training'][key_for_second_axis_plot][i, :],
-                                  dict_plot_param=dict_plot_param_accuracy_training,
+                                  dict_plot_param=dict_plot_param_second_metric_training,
                                   dict_ax={'ylabel': key_for_second_axis_plot})
 
     _plot_validation_history(aplot, color_plot_orange, color_plot_red, flag_valid, history, key_for_second_axis_plot,
@@ -88,13 +88,12 @@ def _plot_validation_history(aplot, color_plot_loss_validation, color_plot_red, 
             aplot.uni_plot(nb_ax=0, xx=xx, yy=history['validation']['loss'][i, :],
                            dict_plot_param=dict_plot_param_loss_validation)
             if key_for_second_axis_plot is not None:
-                dict_plot_param_accuracy_validation = {"color": color_plot_red[i],
-                                                       "linewidth": linewidth,
-                                                       "label": f"{key_for_second_axis_plot} for Validation nb {i}"
-                                                       }
+                dict_plot_param_second_metric_validation = {"color": color_plot_red[i],
+                                                            "linewidth": linewidth,
+                                                            "label": f"{key_for_second_axis_plot} for Validation nb {i}"
+                                                            }
                 aplot.uni_plot_ax_bis(nb_ax=0, xx=xx, yy=history['validation'][key_for_second_axis_plot][i, :],
-                                      dict_plot_param=dict_plot_param_accuracy_validation,
-                                      dict_ax=dict_ax)
+                                      dict_plot_param=dict_plot_param_second_metric_validation, dict_ax=dict_ax)
 
 
 def _plot_best_epoch_NN(aplot, best_epoch_of_NN, nb_trials):

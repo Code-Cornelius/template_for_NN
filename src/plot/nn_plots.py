@@ -65,6 +65,7 @@ def confusion_matrix_creator(Y, Y_predict_result, labels, title=""):
 
 
 def result_function(title, data_train_Y, y_pred1, no_classes, data_test_Y=None, y_pred2=None):
+    # TODO to write
     # initialise the parameters for the dataframe
     conclusion_set = ["Training"]
     conclusion_accuracy = [metrics.accuracy_score(data_train_Y, y_pred1)]

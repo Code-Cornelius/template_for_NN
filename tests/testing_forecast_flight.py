@@ -5,15 +5,15 @@ import seaborn as sns
 from sklearn.preprocessing import MinMaxScaler
 
 from src.nn_classes.architecture.gru import factory_parametrised_GRU
-from src.plot.NN_plot_history import nn_plot_train_loss_acc
-from src.plot.NN_plots import nn_plot_prediction_vs_true, nn_print_errors
+from src.plot.nn_plot_history import nn_plot_train_loss_acc
+from src.plot.nn_plots import nn_plot_prediction_vs_true, nn_print_errors
 from src.nn_classes.architecture.fully_connected import factory_parametrised_FC_NN
 from src.nn_classes.optim_wrapper import Optim_wrapper
 from src.train.nntrainparameters import NNTrainParameters
 from src.nn_classes.architecture.nn_fcts import pytorch_device_setting, set_seeds
 from src.nn_classes.training_stopper.Early_stopper_training import Early_stopper_training
 from src.nn_classes.training_stopper.Early_stopper_validation import Early_stopper_validation
-from src.train.NN_kfold_training import nn_kfold_train, train_kfold_a_fold_after_split, create_history_kfold
+from src.train.nn_kfold_training import nn_kfold_train, train_kfold_a_fold_after_split, create_history_kfold
 from src.nn_classes.architecture.lstm import factory_parametrised_LSTM
 from src.data_processing_fct import create_input_sequences
 from priv_lib_plot import APlot

@@ -1,6 +1,6 @@
-from src.plot.NN_plot_history import nn_plot_train_loss_acc
-from src.train.NN_kfold_training import nn_kfold_train
-from src.plot.NN_plots import *
+from src.plot.nn_plot_history import nn_plot_train_loss_acc
+from src.train.nn_kfold_training import nn_kfold_train
+from src.plot.nn_plots import *
 from src.nn_classes.training_stopper.Early_stopper_vanilla import Early_stopper_vanilla
 
 

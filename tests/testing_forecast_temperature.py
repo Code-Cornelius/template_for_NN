@@ -4,46 +4,20 @@ import torch.nn as nn
 import seaborn as sns
 from sklearn.preprocessing import MinMaxScaler
 
+from data_processing_fct import create_input_sequences
 from src.nn_classes.architecture.gru import factory_parametrised_GRU
-from src.plot.NN_plot_history import nn_plot_train_loss_acc
-from src.plot.NN_plots import nn_plot_prediction_vs_true, nn_print_errors
+from src.plot.nn_plot_history import nn_plot_train_loss_acc
+from src.plot.nn_plots import nn_plot_prediction_vs_true, nn_print_errors
 from src.nn_classes.architecture.fully_connected import factory_parametrised_FC_NN
 from src.nn_classes.optim_wrapper import Optim_wrapper
 from src.train.nntrainparameters import NNTrainParameters
 from src.nn_classes.architecture.nn_fcts import pytorch_device_setting, set_seeds
 from src.nn_classes.training_stopper.Early_stopper_training import Early_stopper_training
 from src.nn_classes.training_stopper.Early_stopper_validation import Early_stopper_validation
-from src.train.NN_kfold_training import nn_kfold_train, train_kfold_a_fold_after_split, create_history_kfold
+from src.train.nn_kfold_training import nn_kfold_train, train_kfold_a_fold_after_split, create_history_kfold
 from src.nn_classes.architecture.lstm import factory_parametrised_LSTM
 
 from priv_lib_plot import APlot
-
-
-def create_input_sequences(input_data, lookback_window, batch_first=True):
-    # from https://stackabuse.com/time-series-prediction-using-lstm-with-pytorch-in-python/?fbclid=IwAR17NoARUlBsBLzanKmyuvmCXfU6Rxc69T9BZpowXfSUSYQNEFzl2pfDhSo
-    # TODO add input dim.
-    L = len(input_data)
-    nb_of_data = L - lookback_window
-
-    assert lookback_window < L, f"lookback window is bigger than data. Window size : {lookback_window}, Data length : {L}."
-
-    if batch_first:
-        data_X = torch.zeros(nb_of_data, lookback_window, 1)
-        data_Y = torch.zeros(nb_of_data, 1)
-
-        for i in range(nb_of_data):
-            data_X[i, :, 0] = input_data[i:i + lookback_window]
-            data_Y[i, 0] = input_data[i + lookback_window]
-        return data_X, data_Y
-    else:
-        data_X = torch.zeros(lookback_window, nb_of_data, 1)
-        data_Y = torch.zeros(1, nb_of_data, 1)
-
-        for i in range(nb_of_data):
-            data_X[:, i, 0] = input_data[i:i + lookback_window]
-            data_Y[0, i] = input_data[i + lookback_window]
-        return data_X, data_Y
-
 
 # set seed for pytorch.
 set_seeds(42)
