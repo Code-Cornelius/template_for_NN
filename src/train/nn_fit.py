@@ -142,7 +142,7 @@ def _update_history(net, metrics, criterion, epoch, is_valid_included, total_num
     # Training Metrics   #
     ######################
     for metric in metrics:
-        _update_metric(metric, net, epoch, total_number_data, history, train_loader_on_device, 'training')
+        _update_history_for_metric(metric, net, epoch, total_number_data, history, train_loader_on_device, 'training')
 
     ######################
     #   Validation Loss  #
@@ -155,12 +155,12 @@ def _update_history(net, metrics, criterion, epoch, is_valid_included, total_num
         # Validation Metrics  #
         #######################
         for metric in metrics:
-            _update_metric(metric, net, epoch, total_number_data, history, validat_loader_on_device, 'validation')
+            _update_history_for_metric(metric, net, epoch, total_number_data, history, validat_loader_on_device, 'validation')
 
     return
 
 
-def _update_metric(metric, net, epoch, total_number_data, history, data_loader, type):
+def _update_history_for_metric(metric, net, epoch, total_number_data, history, data_loader, type):
     history[type][metric.name][epoch] = 0
     for batch_X, batch_y in data_loader:
         history[type][metric.name][epoch] += metric(net, batch_X, batch_y)
