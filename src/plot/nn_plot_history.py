@@ -40,7 +40,7 @@ def nn_plot_train_loss_acc(history, key_for_second_axis_plot=None, flag_valid=Tr
     for i in range(nb_trials):
         dict_plot_param_loss_training = {"color": color_plot_green[i],
                                          "linewidth": linewidth,
-                                         "label": f"Loss for Training nb {i}"
+                                         "label": f"Loss for Training nb {i+1}"
                                          }
         aplot.uni_plot(nb_ax=0, xx=xx, yy=training_loss[i, :],
                        dict_plot_param=dict_plot_param_loss_training,
@@ -51,7 +51,7 @@ def nn_plot_train_loss_acc(history, key_for_second_axis_plot=None, flag_valid=Tr
         if key_for_second_axis_plot is not None:
             dict_plot_param_second_metric_training = {"color": color_plot_blue[i],
                                                       "linewidth": linewidth,
-                                                      "label": f"{key_for_second_axis_plot} for Training nb {i}"
+                                                      "label": f"{key_for_second_axis_plot} for Training nb {i+1}"
                                                       }
             aplot.uni_plot_ax_bis(nb_ax=0, xx=xx, yy=history['training'][key_for_second_axis_plot][i, :],
                                   dict_plot_param=dict_plot_param_second_metric_training,
@@ -83,14 +83,14 @@ def _plot_validation_history(aplot, color_plot_loss_validation, color_plot_red, 
         for i in range(nb_trials):
             dict_plot_param_loss_validation = {"color": color_plot_loss_validation[i],
                                                "linewidth": linewidth,
-                                               "label": f"Loss for Validation nb {i}"
+                                               "label": f"Loss for Validation nb {i+1}"
                                                }
             aplot.uni_plot(nb_ax=0, xx=xx, yy=history['validation']['loss'][i, :],
                            dict_plot_param=dict_plot_param_loss_validation)
             if key_for_second_axis_plot is not None:
                 dict_plot_param_second_metric_validation = {"color": color_plot_red[i],
                                                             "linewidth": linewidth,
-                                                            "label": f"{key_for_second_axis_plot} for Validation nb {i}"
+                                                            "label": f"{key_for_second_axis_plot} for Validation nb {i+1}"
                                                             }
                 aplot.uni_plot_ax_bis(nb_ax=0, xx=xx, yy=history['validation'][key_for_second_axis_plot][i, :],
                                       dict_plot_param=dict_plot_param_second_metric_validation, dict_ax=dict_ax)
@@ -104,5 +104,5 @@ def _plot_best_epoch_NN(aplot, best_epoch_of_NN, nb_trials):
                                                   "linestyle": "--",
                                                   "linewidth": 0.3,
                                                   "markersize": 0,
-                                                  "label": f"Best model for fold nb {i}"
+                                                  "label": f"Best model for fold nb {i+1}"
                                                   })

@@ -88,7 +88,7 @@ def _nn_multiplefold_train(data_training_X, data_training_Y, early_stoppers, Mod
     # :Recall, the two criterea are either accuracy (so any accuracy is better than a neg. number)
     # : and minus loss, and a loss is always closer to zero than - infinity.
     best_net = None
-    number_kfold_best_net = 1  # to keep track of best net
+    number_kfold_best_net = 0  # to keep track of best net
     best_epoch_of_NN = [0] * nb_split  # :we store the epoch of the best net for each fold.
 
     # : random_state is the seed of StratifiedKFold.
@@ -99,20 +99,22 @@ def _nn_multiplefold_train(data_training_X, data_training_Y, early_stoppers, Mod
             time.sleep(0.0001)  # for printing order
 
         # : one can use tensors as they are convertible to numpy.
-        best_net, number_kfold_best_net = train_kfold_a_fold_after_split(data_training_X, data_training_Y,
-                                                                         index_training, index_validation, Model_NN,
-                                                                         parameters_training, history_kfold,
-                                                                         best_epoch_of_NN, early_stoppers,
-                                                                         value_metric_for_best_NN,
-                                                                         number_kfold_best_net, best_net, i, silent)
+        (best_net, value_metric_for_best_NN,
+         number_kfold_best_net) = train_kfold_a_fold_after_split(data_training_X, data_training_Y,
+                                                                 index_training, index_validation,
+                                                                 Model_NN, parameters_training,
+                                                                 history_kfold, best_epoch_of_NN,
+                                                                 early_stoppers, value_metric_for_best_NN,
+                                                                 number_kfold_best_net, best_net, i, silent)
 
     if not silent:
-        print("Finished the K-Fold Training, the best NN is the number {}".format(number_kfold_best_net))
+        print("Finished the K-Fold Training, the best NN is the number {}".format(number_kfold_best_net + 1))
 
     if only_best_history:
         for key, value in history_kfold.items():
             for key2, value2 in value.items():
-                value2 = value2[number_kfold_best_net - 1, :].reshape(1, -1)  # slicing for only best history.
+                value[key2] = value2[number_kfold_best_net, :].reshape(1, -1)  # slicing for only best history.
+        best_epoch_of_NN = [best_epoch_of_NN[number_kfold_best_net]]
     return best_net, history_kfold, best_epoch_of_NN
 
 
@@ -164,12 +166,8 @@ def train_kfold_a_fold_after_split(data_training_X, data_training_Y, index_train
 
     _set_history_from_nn_train(res=res, best_epoch_of_NN=best_epoch_of_NN, history=history_kfold, index=i)
 
-    # storing the best network.
-    (best_net, value_metric_for_best_NN,
-     number_kfold_best_net) = _new_best_model(best_epoch_of_NN, best_net, i, net,
-                                              value_metric_for_best_NN, history_kfold,
-                                              number_kfold_best_net)
-    return best_net, number_kfold_best_net
+    return _new_best_model(best_epoch_of_NN, best_net, i, net, value_metric_for_best_NN,
+                           history_kfold, number_kfold_best_net)
 
 
 def _new_best_model(best_epoch_of_NN, best_net, i, net, value_metric_for_best_NN, history, number_kfold_best_net):
