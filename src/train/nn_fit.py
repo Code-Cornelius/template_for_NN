@@ -1,8 +1,9 @@
 from matplotlib import pyplot as plt
 from tqdm import tqdm
 
+from src.nn_classes.architecture.nn_fcts import are_at_least_one_None, raise_if_not_all_None, \
+    decorator_train_disable_no_grad
 from src.nn_classes.fast_tensor_dataloader import FastTensorDataLoader
-from src.nn_classes.architecture.nn_fcts import are_at_least_one_None, raise_if_not_all_None, decorator_train_disable_no_grad
 from src.nn_classes.training_stopper.Early_stopper_vanilla import Early_stopper_vanilla
 
 PLOT_WHILE_TRAIN = False

@@ -2,7 +2,7 @@ import torch
 from tqdm import tqdm
 
 
-def create_input_sequences(input_data, lookback_window, data_input_dim=1, output_dim=1, batch_first=True, silent = False):
+def create_input_sequences(input_data, lookback_window, data_input_dim=1, output_dim=1, batch_first=True, silent=False):
     """
 
     Args:
@@ -28,7 +28,7 @@ def create_input_sequences(input_data, lookback_window, data_input_dim=1, output
         data_X = torch.zeros(nb_of_data, lookback_window, data_input_dim)
         data_Y = torch.zeros(nb_of_data, output_dim)
 
-        for i in tqdm(range(nb_of_data), disable = silent):
+        for i in tqdm(range(nb_of_data), disable=silent):
             data_X[i, :, :] = input_data[i:i + lookback_window].view(lookback_window, data_input_dim)
             data_Y[i, :] = input_data[i + lookback_window]
         return data_X, data_Y

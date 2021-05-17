@@ -1,13 +1,9 @@
 from abc import abstractmethod, ABCMeta
-
 import numpy as np
 
-# todo the path things, saving the NN.
 from priv_lib_error import Error_type_setter
 
 DEBUG = False
-
-
 class Early_stopper(metaclass=ABCMeta):
     """
     Abstract class of an early stopper. Given to a training, allows for stopping earlier with respect to some criteria.

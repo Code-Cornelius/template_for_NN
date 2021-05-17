@@ -3,6 +3,7 @@ from priv_lib_util.tools import function_iterable
 
 from src.nn_classes.metric.metric import Metric
 
+
 class NNTrainParameters:
 
     def __init__(self, batch_size, epochs, device, criterion, optim_wrapper, metrics=()):
@@ -26,7 +27,6 @@ class NNTrainParameters:
 
         # iterable containing objects of type Metric
         self.metrics = metrics
-
 
     # SETTERS GETTERS
     @property

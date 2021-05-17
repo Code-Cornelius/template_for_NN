@@ -1,10 +1,7 @@
-# for neural networks
+from abc import abstractmethod, ABCMeta
 from copy import deepcopy
-
 import torch
 import torch.nn as nn
-
-from abc import abstractmethod, ABCMeta
 
 # my lib
 from priv_lib_error import Error_type_setter
@@ -100,4 +97,3 @@ list = [nn.Conv1d(in_channels=1, out_channels=1, kernel_size=3, stride=1, paddin
 CNN = factory_parametrised_Free_NN(list)
 
 CNN()
-

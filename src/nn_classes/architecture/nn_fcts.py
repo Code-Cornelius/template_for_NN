@@ -1,8 +1,8 @@
 import functools
 
+import numpy as np
 import torch
 import torch.cuda
-import numpy as np
 
 
 def are_at_least_one_None(list_parameters):

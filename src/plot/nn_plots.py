@@ -1,16 +1,15 @@
 # global libraries
 import math
-import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import seaborn as sns
 import torch
 from IPython.core.display import display
 from sklearn import metrics
-import seaborn as sns
 
 # my libraries
 from priv_lib_plot import APlot
-
 
 sns.set()
 

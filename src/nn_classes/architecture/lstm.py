@@ -22,11 +22,11 @@ class LSTM(Savable_net, metaclass=ABCMeta):
         self.linear_layer_2 = nn.Linear(self.hidden_FC, self.output_size)
 
         self.hidden_state_0 = nn.Parameter(torch.randn(self.num_layers * self.nb_directions,
-                                                       self.input_size, # repeated later to have batch size
+                                                       self.input_size,  # repeated later to have batch size
                                                        self.hidden_size),
                                            requires_grad=True)  # parameters are moved to device and learn.
         self.hidden_cell_0 = nn.Parameter(torch.randn(self.num_layers * self.nb_directions,
-                                                      self.input_size, # repeated later to have batch size
+                                                      self.input_size,  # repeated later to have batch size
                                                       self.hidden_size),
                                           requires_grad=True)  # parameters are moved to device and learn.
 
@@ -47,7 +47,7 @@ class LSTM(Savable_net, metaclass=ABCMeta):
         # out = torch.cat([out[:, :, -1,:], out[:, :, 0, :]])  # filter lstm here
         # : sliced into shape N,Hidden_size * nb_direction and taking only last output.
 
-        out = out[:,-1]
+        out = out[:, -1]
         out = self.linear_layer(out)
         out = self.activation_fct(out)
         out = self.linear_layer_2(out)

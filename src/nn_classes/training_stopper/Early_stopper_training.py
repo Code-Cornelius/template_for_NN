@@ -5,6 +5,7 @@ class Early_stopper_training(Early_stopper):
     """
     Used to stop training earlier given some criteria. Undefined behaviour when patience is greater than nb of epoch.
     """
+
     def __init__(self, patience=10, silent=True, delta=0.1):
         """Delta is the percent of change with respect to the past. If smaller, then stop."""
 

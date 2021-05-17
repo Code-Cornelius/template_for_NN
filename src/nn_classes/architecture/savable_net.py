@@ -1,12 +1,13 @@
 # global libraries
 import os
 from copy import deepcopy
+
 import torch
 import torch.nn as nn
-
 # my lib
 from priv_lib_error import Error_type_setter
 from priv_lib_util.tools.src.function_writer import list_of_dicts_to_json
+
 from src.nn_classes.architecture.nn_fcts import decorator_train_disable_no_grad
 
 
@@ -24,6 +25,7 @@ class Savable_net(nn.Module):
 
     # function that from the output returns the prediction. Depends on the problem:
     _predict_fct = nn.Identity()
+
     # : default predict_fct. Can be masked with lower child class functions.
     # : the hidden mark "_" is important to not pass through the setter but directly to the parameter.
     # : we set the class variable, that is also defined as an object variable unless redefined!
