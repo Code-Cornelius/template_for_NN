@@ -41,13 +41,8 @@ class LSTM(Savable_net, metaclass=ABCMeta):
         # WIP is backpropagation doing the right job?
         h0, c0 = self.hidden_state_0.repeat(batch_size), self.hidden_cell_0.repeat(batch_size)
         out, _ = self.stacked_lstm(time_series, (h0, c0))  # shape of out is  N,L,Hidden_size * nb_direction
-        # out = out.view(time_series.shape[0], self.time_series_len, self.hidden_size, 2)
-        # print(out[:, :, -1, :].shape)
-        # print(out[:, :, 0, :].shape)
-        # out = torch.cat([out[:, :, -1,:], out[:, :, 0, :]])  # filter lstm here
-        # : sliced into shape N,Hidden_size * nb_direction and taking only last output.
+        out = torch.cat((out[:, -1, :self.hidden_size], out[:, 0, self.hidden_size:]), 1) #this is where the output lies.
 
-        out = out[:, -1]
         out = self.linear_layer(out)
         out = self.activation_fct(out)
         out = self.linear_layer_2(out)
