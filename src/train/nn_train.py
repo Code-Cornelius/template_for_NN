@@ -1,6 +1,6 @@
 import numpy as np
 
-from src.nn_classes.architecture.nn_fcts import are_at_least_one_None, raise_if_not_all_None
+from priv_lib_util.tools import function_iterable
 from src.nn_classes.training_stopper.Early_stopper_vanilla import Early_stopper_vanilla
 from src.train.nn_fit import nn_fit
 
@@ -49,9 +49,9 @@ def nn_train(net, data_X, data_Y,
 
     # condition if we use validation set:
     list_params_validation = [indic_validation_X, indic_validation_Y]
-    is_validation_included = not are_at_least_one_None(list_params_validation)  #: equivalent to "are all not None ?"
+    is_validation_included = not function_iterable.are_at_least_one_None(list_params_validation)  #: equivalent to "are all not None ?"
     if not is_validation_included:
-        raise_if_not_all_None(list_params_validation)
+        function_iterable.raise_if_not_all_None(list_params_validation)
 
     # Prepare Validation set if there is any:
     if is_validation_included:

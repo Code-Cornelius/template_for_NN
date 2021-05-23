@@ -1,8 +1,8 @@
 from matplotlib import pyplot as plt
 from tqdm import tqdm
 
-from src.nn_classes.architecture.nn_fcts import are_at_least_one_None, raise_if_not_all_None, \
-    decorator_train_disable_no_grad
+from priv_lib_util.tools import function_iterable
+from src.util_training import decorator_train_disable_no_grad
 from src.nn_classes.fast_tensor_dataloader import FastTensorDataLoader
 from src.nn_classes.training_stopper.Early_stopper_vanilla import Early_stopper_vanilla
 
@@ -60,6 +60,9 @@ def nn_fit(net, X_train_on_device, Y_train_on_device,
         for i, (batch_X, batch_y) in enumerate(train_loader_on_device, 0):
             # closure needed for some algorithm.
             def closure():
+                # The closure should clear the gradients, compute the loss, and return it.
+                # https://pytorch.org/docs/stable/optim.html
+
                 # set gradients to zero
                 params_training.optim_wrapper.zero_grad()  # https://stackoverflow.com/questions/48001598/why-do-we-need-to-call-zero-grad-in-pytorch
 
@@ -113,7 +116,7 @@ def _do_early_stop(net, early_stoppers, history, epoch, silent):
 def prepare_data_for_fit(X_train_on_device, X_val_on_device, Y_train_on_device, Y_val_on_device, net, params_training):
     list_params_validat = [X_val_on_device, Y_val_on_device]
 
-    is_validat_included = not are_at_least_one_None(list_params_validat)  #: equivalent to are all not None ?
+    is_validat_included = not function_iterable.are_at_least_one_None(list_params_validat)  #: equivalent to are all not None ?
     # raise if there is a logic error.
     if is_validat_included:  #: if we need validation
         total_number_data = Y_train_on_device.shape[0], Y_val_on_device.shape[0]  # : constants for normalisation
@@ -123,7 +126,7 @@ def prepare_data_for_fit(X_train_on_device, X_val_on_device, Y_train_on_device, 
                                                         shuffle=False)  # SHUFFLE IS COSTLY!
     else:
         total_number_data = Y_train_on_device.shape[0], 0  # : constants for normalisation
-        raise_if_not_all_None(list_params_validat)
+        function_iterable.raise_if_not_all_None(list_params_validat)
         validat_loader_on_device = None  # in order to avoid referenced before assigment
     # create data train_loader_on_device : load training data in batches
     train_loader_on_device = FastTensorDataLoader(X_train_on_device, Y_train_on_device,

@@ -4,26 +4,6 @@ import numpy as np
 import torch
 import torch.cuda
 
-
-def are_at_least_one_None(list_parameters):
-    """returns list_parameters.at least one.is_None"""
-    for parameter in list_parameters:
-        if parameter is None:
-            return True
-        else:
-            continue
-    return False
-
-
-def raise_if_not_all_None(list_parameters):
-    """ if one is not None, throws an error"""
-    for parameter in list_parameters:
-        if not parameter is None:
-            raise ValueError("Given a parameter not None while the others are. "
-                             "Is it a mistake ? Parameter not None : " + str(parameter))
-    return
-
-
 def decorator_train_disable_no_grad(func):
     """
     Be careful with it, if you wrap something already wrapped, the wrapping will disapear !
@@ -66,3 +46,4 @@ def pytorch_device_setting(type=''):
 def set_seeds(seed):
     torch.manual_seed(seed)
     np.random.seed(seed)
+

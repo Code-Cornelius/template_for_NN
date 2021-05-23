@@ -10,7 +10,7 @@ from src.plot.nn_plots import nn_plot_prediction_vs_true, nn_print_errors
 from src.nn_classes.architecture.fully_connected import factory_parametrised_FC_NN
 from src.nn_classes.optim_wrapper import Optim_wrapper
 from src.train.nntrainparameters import NNTrainParameters
-from src.nn_classes.architecture.nn_fcts import pytorch_device_setting, set_seeds
+from src.util_training import pytorch_device_setting, set_seeds
 from src.nn_classes.training_stopper.Early_stopper_training import Early_stopper_training
 from src.nn_classes.training_stopper.Early_stopper_validation import Early_stopper_validation
 from src.train.nn_kfold_training import nn_kfold_train, train_kfold_a_fold_after_split, create_history_kfold
@@ -79,9 +79,9 @@ print("shape of training : ", data_training_Y.shape)
 if __name__ == '__main__':
     # config of the architecture:
     input_size = 1
-    num_layers = 10
+    num_layers = 8
     bidirectional = True
-    hidden_size = 32
+    hidden_size = 64
     output_size = 1
     dropout = 0.
     epochs = 8000
@@ -89,7 +89,7 @@ if __name__ == '__main__':
 
     optimiser = torch.optim.Adam
     criterion = nn.MSELoss(reduction='sum')
-    dict_optimiser = {"lr": 0.00005, "weight_decay": 0.0000001}
+    dict_optimiser = {"lr": 0.0005, "weight_decay": 0.0000001}
     optim_wrapper = Optim_wrapper(optimiser, dict_optimiser)
 
     param_training = NNTrainParameters(batch_size=batch_size, epochs=epochs, device=device,
@@ -103,7 +103,7 @@ if __name__ == '__main__':
 
     history = create_history_kfold(True, early_stoppers, 1, param_training)
     best_epoch_of_NN = [0]
-    net, _ = train_kfold_a_fold_after_split(data_training_X, data_training_Y, indices_train,
+    net, _ , _= train_kfold_a_fold_after_split(data_training_X, data_training_Y, indices_train,
                                             indices_valid, parametrized_NN, param_training, history,
                                             early_stoppers=early_stoppers, best_epoch_of_NN=best_epoch_of_NN)
 

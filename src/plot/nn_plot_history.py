@@ -6,7 +6,9 @@ from priv_lib_plot import APlot
 
 def nn_plot_train_loss_acc(history, key_for_second_axis_plot=None, flag_valid=True,
                            log_axis_for_loss=True, best_epoch_of_NN=None,
-                           log_axis_for_second_axis=False, title=''):
+                           log_axis_for_second_axis=False, title='', step_history = 1):
+    assert step_history > 0, "step_history must be strictly positive."
+
     # TODO make sure that the labels are in different places.
     # if there is another key, we create a plot with two y-axis but only one x-axis.
     if key_for_second_axis_plot is not None:
@@ -16,7 +18,7 @@ def nn_plot_train_loss_acc(history, key_for_second_axis_plot=None, flag_valid=Tr
 
     training_loss = history['training']['loss']
 
-    xx = range(training_loss.shape[1])
+    xx = range(0,training_loss.shape[1] * step_history, step_history)
     nb_trials = training_loss.shape[0]
 
     if log_axis_for_loss:
@@ -43,7 +45,7 @@ def nn_plot_train_loss_acc(history, key_for_second_axis_plot=None, flag_valid=Tr
                                          }
         aplot.uni_plot(nb_ax=0, xx=xx, yy=training_loss[i, :],
                        dict_plot_param=dict_plot_param_loss_training,
-                       dict_ax={'title': "Training of a Neural Network, evolution wrt epochs.",
+                       dict_ax={'title': "Training of a Neural Network, {}, evolution wrt epochs.".format(title),
                                 'xlabel': "Epochs", 'ylabel': "Loss",
                                 'xscale': 'linear', 'yscale': yscale,
                                 'basey': 10})
@@ -68,7 +70,7 @@ def nn_plot_train_loss_acc(history, key_for_second_axis_plot=None, flag_valid=Tr
     if key_for_second_axis_plot is not None:
         aplot._axs_bis[0].grid(True)
 
-    return
+    return aplot
 
 
 def _plot_validation_history(aplot, color_plot_loss_validation, color_plot_red, flag_valid, history,

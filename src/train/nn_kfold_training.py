@@ -22,13 +22,15 @@ def nn_kfold_train(data_training_X, data_training_Y,
         data_training_X: tensor
         data_training_Y: tensor
         Model_NN: parametrised architecture,
-            type the Class with architecture we want to KFold over. Requirements: call constructor over it to create a net.
+            type the Class with architecture we want to KFold over.
+            Requirements: call constructor over it to create a net.
         parameters_training: NNTrainParameters. contains the parameters used for training
         early_stoppers: iterable of Early_stopper. Used for deciding if the training should stop early.
             Preferably immutable to insure no changes.
         nb_split:
         shuffle_kfold:
         percent_validation_for_1_fold:
+        only_best_history:
         silent:
 
     Returns: net, history_kfold, best_epoch_for_model.
@@ -166,12 +168,16 @@ def train_kfold_a_fold_after_split(data_training_X, data_training_Y, index_train
     _set_history_from_nn_train(res=res, best_epoch_of_NN=best_epoch_of_NN, history=history_kfold, index=i)
 
     return _new_best_model(best_epoch_of_NN, best_net, i, net, value_metric_for_best_NN,
-                           history_kfold, number_kfold_best_net)
+                           history_kfold, number_kfold_best_net, silent)
 
 
-def _new_best_model(best_epoch_of_NN, best_net, i, net, value_metric_for_best_NN, history, number_kfold_best_net):
-    rookie_perf = - history['training']['loss'][
-        i, best_epoch_of_NN[i]]  #: -1 * ... bc we want to keep order below of best is bigger.
+def _new_best_model(best_epoch_of_NN, best_net, i, net, value_metric_for_best_NN, history,
+                    number_kfold_best_net, silent):
+    rookie_perf = - history['training']['loss'][i, best_epoch_of_NN[i]]
+
+    if not silent:  # -1 * ... bc we want to keep order below :
+        print("New best model updated: rookie perf : {}"
+              " and old best perf : {}.".format(-rookie_perf, -value_metric_for_best_NN))
     if value_metric_for_best_NN < rookie_perf:
         best_net = net
         value_metric_for_best_NN = rookie_perf
