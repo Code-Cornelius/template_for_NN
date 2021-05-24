@@ -6,14 +6,15 @@ from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from priv_lib_util.tools.src.function_writer import list_of_dicts_to_json
 
 
-def create_input_sequences(input_data, lookback_window, data_input_dim=1, output_dim=1, batch_first=True, silent=False):
+def create_input_sequences(input_data, lookback_window, lookforward_window=1,
+                           time_series_dim=1, batch_first=True, silent=False):
     """
 
     Args:
         input_data (pytorch tensor):
         lookback_window (int):
-        data_input_dim (int):
-        output_dim (int):
+        lookforward_window (int):
+        time_series_dim (int):
         batch_first (bool):
         silent (bool):
 
@@ -24,25 +25,27 @@ def create_input_sequences(input_data, lookback_window, data_input_dim=1, output
 
     """
     L = len(input_data)
-    nb_of_data = L - lookback_window
+    nb_of_data = L - lookback_window - lookforward_window + 1
 
     assert lookback_window < L, f"lookback window is bigger than data. Window size : {lookback_window}, Data length : {L}."
+    assert lookforward_window < L, f"lookforward window is bigger than data. Window size : {lookback_window}, Data length : {L}."
 
-    if batch_first:
-        data_X = torch.zeros(nb_of_data, lookback_window, data_input_dim)
-        data_Y = torch.zeros(nb_of_data, output_dim)
+    if batch_first: # specifies how to take the input
+        data_X = torch.zeros(nb_of_data, lookback_window, time_series_dim)
+        data_Y = torch.zeros(nb_of_data, lookforward_window, time_series_dim)
 
         for i in tqdm(range(nb_of_data), disable=silent):
-            data_X[i, :, :] = input_data[i:i + lookback_window].view(lookback_window, data_input_dim)
-            data_Y[i, :] = input_data[i + lookback_window]
+            data_X[i, :, :] = input_data[i:i + lookback_window].view(lookback_window, time_series_dim)
+            data_Y[i, :,:] = input_data[i + lookback_window: i + lookback_window + lookforward_window].view(lookforward_window,time_series_dim)
         return data_X, data_Y
+
     else:
-        data_X = torch.zeros(lookback_window, nb_of_data, data_input_dim)
-        data_Y = torch.zeros(nb_of_data, output_dim)
+        data_X = torch.zeros(lookback_window, nb_of_data, time_series_dim)
+        data_Y = torch.zeros(nb_of_data, time_series_dim, time_series_dim)
 
         for i in tqdm(range(nb_of_data), disable=silent):
-            data_X[:, i, :] = input_data[i:i + lookback_window]
-            data_Y[:, i] = input_data[i + lookback_window]
+            data_X[:, i, :] = input_data[i:i + lookback_window].view(lookback_window, time_series_dim)
+            data_Y[:, i] = input_data[i + lookback_window: i + lookback_window + lookforward_window]
         return data_X, data_Y
 
 
@@ -82,7 +85,8 @@ def pipeline_scaling_normal(df):
     standar_normalis.fit(df.values.reshape(-1, 1))
     return standar_normalis, standar_normalis.transform(df.values.reshape(-1, 1)).reshape(-1)
 
-#TODO useful?
+
+# TODO useful?
 def read_list_of_ints_from_path(path):
     ans = []
     with open(path, "r") as file:

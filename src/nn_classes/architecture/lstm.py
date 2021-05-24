@@ -6,6 +6,8 @@ from priv_lib_error import Error_type_setter
 from src.nn_classes.architecture.savable_net import Savable_net
 
 
+# Todo make sure there is input dim, output dim, input length, output length,
+#  how many hn to consider for hidden layers.
 class LSTM(Savable_net, metaclass=ABCMeta):
     def __init__(self):
         super().__init__(predict_fct=None)  # predict is identity
@@ -18,8 +20,9 @@ class LSTM(Savable_net, metaclass=ABCMeta):
                                     bidirectional=self.bidirectional,
                                     batch_first=True)
 
-        self.linear_layer = nn.Linear(self.hidden_size * self.nb_directions, self.hidden_FC)
-        self.linear_layer_2 = nn.Linear(self.hidden_FC, self.output_size)
+        self.linear_layer = nn.Linear(self.hidden_size * self.nb_directions * self.nb_output_consider,
+                                      self.hidden_FC)
+        self.linear_layer_2 = nn.Linear(self.hidden_FC, self.output_size * self.output_time_series_len)
 
         self.hidden_state_0 = nn.Parameter(torch.randn(self.num_layers * self.nb_directions,
                                                        self.input_size,  # repeated later to have batch size
@@ -41,12 +44,23 @@ class LSTM(Savable_net, metaclass=ABCMeta):
         # WIP is backpropagation doing the right job?
         h0, c0 = self.hidden_state_0.repeat(batch_size), self.hidden_cell_0.repeat(batch_size)
         out, _ = self.stacked_lstm(time_series, (h0, c0))  # shape of out is  N,L,Hidden_size * nb_direction
-        out = torch.cat((out[:, -1, :self.hidden_size], out[:, 0, self.hidden_size:]), 1) #this is where the output lies.
+        out = torch.cat((out[:,
+                         -self.nb_output_consider:,
+                         :self.hidden_size],
+                         out[:,
+                         :self.nb_output_consider,
+                         self.hidden_size:]), 1)
+        # this is where the output lies. We take nb_output.. elements. Meaning the h_n, h_n-1...
+        # the shape of out at this stage is N,  nb_output_consider, Hidden_size * nb_direction
+        out = out.view(-1, self.hidden_size * self.nb_directions * self.nb_output_consider)
+        # squeeshing the two last dimensions into one, for input to FC layer.
+
 
         out = self.linear_layer(out)
         out = self.activation_fct(out)
         out = self.linear_layer_2(out)
-        return out
+        return out.view(-1, self.output_time_series_len,
+                        self.output_size)  # batch size, dim time series output, dim output
 
     # section ######################################################################
     #  #############################################################################
@@ -84,20 +98,38 @@ class LSTM(Savable_net, metaclass=ABCMeta):
 
     @property
     @abstractmethod
-    def time_series_len(self):
-        return self._time_series_len
+    def input_time_series_len(self):
+        return self._input_time_series_len
+
+    @property
+    @abstractmethod
+    def output_time_series_len(self):
+        return self._output_time_series_len
+
+    @property
+    @abstractmethod
+    def nb_output_consider(self):
+        return self._nb_output_consider
 
 
-def factory_parametrised_LSTM(input_size=1, num_layers=1, bidirectional=False,
-                              time_series_len=0, hidden_size=150, output_size=1, dropout=0.,
+def factory_parametrised_LSTM(input_size=1, output_size=1,
+                              num_layers=1, bidirectional=False,
+                              input_time_series_len=1, output_time_series_len=1,
+                              nb_output_consider=1,
+                              hidden_size=150, dropout=0.,
                               activation_fct=nn.CELU(), hidden_FC=16):
     class Parametrised_LSTM(LSTM):
         def __init__(self):
             self.input_size = input_size
+            self.output_size = output_size
+
+            self.input_time_series_len = input_time_series_len
+            self.output_time_series_len = output_time_series_len
+
+            self.nb_output_consider = nb_output_consider
+
             self.num_layers = num_layers
             self.bidirectional = bidirectional
-            self.time_series_len = time_series_len
-            self.output_size = output_size
             self.hidden_size = hidden_size
             self.dropout = dropout
             self.hidden_FC = hidden_FC
@@ -177,14 +209,37 @@ def factory_parametrised_LSTM(input_size=1, num_layers=1, bidirectional=False,
                 raise Error_type_setter(f"Argument is not an {str(float)}.")
 
         @property
-        def time_series_len(self):
+        def input_time_series_len(self):
             return self._time_series_len
 
-        @time_series_len.setter
-        def time_series_len(self, new_time_series_len):
-            assert new_time_series_len > 0, "time_series_len should be strictly positive."
-            if isinstance(new_time_series_len, int):
-                self._time_series_len = new_time_series_len
+        @input_time_series_len.setter
+        def input_time_series_len(self, new_input_time_series_len):
+            assert new_input_time_series_len > 0, "input_time_series_len should be strictly positive."
+            if isinstance(new_input_time_series_len, int):
+                self._input_time_series_len = new_input_time_series_len
+            else:
+                raise Error_type_setter(f"Argument is not an {str(int)}.")
+
+        @property
+        def output_time_series_len(self):
+            return self._output_time_series_len
+
+        @output_time_series_len.setter
+        def output_time_series_len(self, new_output_time_series_len):
+            assert new_output_time_series_len > 0, "output_time_series_len should be strictly positive."
+            if isinstance(new_output_time_series_len, int):
+                self._output_time_series_len = new_output_time_series_len
+            else:
+                raise Error_type_setter(f"Argument is not an {str(int)}.")
+
+        @property
+        def nb_output_consider(self):
+            return self._nb_output_consider
+
+        @nb_output_consider.setter
+        def nb_output_consider(self, new_nb_output_consider):
+            if isinstance(new_nb_output_consider, int):
+                self._nb_output_consider = new_nb_output_consider
             else:
                 raise Error_type_setter(f"Argument is not an {str(int)}.")
 

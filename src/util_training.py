@@ -3,6 +3,9 @@ import functools
 import numpy as np
 import torch
 import torch.cuda
+from priv_lib_util.tools.src.function_dict import retrieve_parameters_by_index_from_json, \
+    replace_function_names_to_functions
+
 
 def decorator_train_disable_no_grad(func):
     """
@@ -47,3 +50,17 @@ def set_seeds(seed):
     torch.manual_seed(seed)
     np.random.seed(seed)
 
+
+def create_model_by_index(index, path2json,
+                          path2net, Model_nn, mapping_names2functions,
+                          list_of_names_args, *args, **kwargs):
+    """"""
+    parameters = retrieve_parameters_by_index_from_json(index, path2json)
+    print(f"For config {index}, the parameters are : \n{parameters}.")
+    replace_function_names_to_functions(parameters, mapping_names2functions, silent=True)
+    dict_params = {key: value for key, value in zip(list_of_names_args,
+                                                    list(parameters.values())
+                                                    )
+                   }
+    parametrized_NN = Model_nn(*args, **dict_params, **kwargs)().load_net(path2net)
+    return parametrized_NN

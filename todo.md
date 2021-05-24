@@ -45,4 +45,6 @@ By the way, storing the parameters (training ones) is not that important.
       grid_plot could create a function that does this, everything a function needs to check before starting the inside: 
       then one just needs to wraps all the function inside APlot.
       
+  GRU LSTM refactor ?
+  
 * running some examples for checking that the functions are okay
