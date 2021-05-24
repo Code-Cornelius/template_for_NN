@@ -1,6 +1,7 @@
 import torch
 from tqdm import tqdm
 import os
+from sklearn.preprocessing import MinMaxScaler, StandardScaler
 
 from priv_lib_util.tools.src.function_writer import list_of_dicts_to_json
 
@@ -68,3 +69,23 @@ def save_data(net, history, name_config, number_run, Taskname, best_epoch_of_NN,
 
     # write a list of dicts into a JSON, we compress the data.
     list_of_dicts_to_json(parameter_options=history, file_name=path_save_history, compress=True)
+
+
+def pipeline_scaling_minimax(df):
+    minimax = MinMaxScaler(feature_range=(0, 1))
+    minimax.fit(df)
+    return minimax, minimax.transform(df)
+
+
+def pipeline_scaling_normal(df):
+    standar_normalis = StandardScaler()  # norm l2 and gives a N_0,1, on each column.
+    standar_normalis.fit(df.values.reshape(-1, 1))
+    return standar_normalis, standar_normalis.transform(df.values.reshape(-1, 1)).reshape(-1)
+
+#TODO useful?
+def read_list_of_ints_from_path(path):
+    ans = []
+    with open(path, "r") as file:
+        for line in file:
+            ans.append(float(line.strip()))
+    return ans
