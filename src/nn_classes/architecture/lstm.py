@@ -6,15 +6,14 @@ from priv_lib_error import Error_type_setter
 from src.nn_classes.architecture.savable_net import Savable_net
 
 
-# Todo make sure there is input dim, output dim, input length, output length,
-#  how many hn to consider for hidden layers.
 class LSTM(Savable_net, metaclass=ABCMeta):
     def __init__(self):
+        assert self.nb_output_consider <= self.input_time_series_len, "The nb of output to consider (h_n, h_n-1...) needs to be smaller than the sequence length."
         super().__init__(predict_fct=None)  # predict is identity
 
         self.nb_directions = int(self.bidirectional) + 1
 
-        self.stacked_lstm = nn.LSTM(self.input_size, self.hidden_size,
+        self.stacked_lstm = nn.LSTM(self.input_dim, self.hidden_size,
                                     num_layers=self.num_layers,
                                     dropout=self.dropout,
                                     bidirectional=self.bidirectional,
@@ -22,14 +21,14 @@ class LSTM(Savable_net, metaclass=ABCMeta):
 
         self.linear_layer = nn.Linear(self.hidden_size * self.nb_directions * self.nb_output_consider,
                                       self.hidden_FC)
-        self.linear_layer_2 = nn.Linear(self.hidden_FC, self.output_size * self.output_time_series_len)
+        self.linear_layer_2 = nn.Linear(self.hidden_FC, self.output_dim * self.output_time_series_len)
 
         self.hidden_state_0 = nn.Parameter(torch.randn(self.num_layers * self.nb_directions,
-                                                       self.input_size,  # repeated later to have batch size
+                                                       self.input_dim,  # repeated later to have batch size
                                                        self.hidden_size),
                                            requires_grad=True)  # parameters are moved to device and learn.
         self.hidden_cell_0 = nn.Parameter(torch.randn(self.num_layers * self.nb_directions,
-                                                      self.input_size,  # repeated later to have batch size
+                                                      self.input_dim,  # repeated later to have batch size
                                                       self.hidden_size),
                                           requires_grad=True)  # parameters are moved to device and learn.
 
@@ -55,12 +54,11 @@ class LSTM(Savable_net, metaclass=ABCMeta):
         out = out.view(-1, self.hidden_size * self.nb_directions * self.nb_output_consider)
         # squeeshing the two last dimensions into one, for input to FC layer.
 
-
         out = self.linear_layer(out)
         out = self.activation_fct(out)
         out = self.linear_layer_2(out)
         return out.view(-1, self.output_time_series_len,
-                        self.output_size)  # batch size, dim time series output, dim output
+                        self.output_dim)  # batch size, dim time series output, dim output
 
     # section ######################################################################
     #  #############################################################################
@@ -68,13 +66,13 @@ class LSTM(Savable_net, metaclass=ABCMeta):
 
     @property
     @abstractmethod
-    def input_size(self):
-        return self._input_size
+    def input_dim(self):
+        return self._input_dim
 
     @property
     @abstractmethod
-    def output_size(self):
-        return self._output_size
+    def output_dim(self):
+        return self._output_dim
 
     @property
     @abstractmethod
@@ -112,7 +110,7 @@ class LSTM(Savable_net, metaclass=ABCMeta):
         return self._nb_output_consider
 
 
-def factory_parametrised_LSTM(input_size=1, output_size=1,
+def factory_parametrised_LSTM(input_dim=1, output_dim=1,
                               num_layers=1, bidirectional=False,
                               input_time_series_len=1, output_time_series_len=1,
                               nb_output_consider=1,
@@ -120,8 +118,8 @@ def factory_parametrised_LSTM(input_size=1, output_size=1,
                               activation_fct=nn.CELU(), hidden_FC=16):
     class Parametrised_LSTM(LSTM):
         def __init__(self):
-            self.input_size = input_size
-            self.output_size = output_size
+            self.input_dim = input_dim
+            self.output_dim = output_dim
 
             self.input_time_series_len = input_time_series_len
             self.output_time_series_len = output_time_series_len
@@ -142,24 +140,24 @@ def factory_parametrised_LSTM(input_size=1, output_size=1,
         # SETTERS GETTERS
 
         @property
-        def input_size(self):
-            return self._input_size
+        def input_dim(self):
+            return self._input_dim
 
-        @input_size.setter
-        def input_size(self, new_input_size):
-            if isinstance(new_input_size, int):
-                self._input_size = new_input_size
+        @input_dim.setter
+        def input_dim(self, new_input_dim):
+            if isinstance(new_input_dim, int):
+                self._input_dim = new_input_dim
             else:
                 raise Error_type_setter(f"Argument is not an {str(int)}.")
 
         @property
-        def output_size(self):
-            return self._output_size
+        def output_dim(self):
+            return self._output_dim
 
-        @output_size.setter
-        def output_size(self, new_output_size):
-            if isinstance(new_output_size, int):
-                self._output_size = new_output_size
+        @output_dim.setter
+        def output_dim(self, new_output_dim):
+            if isinstance(new_output_dim, int):
+                self._output_dim = new_output_dim
             else:
                 raise Error_type_setter(f"Argument is not an {str(int)}.")
 

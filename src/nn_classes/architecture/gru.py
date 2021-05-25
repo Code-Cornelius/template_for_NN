@@ -5,7 +5,7 @@ from priv_lib_error import Error_type_setter
 
 from src.nn_classes.architecture.savable_net import Savable_net
 
-
+# todo the bidrectional like lstm
 class GRU(Savable_net, metaclass=ABCMeta):
     def __init__(self):
         super().__init__(predict_fct=None)  # predict is identity
