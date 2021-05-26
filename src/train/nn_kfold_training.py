@@ -3,6 +3,7 @@ import numpy as np
 import sklearn.model_selection
 import torch
 
+from nn_classes.estimator.estim_history import Estim_history
 from src.nn_classes.training_stopper.Early_stopper_vanilla import Early_stopper_vanilla
 from src.train.nn_train import nn_train
 
@@ -53,10 +54,13 @@ def nn_kfold_train(data_training_X, data_training_Y,
                                                                     percent_validation_for_1_fold,
                                                                     nb_split,
                                                                     shuffle_kfold)
-    history_kfold = create_history_kfold(compute_validation, early_stoppers, nb_split, parameters_training)
+    # initialise estimator
+    metric_names = [metric.name for metric in parameters_training.metrics]
+    estimator_history = Estim_history(metric_names, validation=compute_validation)
 
     return _nn_multiplefold_train(data_training_X, data_training_Y, early_stoppers, Model_NN, nb_split,
-                                  parameters_training, indices, silent, history_kfold, only_best_history)
+                                  parameters_training, indices, silent, estimator_history,
+                                  only_best_history)
 
 
 def create_history_kfold(compute_validation, early_stoppers, nb_split, parameters_training):
@@ -83,14 +87,14 @@ def create_history_kfold(compute_validation, early_stoppers, nb_split, parameter
 # MULTIFOLD
 
 def _nn_multiplefold_train(data_training_X, data_training_Y, early_stoppers, Model_NN, nb_split,
-                           parameters_training, indices, silent, history_kfold, only_best_history=False):
+                           parameters_training, indices, silent, estimator_history,
+                           only_best_history=False):
     # for storing the network:
     value_metric_for_best_NN = - np.Inf  # :we set -\infty which can only be improved.
     # :Recall, the two criterea are either accuracy (so any accuracy is better than a neg. number)
     # : and minus loss, and a loss is always closer to zero than - infinity.
     best_net = None
     number_kfold_best_net = 0  # to keep track of best net
-    best_epoch_of_NN = [0] * nb_split  # :we store the epoch of the best net for each fold.
 
     # : random_state is the seed of StratifiedKFold.
     for i, (index_training, index_validation) in enumerate(indices):
@@ -104,23 +108,24 @@ def _nn_multiplefold_train(data_training_X, data_training_Y, early_stoppers, Mod
          number_kfold_best_net) = train_kfold_a_fold_after_split(data_training_X, data_training_Y,
                                                                  index_training, index_validation,
                                                                  Model_NN, parameters_training,
-                                                                 history_kfold, best_epoch_of_NN,
+                                                                 estimator_history,
                                                                  early_stoppers, value_metric_for_best_NN,
                                                                  number_kfold_best_net, best_net, i, silent)
 
     if not silent:
         print("Finished the K-Fold Training, the best NN is the number {}".format(number_kfold_best_net + 1))
 
-    if only_best_history:
-        for key, value in history_kfold.items():
-            for key2, value2 in value.items():
-                value[key2] = value2[number_kfold_best_net, :].reshape(1, -1)  # slicing for only best history.
-        best_epoch_of_NN = [best_epoch_of_NN[number_kfold_best_net]]
-    return best_net, history_kfold, best_epoch_of_NN
+    # if only_best_history:
+    #     for key, value in history_kfold.items():
+    #         for key2, value2 in value.items():
+    #             value[key2] = value2[number_kfold_best_net, :].reshape(1, -1)  # slicing for only best history.
+    #     best_epoch_of_NN = [best_epoch_of_NN[number_kfold_best_net]]
+
+    return best_net, estimator_history
 
 
 def train_kfold_a_fold_after_split(data_training_X, data_training_Y, index_training, index_validation, Model_NN,
-                                   parameters_training, history_kfold, best_epoch_of_NN,
+                                   parameters_training, estimator_history,
                                    early_stoppers=(Early_stopper_vanilla(),), value_metric_for_best_NN=-np.Inf,
                                    number_kfold_best_net=1, best_net=None, i=0, silent=False):
     """
@@ -132,8 +137,6 @@ def train_kfold_a_fold_after_split(data_training_X, data_training_Y, index_train
         index_validation:
         Model_NN:
         parameters_training:
-        history_kfold:
-        best_epoch_of_NN (list): length nb of splits. Stores an integer with best epoch.
         early_stoppers: a list of early_stoppers
         value_metric_for_best_NN:
         number_kfold_best_net:
@@ -161,19 +164,21 @@ def train_kfold_a_fold_after_split(data_training_X, data_training_Y, index_train
         early_stopper.reset()
 
     # train network and save results
-    res = nn_train(net, data_X=data_training_X, data_Y=data_training_Y, params_training=parameters_training,
-                   indic_train_X=index_training, indic_train_Y=index_training, early_stoppers=early_stoppers,
-                   indic_validation_X=index_validation, indic_validation_Y=index_validation, silent=silent)
+    kfold_history, kfold_best_epoch = nn_train(net, data_X=data_training_X, data_Y=data_training_Y,
+                                               params_training=parameters_training,
+                                               indic_train_X=index_training, indic_train_Y=index_training,
+                                               early_stoppers=early_stoppers,
+                                               indic_validation_X=index_validation, indic_validation_Y=index_validation,
+                                               silent=silent)
 
-    _set_history_from_nn_train(res=res, best_epoch_of_NN=best_epoch_of_NN, history=history_kfold, index=i)
+    estimator_history.append_history(kfold_history, kfold_best_epoch, i)
 
-    return _new_best_model(best_epoch_of_NN, best_net, i, net, value_metric_for_best_NN,
-                           history_kfold, number_kfold_best_net, silent)
+    return _new_best_model(best_net, i, net, value_metric_for_best_NN, estimator_history, number_kfold_best_net, silent)
 
 
-def _new_best_model(best_epoch_of_NN, best_net, i, net, value_metric_for_best_NN, history,
+def _new_best_model(best_net, i, net, value_metric_for_best_NN, estimator_history,
                     number_kfold_best_net, silent):
-    rookie_perf = - history['training']['loss'][i, best_epoch_of_NN[i]]
+    rookie_perf = -estimator_history.get_value_at_index(i, estimator_history.best_epoch[i], "loss_training")
 
     if not silent:  # -1 * ... bc we want to keep order below :
         print("New best model updated: rookie perf : {}"
@@ -202,6 +207,7 @@ def _set_history_from_nn_train(res, best_epoch_of_NN, history, index):
     if 'validation' in kfold_history:
         for metric_key in kfold_history['validation']:
             history['validation'][metric_key][index, :] = kfold_history['validation'][metric_key]
+
 
 
 # section ######################################################################

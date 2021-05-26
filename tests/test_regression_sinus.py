@@ -90,12 +90,14 @@ if __name__ == '__main__':
                                                  param_activation_functions=activation_functions, param_dropout=dropout,
                                                  param_predict_fct=None)
 
-    (net, history, best_epoch_of_NN) = nn_kfold_train(train_X, train_Y, parametrized_NN,
-                                                      parameters_training=param_training, early_stoppers=early_stoppers,
-                                                      nb_split=1, shuffle_kfold=True, percent_validation_for_1_fold=10,
-                                                      silent=False)
+    (net, estimator_history) = nn_kfold_train(train_X, train_Y, parametrized_NN,
+                                              parameters_training=param_training,
+                                              early_stoppers=early_stoppers,
+                                              nb_split=1, shuffle_kfold=True,
+                                              percent_validation_for_1_fold=10,
+                                              silent=False)
     net.to(torch.device('cpu'))
-    nn_plot_train_loss_acc(history, flag_valid=True, log_axis_for_loss= True, best_epoch_of_NN=best_epoch_of_NN,
+    nn_plot_train_loss_acc(estimator_history, flag_valid=True, log_axis_for_loss= True,
                            key_for_second_axis_plot = 'L4', log_axis_for_second_axis = True)
     nn_plot_prediction_vs_true(net, plot_xx, plot_yy, plot_yy_noisy)
     nn_print_errors(net, train_X, train_Y, testing_X, testing_Y)
