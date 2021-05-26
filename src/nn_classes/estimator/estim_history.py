@@ -1,20 +1,29 @@
 import pandas as pd
 from priv_lib_estimator import Estimator
+from priv_lib_util.tools.src.function_json import unzip_json, zip_json
+from priv_lib_util.tools.src.function_writer import list_of_dicts_to_json
 
+
+import json
 
 class Estim_history(Estimator):
     BASE_COLUMN_NAMES = ['fold', 'epoch']
 
-    def __init__(self, metric_names, validation):
-        df_column_names = Estim_history._generate_all_column_names(metric_names, validation)
-        data_frame = pd.DataFrame(columns=df_column_names)
-        super().__init__(data_frame)
+    def __init__(self, df=None, metric_names=None, validation=True):
+        if df is not None:
+            # initialise with dataframe from csv
+            super().__init__(df)
 
-        self.validation = validation
-        self.best_epoch = []
+        else:
+            df_column_names = Estim_history._generate_all_column_names(metric_names, validation)
+            data_frame = pd.DataFrame(columns=df_column_names)
+            super().__init__(data_frame)
 
-        # TODO: collect training parameters
-        self.training_parameters = {}
+            self.validation = validation
+            self.best_epoch = []
+
+            # TODO: collect training parameters
+            self.training_parameters = {}
 
     @staticmethod
     def _generate_column_name(base_name, validation=False):
@@ -40,7 +49,7 @@ class Estim_history(Estimator):
         Returns:
             A list of all the column names for the dataframe (Including the base columns)
         """
-        df_column_names = Estim_history.BASE_COLUMN_NAMES
+        df_column_names = Estim_history.BASE_COLUMN_NAMES.copy()
         df_column_names.append(Estim_history._generate_column_name("loss"))
 
         for metric_name in metric_names:
@@ -55,7 +64,7 @@ class Estim_history(Estimator):
         return df_column_names
 
 
-    def append_history(self, history, fold_number):
+    def append_history(self, history, best_epoch, fold_number):
         """
             Append information from history to the estimator
         Args:
@@ -65,7 +74,7 @@ class Estim_history(Estimator):
         Returns:
             Void
         """
-        self.best_epoch.append(history['best_epoch'])
+        self.best_epoch.append(best_epoch)
         adapted_history = self._translate_history_to_dataframe(history, fold_number)
         adapted_history = pd.DataFrame(adapted_history)
         self.append(adapted_history)
@@ -106,4 +115,60 @@ class Estim_history(Estimator):
 
         return translated_history
 
+    def get_value_at_index(self, fold, epoch, column):
+        index = self._index_mask(fold, epoch)
+        return self._df[column][index].values[0]
+
+    def get_values_at_fold(self, fold, column):
+        index = self._fold_mask(fold)
+        return self._df[column][index].values
+
+    def get_values_at_column(self, column):
+        return self._df[column].values
+
+    def _index_mask(self, fold, epoch):
+        return (self._df['fold'] == fold) & (self._df['epoch'] == epoch)
+
+    def _fold_mask(self, fold):
+        return self._df['fold'] == fold
+
+    def number_of_folds(self):
+        return self._df['fold'].max() + 1
+
+    def number_of_epochs(self):
+        return self._df['epoch'].max() + 1
+
+    def to_json(self, path):
+        self._df.validation = self.validation
+
+        json_df = self._df.to_json(orient='split')
+        parsed = json.loads(json_df)
+        parsed['attrs'] = {
+            'validation': self.validation,
+            'best_epoch': self.best_epoch,
+        }
+
+        zipped = zip_json(parsed)
+
+        with open(path, 'w') as file:
+            json.dump(zipped, file)
+
+    @classmethod
+    def from_file(cls, path):
+
+        with open(path, 'r') as file:
+            df_info = json.load(file)
+            unzipped = unzip_json(df_info)
+            attrs = unzipped['attrs']
+            del unzipped['attrs']
+
+        with open(path, 'w') as file:
+            json.dump(unzipped, file)
+
+        dataframe = pd.read_json(path, orient='split')
+        estimator = cls(dataframe)
+
+        estimator.validation = attrs['validation']
+        estimator.best_epoch = attrs['best_epoch']
+        return estimator
 

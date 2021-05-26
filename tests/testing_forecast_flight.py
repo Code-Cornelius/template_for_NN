@@ -4,6 +4,7 @@ import torch.nn as nn
 import seaborn as sns
 from sklearn.preprocessing import MinMaxScaler
 
+from nn_classes.estimator.estim_history import Estim_history
 from src.nn_classes.architecture.gru import factory_parametrised_GRU
 from src.plot.nn_plot_history import nn_plot_train_loss_acc
 from src.plot.nn_plots import nn_plot_prediction_vs_true, nn_print_errors
@@ -112,15 +113,14 @@ if __name__ == '__main__':
                                                 activation_fct=nn.CELU(), hidden_FC=128)
 
     ##########################################  TRAINING
-    history = create_history_kfold(True, early_stoppers, 1, param_training)
-    best_epoch_of_NN = [0]
+    estimator_history = Estim_history(metric_names=[], validation=True)
     net, _, _ = train_kfold_a_fold_after_split(data_training_X, data_training_Y, indices_train,
-                                               indices_valid, parametrized_NN, param_training, history,
-                                               early_stoppers=early_stoppers, best_epoch_of_NN=best_epoch_of_NN)
+                                               indices_valid, parametrized_NN, param_training, estimator_history,
+                                               early_stoppers=early_stoppers)
 
     net.to(torch.device('cpu'))
-    nn_plot_train_loss_acc(history, flag_valid=True, log_axis_for_loss=True,
-                           best_epoch_of_NN=best_epoch_of_NN, key_for_second_axis_plot=None,
+    nn_plot_train_loss_acc(estimator_history, flag_valid=True, log_axis_for_loss=True,
+                           key_for_second_axis_plot=None,
                            log_axis_for_second_axis=True)
 
     ##########################################  prediction TESTING :

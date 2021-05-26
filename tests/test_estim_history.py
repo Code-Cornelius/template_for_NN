@@ -2,7 +2,8 @@ from unittest import TestCase
 
 from nn_classes.estimator.estim_history import Estim_history
 import numpy as np
-
+import os
+ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 history = {
     'training': {
         'loss': np.array(range(10)),
@@ -32,7 +33,7 @@ flattened_history = {
 class Test_estim_history(TestCase):
 
     def test_create_estim_with_validation_has_correct_column_names(self):
-        estimator = Estim_history(metric_names, validation=True)
+        estimator = Estim_history(metric_names=metric_names, validation=True)
 
         column_names = ['fold', 'epoch', 'loss_training', 'L2_training', 'L3_training',
                         'loss_validation', 'L2_validation', 'L3_validation'].sort()
@@ -42,7 +43,7 @@ class Test_estim_history(TestCase):
         assert column_names == df_column_names
 
     def test_create_estim_without_validation_has_correct_column_names(self):
-        estimator = Estim_history(metric_names, validation=False)
+        estimator = Estim_history(metric_names=metric_names, validation=False)
 
         column_names = ['fold', 'epoch', 'loss_training', 'L2_training', 'L3_training'].sort()
 
@@ -51,18 +52,34 @@ class Test_estim_history(TestCase):
         assert column_names == df_column_names
 
     def test_translate_flattens_the_history(self):
-        estimator = Estim_history(metric_names, validation=True)
+        estimator = Estim_history(metric_names=metric_names, validation=True)
 
         translated_history = estimator._translate_history_to_dataframe(history, 1)
 
         assert translated_history == flattened_history
 
     def test_append_history_from_folds_to_estim(self):
-        estimator = Estim_history(metric_names, validation=True)
+        estimator = Estim_history(metric_names=metric_names, validation=True)
 
-        estimator.append_history(history, 0)
-        estimator.append_history(history, 1)
+        estimator.append_history(history, 2, 0)
+        estimator.append_history(history, 3, 1)
 
         df = estimator._df
 
         assert df.shape == (20, 8)
+
+
+    def test_to_csv(self):
+        file_name = "test.json"
+
+        path = os.path.join(ROOT_DIR, file_name)
+        estimator = Estim_history(metric_names=metric_names, validation=True)
+
+        estimator.append_history(history, 2, 0)
+        estimator.append_history(history, 3, 1)
+
+        estimator.to_json(path)
+
+        new_estim = Estim_history.from_file(path)
+
+        print(new_estim)
