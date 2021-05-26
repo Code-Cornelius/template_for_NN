@@ -4,6 +4,7 @@ import torch.nn as nn
 import seaborn as sns
 from sklearn.preprocessing import MinMaxScaler
 
+from data_processing_fct import Windowcreator
 from src.nn_classes.architecture.gru import factory_parametrised_GRU
 from src.plot.nn_plot_history import nn_plot_train_loss_acc
 from src.plot.nn_plots import nn_plot_prediction_vs_true, nn_print_errors
@@ -13,63 +14,43 @@ from src.train.nntrainparameters import NNTrainParameters
 from src.util_training import pytorch_device_setting, set_seeds
 from src.nn_classes.training_stopper.Early_stopper_training import Early_stopper_training
 from src.nn_classes.training_stopper.Early_stopper_validation import Early_stopper_validation
-from src.train.nn_kfold_training import nn_kfold_train, train_kfold_a_fold_after_split, create_history_kfold
+from src.train.nn_kfold_training import train_kfold_a_fold_after_split, create_history_kfold
 from src.nn_classes.architecture.lstm import factory_parametrised_LSTM
-from src.data_processing_fct import create_input_sequences
 from priv_lib_plot import APlot
 
 # set seed for pytorch.
 set_seeds(42)
 
-##########################################  DATA PARAMETERS:
-time_series_len = lookback_window = 18
-# time_series_len = lookback_window = 12
-lookforward_window = 12
-nb_unknown_prediction = 24 // lookforward_window
-
-##########################################
-
-########################################## DATA
-validation_and_testing_data_size = lookback_window
 # Import Data
 flight_data = sns.load_dataset("flights")
-print(flight_data.head())
-data = flight_data['passengers'].values.astype(float)
-
-train_data = data[:-validation_and_testing_data_size]
-
-minimax = MinMaxScaler(feature_range=(-1., 1.))
-train_data_normalized = torch.FloatTensor(minimax.fit_transform(train_data.reshape(-1, 1))).view(-1)
-# : the reshape in order to fit and transform
-testing_data = data[-2 * validation_and_testing_data_size:].reshape(-1, 1)
-testing_data_normalised = torch.FloatTensor(minimax.transform(testing_data)).view(1, lookback_window * 2, 1)
-testing_data = torch.FloatTensor(testing_data).view(1, lookback_window * 2, 1)
-
-data_training_X, data_training_Y = create_input_sequences(train_data_normalized, lookback_window,
-                                                          lookforward_window=lookforward_window,
-                                                          time_series_dim=1,
-                                                          batch_first=True, silent=False)
-indices_train = torch.arange(len(data_training_X) - validation_and_testing_data_size)
-indices_valid = torch.arange(len(data_training_X) - validation_and_testing_data_size, len(data_training_X))
-print("shape of training : ", data_training_Y.shape)
-##########################################
-########################################## Plot data
-aplot = APlot()
-months_total = np.arange(0, len(data), 1)
-months_train = np.arange(0, len(train_data), 1)
-dict_ax = {'title': 'Presentation of the Data', 'xlabel': 'Month', 'ylabel': 'Passenger'}
-dict_plot_param = {'label': 'Data for Testing', 'color': 'black', 'linestyle': '-', 'linewidth': 3}
-aplot.uni_plot(0, months_total, data, dict_ax=dict_ax, dict_plot_param=dict_plot_param)
-dict_plot_param = {'label': 'Data Known at Training Time', 'color': 'gray', 'linestyle': '-', 'linewidth': 3}
-aplot.uni_plot(0, months_train, train_data, dict_ax=dict_ax, dict_plot_param=dict_plot_param)
-APlot.show_and_continue()
 
 
-##########################################
+def add_converted_time_column(df, column_seconds=None,
+                              column_minutes=None, column_hours=None,
+                              column_days=None, column_month=None,
+                              column_year=None):
+    pass
+    # day = 24 * 60 * 60
+    # year = (365.2425) * day
 
 
-def inverse_transform(arr):
-    return minimax.inverse_transform(np.array(arr).reshape(-1, 1)).reshape(-1)
+def add_column_cyclical_features(df, col_name_time, period, start_num=0):
+    """
+
+    Args:
+        df:
+        col_name_time:  string
+        period:
+        start_num:
+
+    Returns:
+
+    """
+    kwargs = {
+        f'sin_{col_name_time}': lambda x: np.sin(2 * np.pi * (df[col_name_time] - start_num) / period),
+        f'cos_{col_name_time}': lambda x: np.cos(2 * np.pi * (df[col_name_time] - start_num) / period)
+    }
+    return df.assign(**kwargs).drop(columns=[col_name_time])
 
 
 ##########################################  GLOBAL PARAMETERS
@@ -79,37 +60,88 @@ early_stop_train = Early_stopper_training(patience=400, silent=SILENT, delta=-in
 early_stop_valid = Early_stopper_validation(patience=400, silent=SILENT, delta=-int(1E-2))
 early_stoppers = (early_stop_train, early_stop_valid)
 metrics = ()
-##########################################
-
-
+##########################################  DATA PARAMETERS:
+time_series_len = lookback_window = 18
+# time_series_len = lookback_window = 12
+lookforward_window = 12
+nb_test_prediction = lookback_window // lookforward_window + 1
+nb_unknown_prediction = 36 // lookforward_window
 ##########################################  main
 if __name__ == '__main__':
     # config of the architecture:
-    input_size = 1
+    input_size = 3
     num_layers = 4
     bidirectional = True
     hidden_size = 256
     output_size = 1
-    dropout = 0.
-    epochs = 8000
+    dropout = 0.01
+    epochs = 80000
     batch_size = 120
 
     optimiser = torch.optim.Adam
     criterion = nn.MSELoss(reduction='sum')
-    dict_optimiser = {"lr": 0.00005, "weight_decay": 1E-5}
+    dict_optimiser = {"lr": 0.0005, "weight_decay": 1E-6}
     optim_wrapper = Optim_wrapper(optimiser, dict_optimiser)
 
     param_training = NNTrainParameters(batch_size=batch_size, epochs=epochs, device=device,
                                        criterion=criterion, optim_wrapper=optim_wrapper,
                                        metrics=metrics)
 
-    parametrized_NN = factory_parametrised_LSTM(input_size=input_size, num_layers=num_layers,
-                                                bidirectional=bidirectional,
-                                                input_time_series_len=lookback_window,
-                                                output_time_series_len=lookforward_window,
-                                                nb_output_consider=lookforward_window,
-                                                hidden_size=hidden_size, output_size=output_size, dropout=dropout,
-                                                activation_fct=nn.CELU(), hidden_FC=128)
+    parametrized_NN = factory_parametrised_GRU(input_dim=input_size, output_dim=output_size,
+                                               num_layers=num_layers, bidirectional=bidirectional,
+                                               input_time_series_len=lookback_window,
+                                               output_time_series_len=lookforward_window,
+                                               nb_output_consider=lookforward_window,
+                                               hidden_size=hidden_size, dropout=dropout,
+                                               activation_fct=nn.CELU(), hidden_FC=128)
+
+    ########################################## DATA
+    print(flight_data.head())
+    flight_data['time_month'] = range(len(flight_data))
+    flight_data = flight_data.drop(columns=["year", "month"])
+    # add cyclicity
+    flight_data = add_column_cyclical_features(flight_data, 'time_month', 12)
+    print(flight_data.head())
+
+    if input_size == 1:
+        data = flight_data['passengers'].values.astype(float).reshape(-1, 1)
+    else:
+        data = flight_data.values.astype(float)
+
+    train_data = data[:-lookback_window].reshape(-1, input_size)
+    testing_data = data[-lookback_window:].reshape(-1, input_size)
+
+    minimax = MinMaxScaler(feature_range=(-1., 1.))
+    train_data_normalized = torch.FloatTensor(minimax.fit_transform(train_data))
+    testing_data_normalised = torch.FloatTensor(minimax.transform(testing_data))
+    testing_data = torch.FloatTensor(testing_data)
+
+    window = Windowcreator(input_dim=input_size, output_dim=1, lookback_window=lookback_window,
+                           lag_last_pred_fut=lookforward_window,
+                           lookforward_window=lookforward_window, type_window="Moving")
+    (data_training_X,
+     data_training_Y) = window.create_input_sequences(train_data_normalized, train_data_normalized[:, 0].unsqueeze(1))
+
+    indices_train = torch.arange(len(data_training_X) - lookback_window)
+    indices_valid = torch.arange(len(data_training_X) - lookback_window, len(data_training_X))
+    print("shape of training : ", data_training_Y.shape)
+    ########################################## Plot data
+    aplot = APlot()
+    months_total = np.arange(0, len(data[:, 0]), 1)  # get only passenger bit
+    months_train = np.arange(0, len(train_data[:, 0]), 1)
+    dict_ax = {'title': 'Presentation of the Data', 'xlabel': 'Month', 'ylabel': 'Passenger'}
+    dict_plot_param = {'label': 'Data for Testing', 'color': 'black', 'linestyle': '-', 'linewidth': 3}
+    aplot.uni_plot(0, months_total, data[:, 0], dict_ax=dict_ax, dict_plot_param=dict_plot_param)
+    dict_plot_param = {'label': 'Data Known at Training Time', 'color': 'gray', 'linestyle': '-', 'linewidth': 3}
+    aplot.uni_plot(0, months_train, train_data[:, 0], dict_ax=dict_ax, dict_plot_param=dict_plot_param)
+    APlot.show_and_continue()
+
+
+    ##########################################
+
+    def inverse_transform(arr):
+        return minimax.inverse_transform(np.array(arr).reshape(-1, input_size))
+
 
     ##########################################  TRAINING
     history = create_history_kfold(True, early_stoppers, 1, param_training)
@@ -123,55 +155,75 @@ if __name__ == '__main__':
                            best_epoch_of_NN=best_epoch_of_NN, key_for_second_axis_plot=None,
                            log_axis_for_second_axis=True)
 
+
+    class Adaptor_output(object):
+        def __init__(self, incrm, start_num, period):
+            self.incrm = incrm
+            self.start_num = start_num
+            self.period = period
+
+        def __call__(self, arr):
+            times = np.arange(self.incrm, self.incrm + lookforward_window)
+            cos_val = np.sin(2 * np.pi * (times - self.start_num) / self.period).reshape(-1, 1)
+            sin_val = np.cos(2 * np.pi * (times - self.start_num) / self.period).reshape(-1, 1)
+            self.incrm += lookforward_window
+            res = np.concatenate((arr.reshape(-1, 1), cos_val, sin_val), axis=1).reshape(1, -1, 3)
+            return torch.tensor(res, dtype=torch.float32)
+
+
     ##########################################  prediction TESTING :
     # prediction by looking at the data we know about
-    train_target = data_training_Y
-    train_prediction = net.nn_predict(data_training_X)[::lookforward_window, :].reshape(-1)
-    # : we plot what is predicted one at a time, skipping the window everytime.
+    if input_size > 1:
+        increase_data_for_pred = Adaptor_output(0, 0, 12)  # 0 initial and 12 month for a period.
+    else:
+        increase_data_for_pred = None
+    train_prediction = window.prediction_over_training_data(net, train_data_normalized, increase_data_for_pred)
 
+    if input_size > 1:
+        increase_data_for_pred = Adaptor_output(train_data_normalized.shape[0],
+                                                0, 12)  # 0 initial and 12 month for a period.
+    else:
+        increase_data_for_pred = None
     ##########################################  prediction unknown set. Corresponds to predicting the black line.
-    test = testing_data_normalised
-    print("Prediction over test data: ", inverse_transform(test))
-    test_prediction = [0] * lookforward_window
-    for i in range(0, validation_and_testing_data_size // lookforward_window, lookforward_window):
-        test_prediction[i:i + lookforward_window] = \
-            net.nn_predict(test[:, i:lookback_window + i, :])[::lookforward_window, :].reshape(-1)
+    test_prediction = window.prediction_recurrent(net, train_data_normalized[-lookback_window:],
+                                                  nb_test_prediction, increase_data_for_pred)
 
     ##########################################  prediction of TESTING unknown data by starting with black line.
-    unknown = torch.cat((testing_data_normalised[:, validation_and_testing_data_size:, :],
-                         torch.zeros(1, lookforward_window * nb_unknown_prediction, 1)),1)
-    print("Prediction over unknown data: ", inverse_transform(unknown))
-    # : the last data + a copy to store prediction
-    for i in range(lookback_window, lookback_window + lookforward_window * nb_unknown_prediction, lookforward_window):
-        unknown[:, i: i + lookforward_window, :] = \
-            net.nn_predict(unknown[:, i- lookback_window:i, :])[::lookforward_window, :].reshape(1, -1, 1)
-    # : replacing the second copy by predictions
-    unknwon_prediction = unknown[:, -validation_and_testing_data_size:, :]
+    if input_size > 1:
+        increase_data_for_pred = Adaptor_output(train_data_normalized.shape[0] + testing_data_normalised.shape[0],
+                                                0, 12)  # 0 initial and 12 month for a period.
+    else:
+        increase_data_for_pred = None
+    unknwon_prediction = window.prediction_recurrent(net, testing_data_normalised[-lookback_window:, :],
+                                                     nb_unknown_prediction, increase_data_for_pred)
 
+    # x-axis data for plotting
     months_total = np.arange(0, len(data), 1)  # data for testing
     months_train = np.arange(0, len(train_data), 1)  # data for training
-    months_train_prediction = np.arange(lookback_window, len(train_prediction) + lookback_window, 1)
+    months_train_prediction = np.arange(lookback_window, train_prediction.shape[1] + lookback_window, 1)
     length_training = len(data_training_Y) + lookback_window + lookforward_window - 1
     months_test = np.arange(length_training,
-                            length_training + lookforward_window, 1)
-    months_forecast = np.arange(length_training + validation_and_testing_data_size,
-                                length_training + validation_and_testing_data_size + lookforward_window * nb_unknown_prediction , 1)
+                            length_training + nb_test_prediction * lookforward_window, 1)
+    months_forecast = np.arange(length_training + lookback_window,
+                                length_training + lookback_window + lookforward_window * nb_unknown_prediction,
+                                1)
 
     aplot = APlot()
     dict_ax = {'title': 'Data and Prediction during Training and over Non Observed Data.', 'xlabel': 'month',
                'ylabel': 'passenger'}
     dict_plot_param = {'label': 'Data for Testing', 'color': 'black', 'linestyle': '-', 'linewidth': 3}
-    aplot.uni_plot(0, months_total, data, dict_ax=dict_ax, dict_plot_param=dict_plot_param)
+    aplot.uni_plot(0, months_total, data[:, 0], dict_ax=dict_ax, dict_plot_param=dict_plot_param)
     dict_plot_param = {'label': 'Data Known at Training Time', 'color': 'gray', 'linestyle': '-', 'linewidth': 3}
-    aplot.uni_plot(0, months_train, train_data, dict_ax=dict_ax, dict_plot_param=dict_plot_param)
+    aplot.uni_plot(0, months_train, train_data[:, 0], dict_ax=dict_ax, dict_plot_param=dict_plot_param)
 
     dict_plot_param = {'label': 'Prediction over Training', 'color': 'royalblue', 'linestyle': '--', 'linewidth': 2}
-    aplot.uni_plot(0, months_train_prediction, inverse_transform(train_prediction), dict_plot_param=dict_plot_param)
+    aplot.uni_plot(0, months_train_prediction, inverse_transform(train_prediction)[:, 0],
+                   dict_plot_param=dict_plot_param)
 
-    dict_plot_param = {'label': 'Prediction over Test Set', 'color': 'r', 'linestyle': '--', 'linewidth': 1}
-    aplot.uni_plot(0, months_test, inverse_transform(test_prediction), dict_plot_param=dict_plot_param)
+    dict_plot_param = {'label': 'Prediction over Test Set', 'color': 'r', 'linestyle': '--', 'linewidth': 1.5}
+    aplot.uni_plot(0, months_test, inverse_transform(test_prediction)[:, 0], dict_plot_param=dict_plot_param)
 
-    dict_plot_param = {'label': 'Prediction of Future Unknown Set', 'color': 'g', 'linestyle': '--', 'linewidth': 1}
-    aplot.uni_plot(0, months_forecast, inverse_transform(unknwon_prediction), dict_plot_param=dict_plot_param)
+    dict_plot_param = {'label': 'Prediction of Future Unknown Set', 'color': 'g', 'linestyle': '--', 'linewidth': 1.5}
+    aplot.uni_plot(0, months_forecast, inverse_transform(unknwon_prediction)[:, 0], dict_plot_param=dict_plot_param)
     aplot.show_legend()
     APlot.show_plot()

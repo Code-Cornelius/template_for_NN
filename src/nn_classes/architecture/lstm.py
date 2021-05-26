@@ -23,12 +23,13 @@ class LSTM(Savable_net, metaclass=ABCMeta):
                                       self.hidden_FC)
         self.linear_layer_2 = nn.Linear(self.hidden_FC, self.output_dim * self.output_time_series_len)
 
+        # h0 c0
         self.hidden_state_0 = nn.Parameter(torch.randn(self.num_layers * self.nb_directions,
-                                                       self.input_dim,  # repeated later to have batch size
+                                                       1,  # repeated later to have batch size
                                                        self.hidden_size),
                                            requires_grad=True)  # parameters are moved to device and learn.
         self.hidden_cell_0 = nn.Parameter(torch.randn(self.num_layers * self.nb_directions,
-                                                      self.input_dim,  # repeated later to have batch size
+                                                      1,  # repeated later to have batch size
                                                       self.hidden_size),
                                           requires_grad=True)  # parameters are moved to device and learn.
 
@@ -40,7 +41,6 @@ class LSTM(Savable_net, metaclass=ABCMeta):
         Returns:
         """
         batch_size = 1, time_series.shape[0], 1
-        # WIP is backpropagation doing the right job?
         h0, c0 = self.hidden_state_0.repeat(batch_size), self.hidden_cell_0.repeat(batch_size)
         out, _ = self.stacked_lstm(time_series, (h0, c0))  # shape of out is  N,L,Hidden_size * nb_direction
         out = torch.cat((out[:,
@@ -115,7 +115,7 @@ def factory_parametrised_LSTM(input_dim=1, output_dim=1,
                               input_time_series_len=1, output_time_series_len=1,
                               nb_output_consider=1,
                               hidden_size=150, dropout=0.,
-                              activation_fct=nn.CELU(), hidden_FC=16):
+                              activation_fct=nn.CELU(), hidden_FC=64):
     class Parametrised_LSTM(LSTM):
         def __init__(self):
             self.input_dim = input_dim
@@ -203,12 +203,15 @@ def factory_parametrised_LSTM(input_dim=1, output_dim=1,
             if isinstance(new_dropout, float) and 0 <= new_dropout < 1:
                 # : dropout should be a percent between 0 and 1.
                 self._dropout = new_dropout
-            else:
-                raise Error_type_setter(f"Argument is not an {str(float)}.")
+            else :
+                if isinstance(new_dropout, int) and not (new_dropout):  # dropout == 0
+                    self._dropout = float(new_dropout)
+                else:
+                    raise Error_type_setter(f"Argument is not an {str(float)}.")
 
         @property
         def input_time_series_len(self):
-            return self._time_series_len
+            return self._input_time_series_len
 
         @input_time_series_len.setter
         def input_time_series_len(self, new_input_time_series_len):
