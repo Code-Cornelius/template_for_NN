@@ -13,7 +13,7 @@ def nn_kfold_train(data_training_X, data_training_Y,
                    early_stoppers=(Early_stopper_vanilla(),),
                    nb_split=5, shuffle_kfold=True,
                    percent_validation_for_1_fold=20, only_best_history=False, silent=False,
-                   train_param_dict={}.copy()):
+                   hyper_param={}.copy()):
     """
     # create main cross validation method
     # it returns the score during training,
@@ -21,7 +21,7 @@ def nn_kfold_train(data_training_X, data_training_Y,
 
 
     Args:
-        train_param_dict: a dictionary with all the training parameters
+        hyper_param: a dictionary with all the training parameters
         data_training_X: tensor
         data_training_Y: tensor
         Model_NN: parametrised architecture,
@@ -57,7 +57,7 @@ def nn_kfold_train(data_training_X, data_training_Y,
                                                                     nb_split,
                                                                     shuffle_kfold)
     # initialise estimator
-    estimator_history = _initialise_estimator(compute_validation, parameters_training, train_param_dict)
+    estimator_history = _initialise_estimator(compute_validation, parameters_training, hyper_param)
 
     return _nn_multiplefold_train(data_training_X, data_training_Y, early_stoppers, Model_NN, nb_split,
                                   parameters_training, indices, silent, estimator_history,
@@ -67,7 +67,7 @@ def nn_kfold_train(data_training_X, data_training_Y,
 def _initialise_estimator(compute_validation, parameters_training, train_param_dict):
     metric_names = [metric.name for metric in parameters_training.metrics]
     estimator_history = Estim_history(metric_names=metric_names, validation=compute_validation,
-                                      training_parameters=train_param_dict)
+                                      hyper_params=train_param_dict)
     return estimator_history
 
 
@@ -120,12 +120,12 @@ def _nn_multiplefold_train(data_training_X, data_training_Y, early_stoppers, Mod
                                                                  early_stoppers, value_metric_for_best_NN,
                                                                  number_kfold_best_net, best_net, i, silent)
 
+    estimator_history.best_fold = number_kfold_best_net
     if not silent:
         print("Finished the K-Fold Training, the best NN is the number {}".format(number_kfold_best_net + 1))
 
     if only_best_history:
-        estimator_history.take_best_fold(number_kfold_best_net)
-
+        estimator_history.take_best_fold()
 
     return best_net, estimator_history
 

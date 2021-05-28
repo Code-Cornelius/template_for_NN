@@ -7,7 +7,7 @@ import json
 class Estim_history(Estimator):
     BASE_COLUMN_NAMES = ['fold', 'epoch']
 
-    def __init__(self, df=None, metric_names=None, validation=True, training_parameters=None):
+    def __init__(self, df=None, metric_names=None, validation=True, hyper_params=None):
         if df is not None:
             # initialise with dataframe from csv
             super().__init__(df)
@@ -20,8 +20,8 @@ class Estim_history(Estimator):
             self.validation = validation
             self.best_epoch = []
 
-            # TODO: collect training parameters
-            self.training_parameters = training_parameters
+            self.hyper_params = hyper_params
+            self.best_fold = 0
 
     @staticmethod
     def _generate_column_name(base_name, validation=False):
@@ -124,6 +124,14 @@ class Estim_history(Estimator):
     def get_values_at_column(self, column):
         return self._df[column].values
 
+    def get_best_value_for(self, column):
+        if len(self.best_epoch) > 1:
+            epoch = self.best_epoch[self.best_fold]
+        else:
+            epoch = self.best_epoch[0]
+
+        return self.get_value_at_index(self.best_fold, epoch, column)
+
     def _index_mask(self, fold, epoch):
         return (self._df['fold'] == fold) & (self._df['epoch'] == epoch)
 
@@ -136,7 +144,7 @@ class Estim_history(Estimator):
     def number_of_epochs(self):
         return self._df['epoch'].max() + 1
 
-    def take_best_fold(self, fold):
+    def take_best_fold(self):
         """
             Crop the dataframe to only store the best fold
         Args:
@@ -145,8 +153,8 @@ class Estim_history(Estimator):
         Returns:
             Void
         """
-        self.best_epoch = [self.best_epoch[fold]]
-        self._df = self._df[self._fold_mask(fold)]
+        self.best_epoch = [self.best_epoch[self.best_fold]]
+        self._df = self._df[self._fold_mask(self.best_fold)]
 
     def to_json(self, path):
         """
@@ -162,7 +170,8 @@ class Estim_history(Estimator):
         parsed['attrs'] = {
             'validation': self.validation,
             'best_epoch': self.best_epoch,
-            'train_param': self.training_parameters
+            'hyper_params': self.hyper_params,
+            'best_fold': self.best_fold
         }
 
         zipped = zip_json(parsed)
@@ -194,6 +203,7 @@ class Estim_history(Estimator):
 
         estimator.validation = attrs['validation']
         estimator.best_epoch = attrs['best_epoch']
-        estimator.training_parameters = attrs['train_param']
+        estimator.hyper_params = attrs['hyper_params']
+        estimator.best_fold = attrs['best_fold']
         return estimator
 
