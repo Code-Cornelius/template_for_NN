@@ -12,7 +12,8 @@ def nn_kfold_train(data_training_X, data_training_Y,
                    Model_NN, parameters_training,
                    early_stoppers=(Early_stopper_vanilla(),),
                    nb_split=5, shuffle_kfold=True,
-                   percent_validation_for_1_fold=20, only_best_history=False, silent=False):
+                   percent_validation_for_1_fold=20, only_best_history=False,
+                   silent=False):
     """
     # create main cross validation method
     # it returns the score during training,
@@ -56,7 +57,7 @@ def nn_kfold_train(data_training_X, data_training_Y,
                                                                     shuffle_kfold)
     # initialise estimator
     metric_names = [metric.name for metric in parameters_training.metrics]
-    estimator_history = Estim_history(metric_names, validation=compute_validation)
+    estimator_history = Estim_history(metric_names=metric_names, validation=compute_validation)
 
     return _nn_multiplefold_train(data_training_X, data_training_Y, early_stoppers, Model_NN, nb_split,
                                   parameters_training, indices, silent, estimator_history,
@@ -207,7 +208,6 @@ def _set_history_from_nn_train(res, best_epoch_of_NN, history, index):
     if 'validation' in kfold_history:
         for metric_key in kfold_history['validation']:
             history['validation'][metric_key][index, :] = kfold_history['validation'][metric_key]
-
 
 
 # section ######################################################################
