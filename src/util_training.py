@@ -9,7 +9,6 @@ from priv_lib_util.tools.src.function_dict import retrieve_parameters_by_index_f
 
 def decorator_train_disable_no_grad(func):
     """
-    Be careful with it, if you wrap something already wrapped, the wrapping will disapear !
     Args:
         func:
 
@@ -27,6 +26,17 @@ def decorator_train_disable_no_grad(func):
 
     return wrapper_decorator_train_disable_no_grad
 
+
+def decorator_on_cpu_during_fct(func):
+    @functools.wraps(func)
+    def wrapper_decorator_on_cpu_during_fct(*, net, device, **kwargs):
+        # key words only.
+        net.to(torch.device('cpu'))
+        ans = func( net = net, **kwargs)
+        net.to(device)
+        return ans
+
+    return wrapper_decorator_on_cpu_during_fct
 
 def pytorch_device_setting(type=''):
     """

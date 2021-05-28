@@ -16,6 +16,7 @@ from src.util_training import set_seeds, pytorch_device_setting
 from src.nn_classes.training_stopper.Early_stopper_training import Early_stopper_training
 from src.nn_classes.training_stopper.Early_stopper_validation import Early_stopper_validation
 from train.nn_kfold_training import nn_kfold_train
+from src.nn_classes.metric.metric import Metric
 
 # set seed for pytorch.
 set_seeds(42)
@@ -27,18 +28,15 @@ def exact_solution(x):
 
 
 ############################## GLOBAL PARAMETERS
-# Number of training samples
-n_samples = 2000
-# Noise level
-sigma = 0.01
+n_samples = 2000  # Number of training samples
+sigma = 0.01  # Noise level
 device = pytorch_device_setting('not_cpu_please')
 SILENT = False
 early_stop_train = Early_stopper_training(patience=20, silent=SILENT, delta=-int(1E-6))
 early_stop_valid = Early_stopper_validation(patience=20, silent=SILENT, delta=-int(1E-6))
 early_stoppers = (early_stop_train, early_stop_valid)
 metrics = ()
-#############################
-
+############################# DATA CREATION
 # exact grid
 plot_xx = torch.linspace(0, 2 * np.pi, 1000).reshape(-1, 1)
 plot_yy = exact_solution(plot_xx).reshape(-1, )
@@ -55,8 +53,16 @@ train_Y = yy[:training_size, :]
 
 testing_X = xx[training_size:, :]
 testing_Y = yy[training_size:, :]
+
+
 ##### end data
 
+def L4loss(net, xx, yy):
+    return torch.norm(net.nn_predict(xx) - yy, 4)
+
+
+L4metric = Metric('L4', L4loss)
+metrics = (L4metric,)
 if __name__ == '__main__':
     # config of the architecture:
     input_size = 1
@@ -68,23 +74,12 @@ if __name__ == '__main__':
     epochs = 7500
     batch_size = 200
     optimiser = torch.optim.Adam
-    criterion = nn.MSELoss(reduction = 'sum')
-
-    def L4loss(net, xx, yy):
-        return torch.norm(net.nn_predict(xx) - yy, 4)
-
-    from src.nn_classes.metric.metric import Metric
-
-    L4metric = Metric('L4', L4loss)
-    metrics = (L4metric,)
-
+    criterion = nn.MSELoss(reduction='sum')
     dict_optimiser = {"lr": 0.001, "weight_decay": 0.0000001}
     optim_wrapper = Optim_wrapper(optimiser, dict_optimiser)
-
     param_training = NNTrainParameters(batch_size=batch_size, epochs=epochs, device=device,
                                        criterion=criterion, optim_wrapper=optim_wrapper,
                                        metrics=metrics)
-
     parametrized_NN = factory_parametrised_FC_NN(param_input_size=input_size, param_list_hidden_sizes=hidden_sizes,
                                                  param_output_size=output_size, param_list_biases=biases,
                                                  param_activation_functions=activation_functions, param_dropout=dropout,
@@ -96,9 +91,13 @@ if __name__ == '__main__':
                                               nb_split=1, shuffle_kfold=True,
                                               percent_validation_for_1_fold=10,
                                               silent=False)
-    net.to(torch.device('cpu'))
-    nn_plot_train_loss_acc(estimator_history, flag_valid=True, log_axis_for_loss= True,
-                           key_for_second_axis_plot = 'L4', log_axis_for_second_axis = True)
-    nn_plot_prediction_vs_true(net, plot_xx, plot_yy, plot_yy_noisy)
-    nn_print_errors(net, train_X, train_Y, testing_X, testing_Y)
+
+    nn_plot_train_loss_acc(estimator_history, flag_valid=True, log_axis_for_loss=True,
+                           key_for_second_axis_plot='L4', log_axis_for_second_axis=True)
+    nn_plot_prediction_vs_true(net=net, plot_xx=plot_xx,
+                               plot_yy=plot_yy, plot_yy_noisy=plot_yy_noisy,
+                               device=device)
+    nn_print_errors(net=net, train_X=train_X, train_Y=train_Y,
+                    testing_X=testing_X, testing_Y=testing_Y,
+                    device=device)
     APlot.show_plot()

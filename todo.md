@@ -1,34 +1,39 @@
 # Ideas for continuing the project:
 
 # Niels
-* New function for the project
-* Estimator
+* Estimator, look at it and see if it is ok.
 
 
 # Bianca
-* Estim_history
 * adapt the functions for the Estim_history  
     * look into the saving data method. (it lies in data_processing).
       I left it half undone (as I was using it) because with estimator it will be much easier.
       The important thing is saving the information for each estimator in 2 places: 
             * saving the DF in a classical way (call super).
-            * saving the fields as a list in a separate file.
-      there is the method read_list_of_ints_from_path in data_processing that could do the trick?
-* think about not predicting multiple times
-By the way, storing the parameters (training ones) is not that important. 
-  Focus on the rest first. 
-  Saving the parameters will make the estim_hyper_param way easier though! 
-  (but it is a side project).
-  Indeed, then you can make a function that takes 
-  a bunch of estim_history and create one estim_hyper_param.
+      you did it differently, can you change estimator as well please ? use super?
+      
+* think about not predicting multiple times in train
   
+
 * can you check what happens when batch size is bigger than actual size of data? 
   I think it is fine, that the metrics are not multiplied by something too big, 
   neither are empty rows created but well...
 
+*  GRU LSTM refactor ?
 
 * Estim_hyper_param
-* plot estimator. 
+* plot estimator. But for that we need to look at estimator and plot estimator. We can do that together in June after the exam.
+Essentially, we can make a very trivial example, like a time estimator (can you do it ?) 
+  that takes column time and any given parameter. 
+  Then, we can start trying to plot it with the plot estimators, that way we can see what kind of plot we need.
+  OK i have that great idea, estimator -> estimator time -> estimator array operation
+  columns are time -> time, size, array type !
+  Then what we want is some files where operations are performed (like append, some computations etc...)
+  and then we fill it with some measurements and boom. Now we want to plot.
+  What do we want to plot ?
+  histogram. CHECK
+  evolution wrt to a parameter? CHECK
+  some other stats ? like what is the evolution of variance wrt the length ? CHECK.
 
 
 # Todos:
@@ -45,6 +50,6 @@ By the way, storing the parameters (training ones) is not that important.
       grid_plot could create a function that does this, everything a function needs to check before starting the inside: 
       then one just needs to wraps all the function inside APlot.
       
-  GRU LSTM refactor ?
+
   
 * running some examples for checking that the functions are okay

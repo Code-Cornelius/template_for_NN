@@ -146,13 +146,23 @@ class Windowcreator(object):
 
     def adding_input_to_output(self, increase_data_for_pred, new_values, device):
         if increase_data_for_pred is not None:
-            new_values = increase_data_for_pred(new_values.to(device).numpy())
+            new_values = increase_data_for_pred(new_values.cpu().numpy()).to(device)
             # cpu to make sure, numpy to avoid implicit conversion.
         return new_values
 
     def prediction_recurrent(self, net, data_start, nb_of_cycle_pred, increase_data_for_pred=None, device='cpu'):
-        # TODO add device parameter for the cat at the end.
+        """
 
+        Args:
+            net:
+            data_start:
+            nb_of_cycle_pred:
+            increase_data_for_pred:
+            device:  where data_start lies.
+
+        Returns:
+
+        """
         # a container has the lookback window (at least) of data.
         # Then iteratively, it predicts the future.
         # data_start should be not prepared dataset

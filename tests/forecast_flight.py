@@ -4,19 +4,17 @@ import torch.nn as nn
 import seaborn as sns
 from sklearn.preprocessing import MinMaxScaler
 
-from data_processing_fct import Windowcreator
+from data_processing_fct import add_column_cyclical_features
+from nn_classes.architecture.Windowcreator import Windowcreator
 from nn_classes.estimator.estim_history import Estim_history
 from src.nn_classes.architecture.gru import factory_parametrised_GRU
 from src.plot.nn_plot_history import nn_plot_train_loss_acc
-from src.plot.nn_plots import nn_plot_prediction_vs_true, nn_print_errors
-from src.nn_classes.architecture.fully_connected import factory_parametrised_FC_NN
 from src.nn_classes.optim_wrapper import Optim_wrapper
 from src.train.nntrainparameters import NNTrainParameters
 from src.util_training import pytorch_device_setting, set_seeds
 from src.nn_classes.training_stopper.Early_stopper_training import Early_stopper_training
 from src.nn_classes.training_stopper.Early_stopper_validation import Early_stopper_validation
-from src.train.nn_kfold_training import train_kfold_a_fold_after_split, create_history_kfold
-from src.nn_classes.architecture.lstm import factory_parametrised_LSTM
+from src.train.nn_kfold_training import train_kfold_a_fold_after_split
 from priv_lib_plot import APlot
 
 # set seed for pytorch.
@@ -24,34 +22,6 @@ set_seeds(42)
 
 # Import Data
 flight_data = sns.load_dataset("flights")
-
-
-def add_converted_time_column(df, column_seconds=None,
-                              column_minutes=None, column_hours=None,
-                              column_days=None, column_month=None,
-                              column_year=None):
-    pass
-    # day = 24 * 60 * 60
-    # year = (365.2425) * day
-
-
-def add_column_cyclical_features(df, col_name_time, period, start_num=0):
-    """
-
-    Args:
-        df:
-        col_name_time:  string
-        period:
-        start_num:
-
-    Returns:
-
-    """
-    kwargs = {
-        f'sin_{col_name_time}': lambda x: np.sin(2 * np.pi * (df[col_name_time] - start_num) / period),
-        f'cos_{col_name_time}': lambda x: np.cos(2 * np.pi * (df[col_name_time] - start_num) / period)
-    }
-    return df.assign(**kwargs).drop(columns=[col_name_time])
 
 
 ##########################################  GLOBAL PARAMETERS
@@ -126,16 +96,7 @@ if __name__ == '__main__':
     indices_train = torch.arange(len(data_training_X) - lookback_window)
     indices_valid = torch.arange(len(data_training_X) - lookback_window, len(data_training_X))
     print("shape of training : ", data_training_Y.shape)
-    ########################################## Plot data
-    aplot = APlot()
-    months_total = np.arange(0, len(data[:, 0]), 1)  # get only passenger bit
-    months_train = np.arange(0, len(train_data[:, 0]), 1)
-    dict_ax = {'title': 'Presentation of the Data', 'xlabel': 'Month', 'ylabel': 'Passenger'}
-    dict_plot_param = {'label': 'Data for Testing', 'color': 'black', 'linestyle': '-', 'linewidth': 3}
-    aplot.uni_plot(0, months_total, data[:, 0], dict_ax=dict_ax, dict_plot_param=dict_plot_param)
-    dict_plot_param = {'label': 'Data Known at Training Time', 'color': 'gray', 'linestyle': '-', 'linewidth': 3}
-    aplot.uni_plot(0, months_train, train_data[:, 0], dict_ax=dict_ax, dict_plot_param=dict_plot_param)
-    APlot.show_and_continue()
+
 
 
     ##########################################
@@ -177,7 +138,8 @@ if __name__ == '__main__':
         increase_data_for_pred = Adaptor_output(0, 0, 12)  # 0 initial and 12 month for a period.
     else:
         increase_data_for_pred = None
-    train_prediction = window.prediction_over_training_data(net, train_data_normalized, increase_data_for_pred)
+    train_prediction = window.prediction_over_training_data(net, train_data_normalized, increase_data_for_pred,
+                                                            device=device)
 
     if input_size > 1:
         increase_data_for_pred = Adaptor_output(train_data_normalized.shape[0],
@@ -186,7 +148,7 @@ if __name__ == '__main__':
         increase_data_for_pred = None
     ##########################################  prediction unknown set. Corresponds to predicting the black line.
     test_prediction = window.prediction_recurrent(net, train_data_normalized[-lookback_window:],
-                                                  nb_test_prediction, increase_data_for_pred)
+                                                  nb_test_prediction, increase_data_for_pred, device='cpu')
 
     ##########################################  prediction of TESTING unknown data by starting with black line.
     if input_size > 1:
@@ -195,7 +157,7 @@ if __name__ == '__main__':
     else:
         increase_data_for_pred = None
     unknwon_prediction = window.prediction_recurrent(net, testing_data_normalised[-lookback_window:, :],
-                                                     nb_unknown_prediction, increase_data_for_pred)
+                                                     nb_unknown_prediction, increase_data_for_pred, device='cpu')
 
     # x-axis data for plotting
     months_total = np.arange(0, len(data), 1)  # data for testing

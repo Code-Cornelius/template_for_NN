@@ -125,7 +125,7 @@ def _nn_multiplefold_train(data_training_X, data_training_Y, early_stoppers, Mod
         print("Finished the K-Fold Training, the best NN is the number {}".format(number_kfold_best_net + 1))
 
     if only_best_history:
-        estimator_history.take_best_fold()
+        estimator_history.slice_best_fold()
 
     return best_net, estimator_history
 
@@ -184,7 +184,7 @@ def train_kfold_a_fold_after_split(data_training_X, data_training_Y, index_train
 
 def _new_best_model(best_net, i, net, value_metric_for_best_NN, estimator_history,
                     number_kfold_best_net, silent):
-    rookie_perf = -estimator_history.get_value_at_index(i, estimator_history.best_epoch[i], "loss_training")
+    rookie_perf = -estimator_history.get_values_fold_epoch_col(i, estimator_history.best_epoch[i], "loss_training")
 
     if not silent:  # -1 * ... bc we want to keep order below :
         print("New best model updated: rookie perf : {}"

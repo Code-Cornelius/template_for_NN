@@ -10,6 +10,7 @@ from sklearn import metrics
 
 # my libraries
 from priv_lib_plot import APlot
+from util_training import decorator_on_cpu_during_fct
 
 sns.set()
 
@@ -93,8 +94,8 @@ def result_function(title, data_train_Y, y_pred1, no_classes, data_test_Y=None, 
         print(metrics.classification_report(data_test_Y, y_pred2, target_names=target_names))
 
 
+@decorator_on_cpu_during_fct
 def nn_plot_prediction_vs_true(net, plot_xx, plot_yy=None, plot_yy_noisy=None):
-    # todo add a title to the graph
     aplot = APlot(how=(1, 1))
     plot_yy_pred = net.nn_predict_ans2cpu(plot_xx)
 
@@ -123,6 +124,7 @@ def nn_plot_prediction_vs_true(net, plot_xx, plot_yy=None, plot_yy_noisy=None):
     return
 
 
+@decorator_on_cpu_during_fct
 def nn_print_errors(net, train_X, train_Y, testing_X, testing_Y):
     # Compute the relative validation error
     diff_train = (net.nn_predict_ans2cpu(train_X) - train_Y)

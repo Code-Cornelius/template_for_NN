@@ -1,12 +1,8 @@
-# todo requirement
-#  make the workers work, in particular check if they work in Linux.
-#  and save the model and use it to check the accuracy total.
 import sklearn
+from priv_lib_plot import APlot
 
 from src.nn_classes.optim_wrapper import Optim_wrapper
 from src.nn_classes.metric.metric import Metric
-
-import test_nn_kfold_train
 
 import torch
 from torch import nn
@@ -14,11 +10,14 @@ import numpy as np
 import torch.nn.functional as F
 import pandas as pd
 
+from plot.nn_plot_history import nn_plot_train_loss_acc
+from plot.nn_plots import nn_plot_prediction_vs_true, nn_print_errors
 from src.nn_classes.architecture.fully_connected import factory_parametrised_FC_NN
 from src.train.nntrainparameters import NNTrainParameters
-from src.nn_classes.architecture.nn_fcts import pytorch_device_setting, set_seeds
+from src.util_training import set_seeds, pytorch_device_setting
 from src.nn_classes.training_stopper.Early_stopper_training import Early_stopper_training
 from src.nn_classes.training_stopper.Early_stopper_validation import Early_stopper_validation
+from train.nn_kfold_training import nn_kfold_train
 
 # set seed for pytorch.
 set_seeds(42)
@@ -30,10 +29,11 @@ n_samples = 10000
 sigma = 0.01
 device = pytorch_device_setting('not_cpu_please')
 SILENT = False
-early_stop_train = Early_stopper_training(patience=20, silent=SILENT, delta=-0.05)
-early_stop_valid = Early_stopper_validation(patience=20, silent=SILENT, delta=-0.05)
+early_stop_train = Early_stopper_training(patience=200, silent=SILENT, delta=-0.05)
+early_stop_valid = Early_stopper_validation(patience=200, silent=SILENT, delta=-0.05)
 early_stoppers_train = (early_stop_train,)
 early_stoppers_valid = (early_stop_valid,)
+early_stoppers = (early_stop_train, early_stop_valid)
 
 accuracy_wrapper = lambda net, xx, yy: sklearn.metrics.accuracy_score(net.nn_predict_ans2cpu(xx),
                                                                       yy.reshape(-1, 1).to('cpu'),
@@ -74,8 +74,8 @@ if __name__ == '__main__':
     epochs = 1000
     batch_size = 1000
     optimiser = torch.optim.SGD
-    criterion = nn.CrossEntropyLoss(reduction = 'sum')
-    dict_optimiser = {"lr": 0.0005, "weight_decay": 0.00001}
+    criterion = nn.CrossEntropyLoss(reduction='sum')
+    dict_optimiser = {"lr": 0.0000005, "weight_decay": 0.00001}
     optim_wrapper = Optim_wrapper(optimiser, dict_optimiser)
 
     param_training = NNTrainParameters(batch_size=batch_size, epochs=epochs, device=device,
@@ -88,9 +88,13 @@ if __name__ == '__main__':
                                                        param_dropout=dropout,
                                                        param_predict_fct=lambda out: torch.max(out, 1)[1])
 
-    test_nn_kfold_train.test(train_X, train_Y, Class_Parametrized_NN, param_training,
-                             test_X, test_Y, early_stoppers_train, early_stoppers_valid,
-                             SILENT,
-                             compute_accuracy=True, plot_xx=None, plot_yy=None, plot_yy_noisy=None)
+    (net, estimator_history) = nn_kfold_train(train_X, train_Y, Class_Parametrized_NN,
+                                              parameters_training=param_training,
+                                              early_stoppers=early_stoppers,
+                                              nb_split=1, shuffle_kfold=True,
+                                              percent_validation_for_1_fold=10,
+                                              silent=False)
 
-    # net.save_net(path = '../NETS_MODELS/the_path.pth')
+    nn_plot_train_loss_acc(estimator_history, flag_valid=True, log_axis_for_loss=True,
+                           key_for_second_axis_plot="accuracy", log_axis_for_second_axis=False)
+    APlot.show_plot()
