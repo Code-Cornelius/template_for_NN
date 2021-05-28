@@ -53,145 +53,28 @@ def read_list_of_ints_from_path(path):
     return ans
 
 
-class Windowcreator(object):
-    def __init__(self, input_dim, output_dim,
-                 lookback_window,
-                 lookforward_window=0, lag_last_pred_fut=1,
-                 type_window="Moving",
-                 batch_first=True, silent=False):
-        """
-        Data pred is the same as input.
-        References:
-            https://www.tensorflow.org/tutorials/structured_data/time_series#2_split
-        todo not sure how increasing window work...
-        """
+def add_column_cyclical_features(df, col_name_time, period, start_num=0):
+    """
+    Semantics:
+        In order to incorporate cyclicity in input data, one can add the sin/cos of the time data (e.g.).
 
-        assert type_window == "Increasing" or type_window == "Moving", "Only two types supported."
-        assert not (type_window == "Increasing" and lookback_window != 0), "Increasing so window ==0."
-        assert not (type_window == "Moving" and lookback_window == 0), "Moving so window > 0."
+    Args:
+        df: pandas dataframe.
+        col_name_time (str):  name of the column where the cyclicity is computed from.
+        period: period in terms of values from the col_name_time.
+        start_num (float): starting value of the cyclicity. Default = 0.
 
-        # Window parameters.
-        self.input_dim = input_dim
-        self.output_dim = output_dim
-        self.lookback_window = lookback_window
-        self.lookforward_window = lookforward_window
-        self.type_window = type_window
-        self.lag_last_pred_fut = lag_last_pred_fut
+    Pre-condition:
+        df's col_name_time exists.
 
-        self.batch_first = batch_first
+    Post-condition:
+        df's col_name_time is removed.
+        df's  'sin_{col_name_time}' and 'cos_{col_name_time}' are created.
 
-        self.silent = silent
-
-        # Parameters of the slices
-        self.complete_window_data = self.lookback_window + self.lag_last_pred_fut
-
-        self.input_slice = slice(0, self.lookback_window)
-        self.input_indices = np.arange(self.complete_window_data)[self.input_slice]
-
-        self.index_start_prediction = self.complete_window_data - self.lookforward_window
-        self.slices_prediction = slice(self.index_start_prediction, None)  # None means to the end
-        self.indices_prediction = np.arange(self.complete_window_data)[self.slices_prediction]
-
-    def __repr__(self):
-        return '\n'.join([
-            f'Total window size: {self.complete_window_data}',
-            f'X indices: {self.input_indices}',
-            f'Y indices: {self.indices_prediction}'])
-
-    def create_input_sequences(self, input_data, output_data):
-        """
-
-        Args:
-            input_data (pytorch tensor): should be a N*M matrix, column is a time series.
-            output_data (pytorch tensor): should be a N'*M' matrix, column is a time series.
-
-        Returns:
-            dataset, first axis the batch size, second is the sequence, third is the dim.
-        References :
-            from https://stackabuse.com/time-series-prediction-using-lstm-with-pytorch-in-python/?fbclid=IwAR17NoARUlBsBLzanKmyuvmCXfU6Rxc69T9BZpowXfSUSYQNEFzl2pfDhSo
-
-        """
-        L = len(input_data)  # WIP make sure it does what one expects.
-        nb_of_data = L - self.complete_window_data + 1  # nb of data - the window, but there is always one data so +1.
-
-        assert self.lookback_window < L, \
-            f"lookback window is bigger than data. Window size : {self.lookback_window}, Data length : {L}."
-        assert self.lookforward_window < L, \
-            f"lookforward window is bigger than data. Window size : {self.lookback_window}, Data length : {L}."
-        assert len(input_data) == len(output_data)
-
-        if self.batch_first:  # specifies how to take the input
-            data_X = torch.zeros(nb_of_data, self.lookback_window, self.input_dim)
-            data_Y = torch.zeros(nb_of_data, self.lookforward_window, self.output_dim)
-
-            for i in tqdm(range(nb_of_data), disable=self.silent):
-                data_X[i, :, :] = input_data[i:i + self.lookback_window, :].view(1, self.lookback_window,
-                                                                                 self.input_dim)
-                slice_out = slice(i + self.lookback_window, i + self.lookback_window + self.lookforward_window)
-                data_Y[i, :, :] = output_data[slice_out, :].view(1, self.lookforward_window, self.output_dim)
-            return data_X, data_Y
-
-        else:
-            data_X = torch.zeros(self.lookback_window, nb_of_data, self.input_dim)
-            data_Y = torch.zeros(nb_of_data, self.input_dim, self.output_dim)
-
-            for i in tqdm(range(nb_of_data), disable=self.silent):
-                data_X[:, i, :] = input_data[i:i + self.lookback_window, :].view(self.lookback_window, self.input_dim)
-                data_Y[:, i, :] = output_data[i + self.lookback_window: i + self.lookback_window +
-                                                                        self.lookforward_window, :]
-            return data_X, data_Y
-
-    def prediction_over_training_data(self, net, data_start, increase_data_for_pred):
-        # a container has the lookback window (at least) of data.
-        # Then iteratively, it predicts the future.
-        # data_start should be not prepared dataset
-        # format L * dim_input
-
-        # we predict by each window of prediction, which is what seems to have the more sense.
-        assert self.lookback_window <= len(data_start), "For prediction, needs at least a window of data for prediction"
-
-        nb_of_cycle_pred = (len(data_start) - self.lookback_window) // self.lookforward_window
-        prediction = torch.zeros(1, self.lookforward_window * nb_of_cycle_pred, self.input_dim)
-        for i in range(nb_of_cycle_pred):
-            indices_input = slice(i * self.lookforward_window, i * self.lookforward_window + self.lookback_window)
-            #  : we start at the lookforward_window * i and need lookback_window elements.
-            indices_pred = slice(i * self.lookforward_window, (i + 1) * self.lookforward_window)
-            new_values = net.nn_predict(data_start[indices_input, :].view(1, -1, self.input_dim))
-            # the view for the batch size.
-
-            new_values = self.adding_input_to_output(increase_data_for_pred, new_values)
-
-            prediction[0, indices_pred, :] = new_values
-        return prediction
-
-    def adding_input_to_output(self, increase_data_for_pred, new_values):
-        if increase_data_for_pred is not None:
-            new_values = increase_data_for_pred(new_values.to("cpu").numpy())
-            # cpu to make sure, numpy to avoid implicit conversion.
-        return new_values
-
-    def prediction_recurrent(self, net, data_start, nb_of_cycle_pred, increase_data_for_pred=None):
-        # TODO add device parameter for the cat at the end.
-
-        # a container has the lookback window (at least) of data.
-        # Then iteratively, it predicts the future.
-        # data_start should be not prepared dataset
-        # format L * dim_input
-        # increase data in the case the output is not exactly the input for next prediction!
-        assert self.lookback_window == len(data_start), "For prediction, needs at least a window of data for prediction"
-
-        input_prediction = data_start.clone()
-        prediction = torch.zeros(1, self.lookforward_window * nb_of_cycle_pred, self.output_dim)
-
-        for i in range(nb_of_cycle_pred):
-            indices_in = slice(i * self.lookforward_window, i * self.lookforward_window + self.lookback_window)
-            #  : we start at the lookforward_window * i and need lookback_window elements.
-            indices_pred = slice(i * self.lookforward_window, (i + 1) * self.lookforward_window)
-            new_values = net.nn_predict(input_prediction[indices_in, :].view(1, -1, self.input_dim))
-            prediction[0, indices_pred, :] = new_values
-
-            new_values = self.adding_input_to_output(increase_data_for_pred, new_values)
-
-            input_prediction = torch.cat((input_prediction, new_values.view(-1, self.input_dim)))
-            # the view for the batch size.
-        return input_prediction[self.lookback_window:].view(1, -1, self.input_dim)
+    Returns:
+        The new dataframe that needs to be reassigned.
+    """
+    values = 2 * np.pi * (df[col_name_time] - start_num) / period
+    kwargs = {f'sin_{col_name_time}': lambda x: np.sin(values),
+              f'cos_{col_name_time}': lambda x: np.cos(values)}
+    return df.assign(**kwargs).drop(columns=[col_name_time])
