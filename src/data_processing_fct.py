@@ -159,12 +159,20 @@ class Windowcreator(object):
             new_values = net.nn_predict(data_start[indices_input, :].view(1, -1, self.input_dim))
             # the view for the batch size.
 
-            if increase_data_for_pred is not None:
-                new_values = increase_data_for_pred(new_values)
+            new_values = self.adding_input_to_output(increase_data_for_pred, new_values)
+
             prediction[0, indices_pred, :] = new_values
         return prediction
 
+    def adding_input_to_output(self, increase_data_for_pred, new_values):
+        if increase_data_for_pred is not None:
+            new_values = increase_data_for_pred(new_values.to("cpu").numpy())
+            # cpu to make sure, numpy to avoid implicit conversion.
+        return new_values
+
     def prediction_recurrent(self, net, data_start, nb_of_cycle_pred, increase_data_for_pred=None):
+        # TODO add device parameter for the cat at the end.
+
         # a container has the lookback window (at least) of data.
         # Then iteratively, it predicts the future.
         # data_start should be not prepared dataset
@@ -181,8 +189,9 @@ class Windowcreator(object):
             indices_pred = slice(i * self.lookforward_window, (i + 1) * self.lookforward_window)
             new_values = net.nn_predict(input_prediction[indices_in, :].view(1, -1, self.input_dim))
             prediction[0, indices_pred, :] = new_values
-            if increase_data_for_pred is not None:
-                new_values = increase_data_for_pred(new_values)
+
+            new_values = self.adding_input_to_output(increase_data_for_pred, new_values)
+
             input_prediction = torch.cat((input_prediction, new_values.view(-1, self.input_dim)))
             # the view for the batch size.
         return input_prediction[self.lookback_window:].view(1, -1, self.input_dim)
