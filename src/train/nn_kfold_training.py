@@ -66,7 +66,7 @@ def nn_kfold_train(data_training_X, data_training_Y,
 
 def _initialise_estimator(compute_validation, parameters_training, train_param_dict):
     metric_names = [metric.name for metric in parameters_training.metrics]
-    estimator_history = Estim_history(metric_names, validation=compute_validation,
+    estimator_history = Estim_history(metric_names=metric_names, validation=compute_validation,
                                       training_parameters=train_param_dict)
     return estimator_history
 
