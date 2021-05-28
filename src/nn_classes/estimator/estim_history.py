@@ -1,15 +1,13 @@
 import pandas as pd
 from priv_lib_estimator import Estimator
 from priv_lib_util.tools.src.function_json import unzip_json, zip_json
-from priv_lib_util.tools.src.function_writer import list_of_dicts_to_json
-
 
 import json
 
 class Estim_history(Estimator):
     BASE_COLUMN_NAMES = ['fold', 'epoch']
 
-    def __init__(self, df=None, metric_names=None, validation=True):
+    def __init__(self, df=None, metric_names=None, validation=True, training_parameters=None):
         if df is not None:
             # initialise with dataframe from csv
             super().__init__(df)
@@ -23,7 +21,7 @@ class Estim_history(Estimator):
             self.best_epoch = []
 
             # TODO: collect training parameters
-            self.training_parameters = {}
+            self.training_parameters = training_parameters
 
     @staticmethod
     def _generate_column_name(base_name, validation=False):
@@ -138,14 +136,33 @@ class Estim_history(Estimator):
     def number_of_epochs(self):
         return self._df['epoch'].max() + 1
 
-    def to_json(self, path):
-        self._df.validation = self.validation
+    def take_best_fold(self, fold):
+        """
+            Crop the dataframe to only store the best fold
+        Args:
+            fold: the fold to save
 
+        Returns:
+            Void
+        """
+        self.best_epoch = [self.best_epoch[fold]]
+        self._df = self._df[self._fold_mask(fold)]
+
+    def to_json(self, path):
+        """
+            Save an estimator to json
+        Args:
+            path: The path where to store the estimator
+
+        Returns:
+            Void
+        """
         json_df = self._df.to_json(orient='split')
         parsed = json.loads(json_df)
         parsed['attrs'] = {
             'validation': self.validation,
             'best_epoch': self.best_epoch,
+            'train_param': self.training_parameters
         }
 
         zipped = zip_json(parsed)
@@ -154,8 +171,15 @@ class Estim_history(Estimator):
             json.dump(zipped, file)
 
     @classmethod
-    def from_file(cls, path):
+    def from_json(cls, path):
+        """
+            Create estimator from previously stored json file
+        Args:
+            path: The source path for the json
 
+        Returns:
+            Void
+        """
         with open(path, 'r') as file:
             df_info = json.load(file)
             unzipped = unzip_json(df_info)
@@ -170,5 +194,6 @@ class Estim_history(Estimator):
 
         estimator.validation = attrs['validation']
         estimator.best_epoch = attrs['best_epoch']
+        estimator.training_parameters = attrs['train_param']
         return estimator
 

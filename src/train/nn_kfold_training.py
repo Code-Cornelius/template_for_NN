@@ -12,8 +12,8 @@ def nn_kfold_train(data_training_X, data_training_Y,
                    Model_NN, parameters_training,
                    early_stoppers=(Early_stopper_vanilla(),),
                    nb_split=5, shuffle_kfold=True,
-                   percent_validation_for_1_fold=20, only_best_history=False,
-                   silent=False):
+                   percent_validation_for_1_fold=20, only_best_history=False, silent=False,
+                   train_param_dict={}.copy()):
     """
     # create main cross validation method
     # it returns the score during training,
@@ -21,6 +21,7 @@ def nn_kfold_train(data_training_X, data_training_Y,
 
 
     Args:
+        train_param_dict: a dictionary with all the training parameters
         data_training_X: tensor
         data_training_Y: tensor
         Model_NN: parametrised architecture,
@@ -56,12 +57,18 @@ def nn_kfold_train(data_training_X, data_training_Y,
                                                                     nb_split,
                                                                     shuffle_kfold)
     # initialise estimator
-    metric_names = [metric.name for metric in parameters_training.metrics]
-    estimator_history = Estim_history(metric_names=metric_names, validation=compute_validation)
+    estimator_history = _initialise_estimator(compute_validation, parameters_training, train_param_dict)
 
     return _nn_multiplefold_train(data_training_X, data_training_Y, early_stoppers, Model_NN, nb_split,
                                   parameters_training, indices, silent, estimator_history,
                                   only_best_history)
+
+
+def _initialise_estimator(compute_validation, parameters_training, train_param_dict):
+    metric_names = [metric.name for metric in parameters_training.metrics]
+    estimator_history = Estim_history(metric_names, validation=compute_validation,
+                                      training_parameters=train_param_dict)
+    return estimator_history
 
 
 def create_history_kfold(compute_validation, early_stoppers, nb_split, parameters_training):
@@ -116,11 +123,9 @@ def _nn_multiplefold_train(data_training_X, data_training_Y, early_stoppers, Mod
     if not silent:
         print("Finished the K-Fold Training, the best NN is the number {}".format(number_kfold_best_net + 1))
 
-    # if only_best_history:
-    #     for key, value in history_kfold.items():
-    #         for key2, value2 in value.items():
-    #             value[key2] = value2[number_kfold_best_net, :].reshape(1, -1)  # slicing for only best history.
-    #     best_epoch_of_NN = [best_epoch_of_NN[number_kfold_best_net]]
+    if only_best_history:
+        estimator_history.take_best_fold(number_kfold_best_net)
+
 
     return best_net, estimator_history
 

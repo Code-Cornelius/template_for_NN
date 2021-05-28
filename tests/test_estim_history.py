@@ -80,6 +80,6 @@ class Test_estim_history(TestCase):
 
         estimator.to_json(path)
 
-        new_estim = Estim_history.from_file(path)
+        new_estim = Estim_history.from_json(path)
 
         print(new_estim)
