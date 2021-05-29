@@ -29,52 +29,40 @@ class Estim_history(Estimator):
     #  #############################################################################
     #  JSON constructor and saver.
 
-    def to_json(self, path, compress=True):
+    def to_json(self, path, compress=True, *kwargs):
         # todo What about compression?
         """
             Save an estimator to json as a compressed file.
         Args:
+            compress: whether or not compression is applied
             path: The path where to store the estimator
 
-        Returns:
+        Returns:`
             Void
         """
-        json_df = self._df.to_json(orient='split')
-        parsed = json.loads(json_df)
-        parsed['attrs'] = {
+        attrs = {
             'validation': self.validation,
             'best_epoch': self.best_epoch,
             'hyper_params': self.hyper_params,
             'best_fold': self.best_fold
         }
-        if compress:
-            parsed = zip_json(parsed)
 
-        with open(path, 'w') as file:
-            json.dump(parsed, file)
+        super().to_json(path, compress, attrs)
 
     @classmethod
     def from_json(cls, path, compressed=True):
         """
             Create estimator from previously stored json file
         Args:
+            compressed: whether or not compression is applied
             path: The source path for the json
 
         Returns:
             Void
         """
-        with open(path, 'r') as file:
-            df_info = json.load(file)
-            if compressed:
-                df_info = unzip_json(df_info)
-            attrs = df_info['attrs']
-            del df_info['attrs']
 
-        with open(path, 'w') as file:
-            json.dump(df_info, file)
-
-        dataframe = pd.read_json(path, orient='split')
-        estimator = cls(dataframe)
+        attrs = super().get_estim_attrs_from_json(path, compressed)
+        estimator = super().from_json(path)
 
         estimator.validation = attrs['validation']
         estimator.best_epoch = attrs['best_epoch']
@@ -120,17 +108,18 @@ class Estim_history(Estimator):
 
         return df_column_names
 
-    def append_history(self, history, best_epoch, fold_number):
+    def append_history(self, history, fold_best_epoch, fold_number):
         """
             Append information from history to the estimator
         Args:
+            fold_best_epoch:
             history: history of the training
             fold_number: the fold number the history corresponds to
 
         Returns:
             Void
         """
-        self.best_epoch.append(best_epoch)
+        self.best_epoch.append(fold_best_epoch)
         adapted_history = self._translate_history_to_dataframe(history, fold_number)
         adapted_history = pd.DataFrame(adapted_history)
         self.append(adapted_history)
@@ -191,7 +180,7 @@ class Estim_history(Estimator):
         Returns:
             Void
         """
-        self.best_epoch = [self.best_epoch]
+        self.best_epoch = [self.best_epoch[self.best_fold]]
         self.df = self.df.loc[self._fold_mask(self.best_fold)]
 
     # section ######################################################################
