@@ -1,5 +1,6 @@
 import json
 
+import numpy as np
 import pandas as pd
 import numpy as np
 from priv_lib_error import Error_type_setter
@@ -10,28 +11,22 @@ from priv_lib_util.tools.src.function_json import unzip_json, zip_json
 class Estim_history(Estimator):
     NAMES_COLUMNS = {'fold', 'epoch'}
 
-    def __init__(self, df=None, metric_names=None, validation=True, hyper_params=None):
-        if df is not None:
-            # initialise with dataframe from csv
-            super().__init__(df)
+    def __init__(self, metric_names=None, validation=True, hyper_params=None):
+        # not possible anymore to init with a df.
+        self.metric_names = metric_names
+        self.validation = validation
+        self.best_epoch = []
+        self.hyper_params = hyper_params
+        self.best_fold = -1
 
-        else:
-            df_column_names = self._generate_all_column_names()
-            data_frame = pd.DataFrame(columns=df_column_names)
-            super().__init__(data_frame)
-
-            self.validation = validation
-            self.best_epoch = []
-
-            self.hyper_params = hyper_params
-            self.best_fold = 0
+        df_column_names = self._generate_all_column_names()
+        super().__init__(pd.DataFrame(columns=df_column_names))
 
     # section ######################################################################
     #  #############################################################################
     #  JSON constructor and saver.
 
     def to_json(self, path, compress=True, *kwargs):
-        # todo What about compression?
         """
             Save an estimator to json as a compressed file.
         Args:
@@ -61,9 +56,8 @@ class Estim_history(Estimator):
         Returns:
             Void
         """
-
-        attrs = super().get_estim_attrs_from_json(path, compressed)
         estimator = super().from_json(path)
+        attrs = super().from_json_attributes(path, compressed)
 
         estimator.validation = attrs['validation']
         estimator.best_epoch = attrs['best_epoch']

@@ -12,9 +12,9 @@ def nn_plot_train_loss_acc(estimator_history, key_for_second_axis_plot=None, fla
     # TODO make sure that the labels are in different places.
     # if there is another key, we create a plot with two y-axis but only one x-axis.
     if key_for_second_axis_plot is not None:
-        aplot = APlot(how=(1, 1), sharex=True)
+        aplot = APlot(how=(1, 1))
     else:
-        aplot = APlot(how=(1, 1), sharex=False)
+        aplot = APlot(how=(1, 1))
 
     xx = range(0, estimator_history.nb_epochs * step_history, step_history)
     nb_trials = estimator_history.nb_folds
