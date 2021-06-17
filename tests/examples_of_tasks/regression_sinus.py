@@ -1,8 +1,6 @@
 from src.nn_classes.optim_wrapper import Optim_wrapper
 from priv_lib_plot import APlot
 
-import test_nn_kfold_train
-
 import torch
 from torch import nn
 import numpy as np
@@ -11,11 +9,11 @@ import pandas as pd
 from plot.nn_plot_history import nn_plot_train_loss_acc
 from plot.nn_plots import nn_plot_prediction_vs_true, nn_print_errors
 from src.nn_classes.architecture.fully_connected import factory_parametrised_FC_NN
-from src.train.nntrainparameters import NNTrainParameters
+from src.nn_train.nntrainparameters import NNTrainParameters
 from src.util_training import set_seeds, pytorch_device_setting
 from src.nn_classes.training_stopper.Early_stopper_training import Early_stopper_training
 from src.nn_classes.training_stopper.Early_stopper_validation import Early_stopper_validation
-from train.nn_kfold_training import nn_kfold_train
+from nn_train.kfold_training import nn_kfold_train
 from src.nn_classes.metric.metric import Metric
 
 # set seed for pytorch.
@@ -85,12 +83,9 @@ if __name__ == '__main__':
                                                  param_activation_functions=activation_functions, param_dropout=dropout,
                                                  param_predict_fct=None)
 
-    (net, estimator_history) = nn_kfold_train(train_X, train_Y, parametrized_NN,
-                                              parameters_training=param_training,
-                                              early_stoppers=early_stoppers,
-                                              nb_split=1, shuffle_kfold=True,
-                                              percent_validation_for_1_fold=10,
-                                              silent=False)
+    (net, estimator_history) = nn_kfold_train(train_X, train_Y, parametrized_NN, params_train=param_training,
+                                              early_stoppers=early_stoppers, nb_split=1, shuffle_kfold=True,
+                                              percent_val_for_1_fold=10, silent=False)
 
     nn_plot_train_loss_acc(estimator_history, flag_valid=True, log_axis_for_loss=True,
                            key_for_second_axis_plot='L4', log_axis_for_second_axis=True)

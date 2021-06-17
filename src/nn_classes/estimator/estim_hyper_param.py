@@ -1,6 +1,7 @@
+import os
+
 import pandas as pd
 from priv_lib_estimator import Estimator
-import os
 
 from nn_classes.estimator.estim_history import Estim_history
 
@@ -41,6 +42,4 @@ class Estim_hyper_param(Estimator):
         estimator_dict = estimator.hyper_params.copy()
         estimator_dict[metric_name] = estimator.get_best_value_for(metric_name)
 
-        return  estimator_dict
-
-
+        return estimator_dict

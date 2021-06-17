@@ -1,15 +1,16 @@
 # global libraries
 import math
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
 import torch
 from IPython.core.display import display
-from sklearn import metrics
-
 # my libraries
 from priv_lib_plot import APlot
+from sklearn import metrics
+
 from util_training import decorator_on_cpu_during_fct
 
 sns.set()

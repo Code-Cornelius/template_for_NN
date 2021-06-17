@@ -1,25 +1,25 @@
 # Ideas for continuing the project:
 
 # Niels
-* Estimator, look at it and see if it is ok.
 
+to check correctness : 
 
+* adapt the functions for the Estim_history
+    * look into the saving data method. (it lies in data_processing). I left it half undone (as I was using it) because
+      with estimator it will be much easier. The important thing is saving the information for each estimator in 2
+      places:
+        * saving the DF in a classical way (call super). you did it differently, can you change estimator as well please
+          ? use super?
+          
 # Bianca
-* adapt the functions for the Estim_history  
-    * look into the saving data method. (it lies in data_processing).
-      I left it half undone (as I was using it) because with estimator it will be much easier.
-      The important thing is saving the information for each estimator in 2 places: 
-            * saving the DF in a classical way (call super).
-      you did it differently, can you change estimator as well please ? use super?
+
       
-* think about not predicting multiple times in train
   
 
 * can you check what happens when batch size is bigger than actual size of data? 
   I think it is fine, that the metrics are not multiplied by something too big, 
   neither are empty rows created but well...
 
-*  GRU LSTM refactor ?
 
 * Estim_hyper_param
 * plot estimator. But for that we need to look at estimator and plot estimator. We can do that together in June after the exam.

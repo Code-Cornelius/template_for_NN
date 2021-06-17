@@ -1,6 +1,6 @@
 import torch
-from torch import nn
 import torch.nn.functional as f
+from torch import nn
 from torch.autograd import Variable
 
 # Define some constants

@@ -1,10 +1,6 @@
+import numpy as np
 import torch
 from tqdm import tqdm
-import os
-import numpy as np
-from sklearn.preprocessing import MinMaxScaler, StandardScaler
-
-from priv_lib_util.tools.src.function_writer import list_of_dicts_to_json
 
 
 class Windowcreator(object):
@@ -186,6 +182,7 @@ class Windowcreator(object):
             # the view for the batch size.
         return input_prediction[self.lookback_window:].view(1, -1, self.input_dim)
 
+
 """
 example of increase_data_for_pred:
 
@@ -203,5 +200,3 @@ class Adaptor_output(object):
         res = np.concatenate((arr.reshape(-1, 2), cos_val, sin_val), axis=1).reshape(1, -1, 4)
         return torch.tensor(res, dtype=torch.float32)
 """
-
-

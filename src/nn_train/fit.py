@@ -1,10 +1,10 @@
 from matplotlib import pyplot as plt
+from priv_lib_util.tools import function_iterable
 from tqdm import tqdm
 
-from priv_lib_util.tools import function_iterable
-from src.util_training import decorator_train_disable_no_grad
 from src.nn_classes.fast_tensor_dataloader import FastTensorDataLoader
 from src.nn_classes.training_stopper.Early_stopper_vanilla import Early_stopper_vanilla
+from src.util_training import decorator_train_disable_no_grad
 
 PLOT_WHILE_TRAIN = False
 if PLOT_WHILE_TRAIN:
@@ -25,7 +25,7 @@ def nn_fit(net, X_train_on_device, Y_train_on_device,
            params_training, history,
            early_stoppers=(Early_stopper_vanilla(),),
            X_val_on_device=None, Y_val_on_device=None,
-           silent=False):
+           *, silent=False):
     """
     Args:
         net: model
@@ -116,7 +116,8 @@ def _do_early_stop(net, early_stoppers, history, epoch, silent):
 def prepare_data_for_fit(X_train_on_device, X_val_on_device, Y_train_on_device, Y_val_on_device, net, params_training):
     list_params_validat = [X_val_on_device, Y_val_on_device]
 
-    is_validat_included = not function_iterable.are_at_least_one_None(list_params_validat)  #: equivalent to are all not None ?
+    is_validat_included = not function_iterable.are_at_least_one_None(
+        list_params_validat)  #: equivalent to are all not None ?
     # raise if there is a logic error.
     if is_validat_included:  #: if we need validation
         total_number_data = Y_train_on_device.shape[0], Y_val_on_device.shape[0]  # : constants for normalisation
@@ -141,6 +142,9 @@ def prepare_data_for_fit(X_train_on_device, X_val_on_device, Y_train_on_device, 
 
 def _update_history(net, metrics, criterion, epoch, is_valid_included, total_number_data, train_loader_on_device,
                     validat_loader_on_device, history):
+    # update the history by adding the computed metrics.
+    # one cannot compute the prediction only once. Because of encapsulation,
+    # it is not obvious whether the data needs to be on device or cpu.
     ######################
     # Training Metrics   #
     ######################
@@ -158,7 +162,8 @@ def _update_history(net, metrics, criterion, epoch, is_valid_included, total_num
         # Validation Metrics  #
         #######################
         for metric in metrics:
-            _update_history_for_metric(metric, net, epoch, total_number_data, history, validat_loader_on_device, 'validation')
+            _update_history_for_metric(metric, net, epoch, total_number_data, history, validat_loader_on_device,
+                                       'validation')
 
     return
 

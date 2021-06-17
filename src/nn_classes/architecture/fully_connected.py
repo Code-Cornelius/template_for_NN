@@ -1,8 +1,6 @@
 from abc import abstractmethod, ABCMeta
-from copy import deepcopy
-import torch
-import torch.nn as nn
 
+import torch.nn as nn
 # my lib
 from priv_lib_error import Error_type_setter
 from priv_lib_util.tools import function_iterable

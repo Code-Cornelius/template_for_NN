@@ -32,11 +32,12 @@ def decorator_on_cpu_during_fct(func):
     def wrapper_decorator_on_cpu_during_fct(*, net, device, **kwargs):
         # key words only.
         net.to(torch.device('cpu'))
-        ans = func( net = net, **kwargs)
+        ans = func(net=net, **kwargs)
         net.to(device)
         return ans
 
     return wrapper_decorator_on_cpu_during_fct
+
 
 def pytorch_device_setting(type=''):
     """

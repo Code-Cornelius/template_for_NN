@@ -1,4 +1,5 @@
 from abc import ABCMeta, abstractmethod
+
 import torch
 import torch.nn as nn
 from priv_lib_error import Error_type_setter
@@ -203,7 +204,7 @@ def factory_parametrised_LSTM(input_dim=1, output_dim=1,
             if isinstance(new_dropout, float) and 0 <= new_dropout < 1:
                 # : dropout should be a percent between 0 and 1.
                 self._dropout = new_dropout
-            else :
+            else:
                 if isinstance(new_dropout, int) and not (new_dropout):  # dropout == 0
                     self._dropout = float(new_dropout)
                 else:

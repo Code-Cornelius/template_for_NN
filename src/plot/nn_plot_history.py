@@ -6,7 +6,7 @@ from priv_lib_plot import APlot
 
 def nn_plot_train_loss_acc(estimator_history, key_for_second_axis_plot=None, flag_valid=True,
                            log_axis_for_loss=True,
-                           log_axis_for_second_axis=False, title='', step_history = 1):
+                           log_axis_for_second_axis=False, title='', step_history=1):
     assert step_history > 0, "step_history must be strictly positive."
 
     # TODO make sure that the labels are in different places.

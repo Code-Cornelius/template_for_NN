@@ -1,12 +1,10 @@
 # function applying DNNOPT
 
+import numpy as np
 # from a surrogate, find the minimiser to some loss function.
 import pandas as pd
-import torch
 from torch import optim
-import numpy as np
 from tqdm import tqdm
-
 
 
 def DNNopt(optimal_values, loss_function, list_lr, nb_new_pts_to_add):

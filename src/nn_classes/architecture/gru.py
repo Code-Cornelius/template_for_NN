@@ -1,4 +1,5 @@
 from abc import ABCMeta, abstractmethod
+
 import torch
 import torch.nn as nn
 from priv_lib_error import Error_type_setter
@@ -15,10 +16,10 @@ class GRU(Savable_net, metaclass=ABCMeta):
         self.nb_directions = int(self.bidirectional) + 1
 
         self.stacked_GRU = nn.GRU(self.input_dim, self.hidden_size,
-                                    num_layers=self.num_layers,
-                                    dropout=self.dropout,
-                                    bidirectional=self.bidirectional,
-                                    batch_first=True)
+                                  num_layers=self.num_layers,
+                                  dropout=self.dropout,
+                                  bidirectional=self.bidirectional,
+                                  batch_first=True)
 
         self.linear_layer = nn.Linear(self.hidden_size * self.nb_directions * self.nb_output_consider,
                                       self.hidden_FC)

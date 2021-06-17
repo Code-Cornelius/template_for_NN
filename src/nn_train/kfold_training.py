@@ -1,19 +1,19 @@
 import time
+
 import numpy as np
 import sklearn.model_selection
 import torch
 
 from nn_classes.estimator.estim_history import Estim_history
 from src.nn_classes.training_stopper.Early_stopper_vanilla import Early_stopper_vanilla
-from src.train.nn_train import nn_train
+from src.nn_train.train import nn_train
 
 
-def nn_kfold_train(data_training_X, data_training_Y,
-                   Model_NN, parameters_training,
+def nn_kfold_train(data_train_X, data_train_Y, Model_NN, params_train,
                    early_stoppers=(Early_stopper_vanilla(),),
-                   nb_split=5, shuffle_kfold=True,
-                   percent_validation_for_1_fold=20, only_best_history=False, silent=False,
-                   hyper_param={}.copy()):
+                   nb_split=5, shuffle_kfold=True, percent_val_for_1_fold=20,
+                   hyper_param={}.copy(),
+                   only_best_history=False, silent=False):
     """
     # create main cross validation method
     # it returns the score during training,
@@ -21,20 +21,20 @@ def nn_kfold_train(data_training_X, data_training_Y,
 
 
     Args:
-        hyper_param: a dictionary with all the training parameters
-        data_training_X: tensor
-        data_training_Y: tensor
+        data_train_X: tensor
+        data_train_Y: tensor
         Model_NN: parametrised architecture,
             type the Class with architecture we want to KFold over.
             Requirements: call constructor over it to create a net.
-        parameters_training: NNTrainParameters. contains the parameters used for training
+        params_train: NNTrainParameters. contains the parameters used for training
         early_stoppers: iterable of Early_stopper. Used for deciding if the training should stop early.
             Preferably immutable to insure no changes.
         nb_split:
         shuffle_kfold:
-        percent_validation_for_1_fold:
-        only_best_history:
-        silent:
+        percent_val_for_1_fold:
+        hyper_param: a dictionary with all the training parameters
+        only_best_history (bool):
+        silent (bool): verbose.
 
     Returns: net, history_kfold, best_epoch_for_model.
 
@@ -51,16 +51,16 @@ def nn_kfold_train(data_training_X, data_training_Y,
         early_stoppers not changed.
     """
     # place where logs of trainings with respect to the metrics are stored.
-    indices, compute_validation = _nn_kfold_indices_creation_random(data_training_X,
-                                                                    data_training_Y,
-                                                                    percent_validation_for_1_fold,
+    indices, compute_validation = _nn_kfold_indices_creation_random(data_train_X,
+                                                                    data_train_Y,
+                                                                    percent_val_for_1_fold,
                                                                     nb_split,
                                                                     shuffle_kfold)
     # initialise estimator
-    estimator_history = _initialise_estimator(compute_validation, parameters_training, hyper_param)
+    estimator_history = _initialise_estimator(compute_validation, params_train, hyper_param)
 
-    return _nn_multiplefold_train(data_training_X, data_training_Y, early_stoppers, Model_NN, nb_split,
-                                  parameters_training, indices, silent, estimator_history,
+    return _nn_multiplefold_train(data_train_X, data_train_Y, early_stoppers, Model_NN, nb_split,
+                                  params_train, indices, silent, estimator_history,
                                   only_best_history)
 
 
@@ -169,13 +169,11 @@ def train_kfold_a_fold_after_split(data_training_X, data_training_Y, index_train
     for early_stopper in early_stoppers:
         early_stopper.reset()
 
-    # train network and save results
     kfold_history, kfold_best_epoch = nn_train(net, data_X=data_training_X, data_Y=data_training_Y,
-                                               params_training=parameters_training,
-                                               indic_train_X=index_training, indic_train_Y=index_training,
-                                               early_stoppers=early_stoppers,
-                                               indic_validation_X=index_validation, indic_validation_Y=index_validation,
-                                               silent=silent)
+                                               params_training=parameters_training, indic_train_X=index_training,
+                                               indic_train_Y=index_training, early_stoppers=early_stoppers,
+                                               indic_val_X=index_validation, indic_val_Y=index_validation,
+                                               silent=silent)  # train network and save results
 
     estimator_history.append_history(kfold_history, kfold_best_epoch, i)
 

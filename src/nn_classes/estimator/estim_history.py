@@ -1,9 +1,9 @@
+import json
+
 import pandas as pd
 from priv_lib_error import Error_type_setter
 from priv_lib_estimator import Estimator
 from priv_lib_util.tools.src.function_json import unzip_json, zip_json
-
-import json
 
 
 class Estim_history(Estimator):

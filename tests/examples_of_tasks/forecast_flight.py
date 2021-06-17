@@ -4,17 +4,19 @@ import torch.nn as nn
 import seaborn as sns
 from sklearn.preprocessing import MinMaxScaler
 
-from data_processing_fct import add_column_cyclical_features
-from nn_classes.architecture.Windowcreator import Windowcreator
-from nn_classes.estimator.estim_history import Estim_history
+from src.data_processing_fct import add_column_cyclical_features
+from src.nn_classes.architecture.windowcreator import Windowcreator
+from src.nn_classes.estimator.estim_history import Estim_history
 from src.nn_classes.architecture.gru import factory_parametrised_GRU
 from src.plot.nn_plot_history import nn_plot_train_loss_acc
 from src.nn_classes.optim_wrapper import Optim_wrapper
-from src.train.nntrainparameters import NNTrainParameters
+from src.nn_train.nntrainparameters import NNTrainParameters
 from src.util_training import pytorch_device_setting, set_seeds
 from src.nn_classes.training_stopper.Early_stopper_training import Early_stopper_training
 from src.nn_classes.training_stopper.Early_stopper_validation import Early_stopper_validation
-from src.train.nn_kfold_training import train_kfold_a_fold_after_split
+from src.nn_train.kfold_training import train_kfold_a_fold_after_split
+
+
 from priv_lib_plot import APlot
 
 # set seed for pytorch.

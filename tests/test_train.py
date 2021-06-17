@@ -1,21 +1,18 @@
 from src.nn_classes.optim_wrapper import Optim_wrapper
 from priv_lib_plot import APlot
 
-import test_nn_kfold_train
-
 import torch
 from torch import nn
 import numpy as np
-import pandas as pd
 
 from plot.nn_plot_history import nn_plot_train_loss_acc
 from plot.nn_plots import nn_plot_prediction_vs_true, nn_print_errors
 from src.nn_classes.architecture.fully_connected import factory_parametrised_FC_NN
-from src.train.nntrainparameters import NNTrainParameters
+from src.nn_train.nntrainparameters import NNTrainParameters
 from src.util_training import set_seeds, pytorch_device_setting
 from src.nn_classes.training_stopper.Early_stopper_training import Early_stopper_training
 from src.nn_classes.training_stopper.Early_stopper_validation import Early_stopper_validation
-from train.nn_kfold_training import nn_kfold_train
+from nn_train.kfold_training import nn_kfold_train
 from src.nn_classes.metric.metric import Metric
 
 # set seed for pytorch.
@@ -72,10 +69,10 @@ if __name__ == '__main__':
     activation_functions = [torch.tanh, torch.tanh, torch.relu]
     dropout = 0.
     epochs = 7500
-    batch_size = 200
+    batch_size = 500
     optimiser = torch.optim.Adam
     criterion = nn.MSELoss(reduction='sum')
-    dict_optimiser = {"lr": 0.001, "weight_decay": 0.0000001}
+    dict_optimiser = {"lr": 0.0005, "weight_decay": 1E-7}
     optim_wrapper = Optim_wrapper(optimiser, dict_optimiser)
     param_training = NNTrainParameters(batch_size=batch_size, epochs=epochs, device=device,
                                        criterion=criterion, optim_wrapper=optim_wrapper,
@@ -86,43 +83,47 @@ if __name__ == '__main__':
                                                  param_predict_fct=None)
 
     # NORMAL TRAINING
-    (net, estimator_history) = nn_kfold_train(train_X, train_Y, parametrized_NN, parameters_training=param_training,
+    (net, estimator_history) = nn_kfold_train(train_X, train_Y, parametrized_NN, params_train=param_training,
                                               early_stoppers=early_stoppers, nb_split=1, shuffle_kfold=True,
-                                              percent_validation_for_1_fold=10, silent=False)
+                                              percent_val_for_1_fold=10, silent=False)
 
     nn_plot_train_loss_acc(estimator_history, flag_valid=True, log_axis_for_loss=True, key_for_second_axis_plot='L4',
                            log_axis_for_second_axis=True)
     nn_plot_prediction_vs_true(net=net, plot_xx=plot_xx, plot_yy=plot_yy, plot_yy_noisy=plot_yy_noisy, device=device)
     nn_print_errors(net=net, train_X=train_X, train_Y=train_Y, testing_X=testing_X, testing_Y=testing_Y, device=device)
-    APlot.show_plot()
+    APlot.show_and_continue()
     # MULTIPLE FOLD TRAINING
-    (net, estimator_history) = nn_kfold_train(train_X, train_Y, parametrized_NN, parameters_training=param_training,
-                                              early_stoppers=early_stoppers, nb_split=5, shuffle_kfold=True, silent=False)
+    (net, estimator_history) = nn_kfold_train(train_X, train_Y, parametrized_NN, params_train=param_training,
+                                              early_stoppers=early_stoppers, nb_split=5, shuffle_kfold=True,
+                                              silent=False)
     nn_plot_train_loss_acc(estimator_history, flag_valid=True, log_axis_for_loss=True, key_for_second_axis_plot='L4',
                            log_axis_for_second_axis=True)
     nn_plot_prediction_vs_true(net=net, plot_xx=plot_xx, plot_yy=plot_yy, plot_yy_noisy=plot_yy_noisy, device=device)
     nn_print_errors(net=net, train_X=train_X, train_Y=train_Y, testing_X=testing_X, testing_Y=testing_Y, device=device)
-    APlot.show_plot()
+    APlot.show_and_continue()
+
+    # BIANCA
     # NO VALIDATION TRAINING
-    (net, estimator_history) = nn_kfold_train(train_X, train_Y, parametrized_NN, parameters_training=param_training,
-                                              early_stoppers=early_stoppers, nb_split=1, shuffle_kfold=True,
-                                              percent_validation_for_1_fold=0, silent=False)
-    nn_plot_train_loss_acc(estimator_history, flag_valid=True, log_axis_for_loss=True, key_for_second_axis_plot='L4',
-                           log_axis_for_second_axis=True)
-    nn_plot_prediction_vs_true(net=net, plot_xx=plot_xx, plot_yy=plot_yy, plot_yy_noisy=plot_yy_noisy, device=device)
-    nn_print_errors(net=net, train_X=train_X, train_Y=train_Y, testing_X=testing_X, testing_Y=testing_Y, device=device)
-    APlot.show_plot()
-    # error percent:
+    # (net, estimator_history) = nn_kfold_train(train_X, train_Y, parametrized_NN, params_train=param_training,
+    #                                           early_stoppers=early_stoppers, nb_split=1, shuffle_kfold=True,
+    #                                           percent_val_for_1_fold=0, silent=False)
+    # nn_plot_train_loss_acc(estimator_history, flag_valid=True, log_axis_for_loss=True, key_for_second_axis_plot='L4',
+    #                        log_axis_for_second_axis=True)
+    # nn_plot_prediction_vs_true(net=net, plot_xx=plot_xx, plot_yy=plot_yy, plot_yy_noisy=plot_yy_noisy, device=device)
+    # nn_print_errors(net=net, train_X=train_X, train_Y=train_Y, testing_X=testing_X, testing_Y=testing_Y, device=device)
+    # APlot.show_and_continue()
+
+    # intentional error percent in input:
     try:
-        (net, estimator_history) = nn_kfold_train(train_X, train_Y, parametrized_NN, parameters_training=param_training,
+        (net, estimator_history) = nn_kfold_train(train_X, train_Y, parametrized_NN, params_train=param_training,
                                                   early_stoppers=early_stoppers, nb_split=1, shuffle_kfold=True,
-                                                  percent_validation_for_1_fold=-0.5, silent=False)
-    except ValueError:
+                                                  percent_val_for_1_fold=-0.5, silent=False)
+    except AssertionError:
         pass
     try:
-        (net, estimator_history) = nn_kfold_train(train_X, train_Y, parametrized_NN, parameters_training=param_training,
+        (net, estimator_history) = nn_kfold_train(train_X, train_Y, parametrized_NN, params_train=param_training,
                                                   early_stoppers=early_stoppers, nb_split=1, shuffle_kfold=True,
-                                                  percent_validation_for_1_fold=1.5, silent=False)
-    except ValueError:
+                                                  percent_val_for_1_fold=1.5, silent=False)
+    except AssertionError:
         pass
     APlot.show_plot()
