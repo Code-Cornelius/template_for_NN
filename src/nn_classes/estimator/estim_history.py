@@ -16,7 +16,7 @@ class Estim_history(Estimator):
             super().__init__(df)
 
         else:
-            df_column_names = Estim_history._generate_all_column_names(metric_names, validation)
+            df_column_names = self._generate_all_column_names()
             data_frame = pd.DataFrame(columns=df_column_names)
             super().__init__(data_frame)
 
@@ -71,10 +71,35 @@ class Estim_history(Estimator):
         estimator.best_fold = attrs['best_fold']
         return estimator
 
+    def get_col_metric_names(self):
+        """
+        Semantics:
+            Generate the names for the columns which hold information about the metrics
+
+        Returns:
+            A list of strings representing the column names based on metric names and validation flag
+        """
+        df_column_names = []
+        df_column_names.append(Estim_history._generate_column_name("loss"))
+
+        for metric_name in self.metric_names:
+            df_column_names.append(Estim_history._generate_column_name(metric_name))
+
+        if self.validation:
+            df_column_names.append(Estim_history._generate_column_name("loss", validation=True))
+
+            for metric_name in self.metric_names:
+                df_column_names.append(Estim_history._generate_column_name(metric_name, validation=True))
+
+        return df_column_names
+
+
     @staticmethod
     def _generate_column_name(base_name, validation=False):
         """
-        Generate the column name based on a metric name and its use case (training or validation)
+        Semantics:
+            Generate the column name based on a metric name and its use case (training or validation)
+
         Args:
             base_name: the name of the metric
             validation: boolean representing whether the metric is a result of validation or training
@@ -84,28 +109,13 @@ class Estim_history(Estimator):
         """
         return f"{base_name}_" + ('validation' if validation else 'training')
 
-    @staticmethod
-    def _generate_all_column_names(metric_names, validation):
+    def _generate_all_column_names(self):
         """
-            Generate all the column names for the dataframe
-        Args:
-            metric_names: A list of the names of the metrics used
-            validation: A boolean representing whether validation is used during training
-
+        Generate all the column names for the dataframe
         Returns:
             A list of all the column names for the dataframe (Including the base columns)
         """
-        df_column_names = Estim_history.NAMES_COLUMNS.copy()
-        df_column_names.add(Estim_history._generate_column_name("loss"))
-
-        for metric_name in metric_names:
-            df_column_names.add(Estim_history._generate_column_name(metric_name))
-
-        if validation:
-            df_column_names.add(Estim_history._generate_column_name("loss", validation=True))
-
-            for metric_name in metric_names:
-                df_column_names.add(Estim_history._generate_column_name(metric_name, validation=True))
+        df_column_names = list(Estim_history.NAMES_COLUMNS.copy()) + self.get_col_metric_names()
 
         return df_column_names
 
