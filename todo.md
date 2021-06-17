@@ -16,15 +16,11 @@ to check correctness :
       
   
 * Gru and lsdm
-* Remove NaN from estim_history
-* The indices
-* Test does not pass (smth with validation) logs not provided (blame Niels)
 * can you check what happens when batch size is bigger than actual size of data? 
   I think it is fine, that the metrics are not multiplied by something too big, 
   neither are empty rows created but well...
 
 
-* Estim_hyper_param
 * plot estimator. But for that we need to look at estimator and plot estimator. We can do that together in June after the exam.
 Essentially, we can make a very trivial example, like a time estimator (can you do it ?) 
   that takes column time and any given parameter. 

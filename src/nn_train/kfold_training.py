@@ -50,12 +50,19 @@ def nn_kfold_train(data_train_X, data_train_Y, Model_NN, params_train,
     Post-condition :
         early_stoppers not changed.
     """
+
+
     # place where logs of trainings with respect to the metrics are stored.
     indices, compute_validation = _nn_kfold_indices_creation_random(data_train_X,
                                                                     data_train_Y,
                                                                     percent_val_for_1_fold,
                                                                     nb_split,
                                                                     shuffle_kfold)
+    # Check if the correct type of early stoppers are passed
+    if not compute_validation:
+        for stop in early_stoppers:
+            assert not stop.is_validation(), "Input validation stopper while no validation set given."
+
     # initialise estimator
     estimator_history = _initialise_estimator(compute_validation, params_train, hyper_param)
 
@@ -70,7 +77,7 @@ def _initialise_estimator(compute_validation, parameters_training, train_param_d
                                       hyper_params=train_param_dict)
     return estimator_history
 
-
+# TODO NIELS: delete this
 def create_history_kfold(compute_validation, early_stoppers, nb_split, parameters_training):
     """ nb of split at least 1, 1 means no split.  """
     # todo change parameters_training for params_training
