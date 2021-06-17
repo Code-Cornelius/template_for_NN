@@ -15,7 +15,10 @@ to check correctness :
 
       
   
-
+* Gru and lsdm
+* Remove NaN from estim_history
+* The indices
+* Test does not pass (smth with validation) logs not provided (blame Niels)
 * can you check what happens when batch size is bigger than actual size of data? 
   I think it is fine, that the metrics are not multiplied by something too big, 
   neither are empty rows created but well...

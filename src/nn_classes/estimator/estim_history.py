@@ -1,6 +1,7 @@
 import json
 
 import pandas as pd
+import numpy as np
 from priv_lib_error import Error_type_setter
 from priv_lib_estimator import Estimator
 from priv_lib_util.tools.src.function_json import unzip_json, zip_json
@@ -136,14 +137,12 @@ class Estim_history(Estimator):
         """
         translated_history = {}
 
-        # add the epoch number to the translated history
-        nb_epochs = len(history['training']['loss'])
-        translated_history['epoch'] = [*range(nb_epochs)]
 
         # collect training information
         for key, value in history['training'].items():
             new_key = self._generate_column_name(key)
-            translated_history[new_key] = value.tolist()
+            new_value = value[~np.isnan(value)]
+            translated_history[new_key] = new_value.tolist()
 
         assert ('validation' in history) == self.validation, "The information about validation in estimator " \
                                                              "is not reflected in history"
@@ -151,7 +150,12 @@ class Estim_history(Estimator):
         if 'validation' in history:
             for key, value in history['validation'].items():
                 new_key = self._generate_column_name(key, validation=True)
-                translated_history[new_key] = value.tolist()
+                new_value = value[~np.isnan(value)]
+                translated_history[new_key] = new_value.tolist()
+
+        # add the epoch number to the translated history
+        nb_epochs = len(translated_history['loss_training'])
+        translated_history['epoch'] = [*range(nb_epochs)]
 
         # add the fold number to the history
         translated_history['fold'] = [fold_number] * nb_epochs
