@@ -14,7 +14,7 @@ to check correctness :
 # Bianca
 
       
-  
+* plot_evol_history: two todos in draw, for the one with a list erase nielssss quick fix
 * Gru and lsdm
 * can you check what happens when batch size is bigger than actual size of data? 
   I think it is fine, that the metrics are not multiplied by something too big, 
