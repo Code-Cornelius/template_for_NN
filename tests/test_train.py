@@ -84,18 +84,15 @@ if __name__ == '__main__':
                                                  param_predict_fct=None)
 
     # NORMAL TRAINING
-    # (net, estimator_history) = nn_kfold_train(train_X, train_Y, parametrized_NN, params_train=param_training,
-    #                                           early_stoppers=early_stoppers, nb_split=1, shuffle_kfold=True,
-    #                                           percent_val_for_1_fold=10, silent=False)
-    #
-    # nn_plot_train_loss_acc(estimator_history, flag_valid=True, log_axis_for_loss=True, key_for_second_axis_plot='L4',
-    #                        log_axis_for_second_axis=True)
-    # history_plot = Plot_evol_history(estimator_history)
-    # history_plot.draw(second_axis=None, log_axis_for_loss=True, log_second_axis=True)
-    #
-    # nn_plot_prediction_vs_true(net=net, plot_xx=plot_xx, plot_yy=plot_yy, plot_yy_noisy=plot_yy_noisy, device=device)
-    # nn_print_errors(net=net, train_X=train_X, train_Y=train_Y, testing_X=testing_X, testing_Y=testing_Y, device=device)
-    # APlot.show_plot()
+    (net, estimator_history) = nn_kfold_train(train_X, train_Y, parametrized_NN, params_train=param_training,
+                                              early_stoppers=early_stoppers, nb_split=1, shuffle_kfold=True,
+                                              percent_val_for_1_fold=10, silent=False)
+    history_plot = Plot_evol_history(estimator_history)
+    history_plot.draw(key_for_second_axis_plot='L4', log_axis_for_loss=True, log_axis_for_second_axis=True)
+
+    nn_plot_prediction_vs_true(net=net, plot_xx=plot_xx, plot_yy=plot_yy, plot_yy_noisy=plot_yy_noisy, device=device)
+    nn_print_errors(net=net, train_X=train_X, train_Y=train_Y, testing_X=testing_X, testing_Y=testing_Y, device=device)
+    APlot.show_and_continue()
 
 
     # MULTIPLE FOLD TRAINING
@@ -103,22 +100,23 @@ if __name__ == '__main__':
                                               early_stoppers=early_stoppers, nb_split=5, shuffle_kfold=True,
                                               silent=False)
     history_plot = Plot_evol_history(estimator_history)
-    history_plot.draw(second_axis=None, log_axis_for_loss=True, log_second_axis=True)
+    history_plot.draw(key_for_second_axis_plot='L4', log_axis_for_loss=True, log_axis_for_second_axis=True)
 
     nn_plot_prediction_vs_true(net=net, plot_xx=plot_xx, plot_yy=plot_yy, plot_yy_noisy=plot_yy_noisy, device=device)
     nn_print_errors(net=net, train_X=train_X, train_Y=train_Y, testing_X=testing_X, testing_Y=testing_Y, device=device)
-    APlot.show_plot()
+    APlot.show_and_continue()
 
     # BIANCA
     # NO VALIDATION TRAINING
-    # (net, estimator_history) = nn_kfold_train(train_X, train_Y, parametrized_NN, params_train=param_training,
-    #                                           early_stoppers=early_stoppers, nb_split=1, shuffle_kfold=True,
-    #                                           percent_val_for_1_fold=0, silent=False)
-    # nn_plot_train_loss_acc(estimator_history, flag_valid=True, log_axis_for_loss=True, key_for_second_axis_plot='L4',
-    #                        log_axis_for_second_axis=True)
-    # nn_plot_prediction_vs_true(net=net, plot_xx=plot_xx, plot_yy=plot_yy, plot_yy_noisy=plot_yy_noisy, device=device)
-    # nn_print_errors(net=net, train_X=train_X, train_Y=train_Y, testing_X=testing_X, testing_Y=testing_Y, device=device)
-    # APlot.show_and_continue()
+    (net, estimator_history) = nn_kfold_train(train_X, train_Y, parametrized_NN, params_train=param_training,
+                                              early_stoppers=early_stoppers, nb_split=1, shuffle_kfold=True,
+                                              percent_val_for_1_fold=0, silent=False)
+    history_plot = Plot_evol_history(estimator_history)
+    history_plot.draw(key_for_second_axis_plot='L4', log_axis_for_loss=True, log_axis_for_second_axis=True)
+
+    nn_plot_prediction_vs_true(net=net, plot_xx=plot_xx, plot_yy=plot_yy, plot_yy_noisy=plot_yy_noisy, device=device)
+    nn_print_errors(net=net, train_X=train_X, train_Y=train_Y, testing_X=testing_X, testing_Y=testing_Y, device=device)
+    APlot.show_and_continue()
 
     # intentional error percent in input:
     try:
