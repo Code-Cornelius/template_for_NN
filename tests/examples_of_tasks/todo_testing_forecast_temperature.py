@@ -89,8 +89,8 @@ if __name__ == '__main__':
                                                 activation_fct=nn.CELU(), hidden_FC=50)
 
     estimator_history = Estim_history(metric_names=[], validation=True)
-    net, _ = train_kfold_a_fold_after_split(data_training_X, data_training_Y, indices_train,
-                                            indices_valid, parametrized_NN, param_training, estimator_history,
+    net, _ = train_kfold_a_fold_after_split(data_training_X, data_training_Y, indices_train, indices_valid,
+                                            parametrized_NN, param_training, estimator_history,
                                             early_stoppers=early_stoppers)
 
     net.to(torch.device('cpu'))

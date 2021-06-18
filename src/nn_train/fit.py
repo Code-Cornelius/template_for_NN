@@ -116,8 +116,8 @@ def _do_early_stop(net, early_stoppers, history, epoch, silent):
 def prepare_data_for_fit(X_train_on_device, X_val_on_device, Y_train_on_device, Y_val_on_device, net, params_training):
     list_params_validat = [X_val_on_device, Y_val_on_device]
 
-    is_validat_included = not function_iterable.are_at_least_one_None(
-        list_params_validat)  #: equivalent to are all not None ?
+    is_validat_included = not function_iterable.are_at_least_one_None(list_params_validat)
+    #: equivalent to are all not None ?
     # raise if there is a logic error.
     if is_validat_included:  #: if we need validation
         total_number_data = Y_train_on_device.shape[0], Y_val_on_device.shape[0]  # : constants for normalisation

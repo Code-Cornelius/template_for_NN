@@ -6,7 +6,8 @@ from src.nn_train.fit import nn_fit
 
 
 def nn_train(net, data_X, data_Y, params_training, indic_train_X, indic_train_Y,
-             early_stoppers=(Early_stopper_vanilla(),), indic_val_X=None, indic_val_Y=None, *, silent=False):
+             early_stoppers=(Early_stopper_vanilla(),),
+             indic_val_X=None, indic_val_Y=None, *, silent=False):
     """
     Semantics : Given the net, we train it upon data.
     For optimisation reasons, we pass the indices.
@@ -40,8 +41,8 @@ def nn_train(net, data_X, data_Y, params_training, indic_train_X, indic_train_Y,
 
     # condition if we use validation set:
     list_params_validation = [indic_val_X, indic_val_Y]
-    is_val_included = not function_iterable.are_at_least_one_None(
-        list_params_validation)  #: equivalent to "are all not None ?"
+    is_val_included = not function_iterable.are_at_least_one_None(list_params_validation)
+    #: equivalent to "are all not None ?"
     if not is_val_included:
         function_iterable.raise_if_not_all_None(list_params_validation)
 
@@ -81,7 +82,7 @@ def _history_creation(data_X, data_Y, device, epoch, indic_validation_X, indic_v
         for metric in params_training.metrics:
             # initialise with nans such that no plot if no value.
             history['validation'][metric.name] = np.full(epoch, np.nan)
-    else :
+    else:
         X_val_on_device = 0
         Y_val_on_device = 0
     return X_val_on_device, Y_val_on_device, history

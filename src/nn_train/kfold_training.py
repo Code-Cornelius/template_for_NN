@@ -9,7 +9,7 @@ from src.nn_classes.training_stopper.Early_stopper_vanilla import Early_stopper_
 from src.nn_train.train import nn_train
 
 
-def nn_kfold_train(data_train_X, data_train_Y, Model_NN, params_train,
+def nn_kfold_train(data_train_X, data_train_Y, Model_NN, param_train,
                    early_stoppers=(Early_stopper_vanilla(),),
                    nb_split=5, shuffle_kfold=True, percent_val_for_1_fold=20,
                    hyper_param={}.copy(),
@@ -26,13 +26,13 @@ def nn_kfold_train(data_train_X, data_train_Y, Model_NN, params_train,
         Model_NN: parametrised architecture,
             type the Class with architecture we want to KFold over.
             Requirements: call constructor over it to create a net.
-        params_train: NNTrainParameters. contains the parameters used for training
+        param_train: NNTrainParameters. contains the parameters used for training
         early_stoppers: iterable of Early_stopper. Used for deciding if the training should stop early.
             Preferably immutable to insure no changes.
         nb_split:
         shuffle_kfold:
         percent_val_for_1_fold:
-        hyper_param: a dictionary with all the training parameters
+        hyper_param (dict): all the training parameters TODO FORMAT
         only_best_history (bool):
         silent (bool): verbose.
 
@@ -51,59 +51,36 @@ def nn_kfold_train(data_train_X, data_train_Y, Model_NN, params_train,
         early_stoppers not changed.
     """
 
-
     # place where logs of trainings with respect to the metrics are stored.
-    indices, compute_validation = _nn_kfold_indices_creation_random(data_train_X,
-                                                                    data_train_Y,
-                                                                    percent_val_for_1_fold,
-                                                                    nb_split,
-                                                                    shuffle_kfold)
+    indices, compute_validation = _nn_kfold_indices_creation_random(data_train_X, data_train_Y,
+                                                                    percent_val_for_1_fold, nb_split, shuffle_kfold)
     # Check if the correct type of early stoppers are passed
     if not compute_validation:
         for stop in early_stoppers:
             assert not stop.is_validation(), "Input validation stopper while no validation set given."
 
-    # initialise estimator
-    estimator_history = _initialise_estimator(compute_validation, params_train, hyper_param)
+    # initialise estimator where history is stored.
+    estimator_history = _initialise_estimator(compute_validation, param_train, hyper_param)
 
-    return _nn_multiplefold_train(data_train_X, data_train_Y, early_stoppers, Model_NN, nb_split,
-                                  params_train, indices, silent, estimator_history,
-                                  only_best_history)
+    return _nn_multiplefold_train(data_train_X, data_train_Y, early_stoppers, Model_NN, nb_split, param_train, indices,
+                                  silent, estimator_history, only_best_history)
 
 
-def _initialise_estimator(compute_validation, parameters_training, train_param_dict):
-    metric_names = [metric.name for metric in parameters_training.metrics]
+def _initialise_estimator(compute_validation, param_train, train_param_dict):
+    metric_names = [metric.name for metric in param_train.metrics]
     estimator_history = Estim_history(metric_names=metric_names, validation=compute_validation,
                                       hyper_params=train_param_dict)
     return estimator_history
-
-# TODO NIELS: delete this
-def create_history_kfold(compute_validation, early_stoppers, nb_split, parameters_training):
-    """ nb of split at least 1, 1 means no split.  """
-    # todo change parameters_training for params_training
-    history_kfold = {'training': {}}
-    history_kfold['training']['loss'] = np.zeros((nb_split, parameters_training.epochs))
-    for metric in parameters_training.metrics:
-        history_kfold['training'][metric.name] = np.zeros((nb_split, parameters_training.epochs))
-    if compute_validation:
-        history_kfold['validation'] = {}
-        history_kfold['validation']['loss'] = np.zeros((nb_split, parameters_training.epochs))
-        for metric in parameters_training.metrics:
-            history_kfold['validation'][metric.name] = np.zeros((nb_split, parameters_training.epochs))
-
-    else:  # : testing that no early validation stopper given.
-        for stop in early_stoppers:
-            assert not stop.is_validation(), "Input validation stopper while no validation set given."
-    return history_kfold
 
 
 # section ######################################################################
 #  #############################################################################
 # MULTIFOLD
 
-def _nn_multiplefold_train(data_training_X, data_training_Y, early_stoppers, Model_NN, nb_split,
-                           parameters_training, indices, silent, estimator_history,
-                           only_best_history=False):
+def _nn_multiplefold_train(data_train_X, data_train_Y,
+                           early_stoppers, Model_NN, nb_split,
+                           param_train, indices, silent,
+                           estimator_history, only_best_history=False):
     # for storing the network:
     value_metric_for_best_NN = - np.Inf  # :we set -\infty which can only be improved.
     # :Recall, the two criterea are either accuracy (so any accuracy is better than a neg. number)
@@ -120,12 +97,11 @@ def _nn_multiplefold_train(data_training_X, data_training_Y, early_stoppers, Mod
 
         # : one can use tensors as they are convertible to numpy.
         (best_net, value_metric_for_best_NN,
-         number_kfold_best_net) = train_kfold_a_fold_after_split(data_training_X, data_training_Y,
-                                                                 index_training, index_validation,
-                                                                 Model_NN, parameters_training,
-                                                                 estimator_history,
-                                                                 early_stoppers, value_metric_for_best_NN,
-                                                                 number_kfold_best_net, best_net, i, silent)
+         number_kfold_best_net) = train_kfold_a_fold_after_split(data_train_X, data_train_Y, index_training,
+                                                                 index_validation, Model_NN, param_train,
+                                                                 estimator_history, early_stoppers,
+                                                                 value_metric_for_best_NN, number_kfold_best_net,
+                                                                 best_net, i, silent)
 
     estimator_history.best_fold = number_kfold_best_net
     if not silent:
@@ -137,19 +113,19 @@ def _nn_multiplefold_train(data_training_X, data_training_Y, early_stoppers, Mod
     return best_net, estimator_history
 
 
-def train_kfold_a_fold_after_split(data_training_X, data_training_Y, index_training, index_validation, Model_NN,
-                                   parameters_training, estimator_history,
-                                   early_stoppers=(Early_stopper_vanilla(),), value_metric_for_best_NN=-np.Inf,
-                                   number_kfold_best_net=1, best_net=None, i=0, silent=False):
+def train_kfold_a_fold_after_split(data_train_X, data_train_Y, index_training, index_validation, Model_NN, param_train,
+                                   estimator_history, early_stoppers=(Early_stopper_vanilla(),),
+                                   value_metric_for_best_NN=-np.Inf, number_kfold_best_net=1, best_net=None, i=0,
+                                   silent=False):
     """
 
     Args:
-        data_training_X:
-        data_training_Y:
+        data_train_X:
+        data_train_Y:
         index_training: format such that it is possible to slice data like: data[index]
         index_validation:
         Model_NN:
-        parameters_training:
+        param_train:
         early_stoppers: a list of early_stoppers
         value_metric_for_best_NN:
         number_kfold_best_net:
@@ -170,14 +146,14 @@ def train_kfold_a_fold_after_split(data_training_X, data_training_Y, index_train
         i is not modified.
 
     """
-    net = Model_NN().to(parameters_training.device)
+    net = Model_NN().to(param_train.device)
 
     # reset the early stoppers for the following fold
     for early_stopper in early_stoppers:
         early_stopper.reset()
 
-    kfold_history, kfold_best_epoch = nn_train(net, data_X=data_training_X, data_Y=data_training_Y,
-                                               params_training=parameters_training, indic_train_X=index_training,
+    kfold_history, kfold_best_epoch = nn_train(net, data_X=data_train_X, data_Y=data_train_Y,
+                                               params_training=param_train, indic_train_X=index_training,
                                                indic_train_Y=index_training, early_stoppers=early_stoppers,
                                                indic_val_X=index_validation, indic_val_Y=index_validation,
                                                silent=silent)  # train network and save results
@@ -256,7 +232,8 @@ def _nn_kfold_indices_creation_random(data_training_X, data_training_Y,
     else:
         try:
             # classification
-            kfold = sklearn.model_selection.StratifiedKFold(n_splits=nb_split, shuffle=shuffle_kfold)  # set seed higher
+            kfold = sklearn.model_selection.StratifiedKFold(n_splits=nb_split, shuffle=shuffle_kfold)
+            # the seed is not fixed here but outside.
 
             # attempt to use the indices to check whether we can use stratified kfold
             for _ in kfold.split(data_training_X, data_training_Y):
@@ -264,6 +241,7 @@ def _nn_kfold_indices_creation_random(data_training_X, data_training_Y,
 
         except ValueError:
             # regression
-            kfold = sklearn.model_selection.KFold(n_splits=nb_split, shuffle=shuffle_kfold)  # set seed higher
+            kfold = sklearn.model_selection.KFold(n_splits=nb_split, shuffle=shuffle_kfold)
+            # the seed is not fixed here but outside.
 
         return kfold.split(data_training_X, data_training_Y), True

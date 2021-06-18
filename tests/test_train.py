@@ -1,20 +1,18 @@
-from nn_classes.estimator.Plot_evol_history import Plot_evol_history
-from src.nn_classes.optim_wrapper import Optim_wrapper
-from priv_lib_plot import APlot
-
-import torch
-from torch import nn
 import numpy as np
+import torch
+from priv_lib_plot import APlot
+from torch import nn
 
-from plot.nn_plot_history import nn_plot_train_loss_acc
+from nn_classes.estimator.Plot_evol_history import Plot_evol_history
+from nn_train.kfold_training import nn_kfold_train
 from plot.nn_plots import nn_plot_prediction_vs_true, nn_print_errors
 from src.nn_classes.architecture.fully_connected import factory_parametrised_FC_NN
-from src.nn_train.nntrainparameters import NNTrainParameters
-from src.util_training import set_seeds, pytorch_device_setting
+from src.nn_classes.metric.metric import Metric
+from src.nn_classes.optim_wrapper import Optim_wrapper
 from src.nn_classes.training_stopper.Early_stopper_training import Early_stopper_training
 from src.nn_classes.training_stopper.Early_stopper_validation import Early_stopper_validation
-from nn_train.kfold_training import nn_kfold_train
-from src.nn_classes.metric.metric import Metric
+from src.nn_train.nntrainparameters import NNTrainParameters
+from src.util_training import set_seeds, pytorch_device_setting
 
 # set seed for pytorch.
 set_seeds(42)
@@ -84,7 +82,7 @@ if __name__ == '__main__':
                                                  param_predict_fct=None)
 
     # NORMAL TRAINING
-    (net, estimator_history) = nn_kfold_train(train_X, train_Y, parametrized_NN, params_train=param_training,
+    (net, estimator_history) = nn_kfold_train(train_X, train_Y, parametrized_NN, param_train=param_training,
                                               early_stoppers=early_stoppers, nb_split=1, shuffle_kfold=True,
                                               percent_val_for_1_fold=10, silent=False)
     history_plot = Plot_evol_history(estimator_history)
@@ -94,9 +92,8 @@ if __name__ == '__main__':
     nn_print_errors(net=net, train_X=train_X, train_Y=train_Y, testing_X=testing_X, testing_Y=testing_Y, device=device)
     APlot.show_and_continue()
 
-
     # MULTIPLE FOLD TRAINING
-    (net, estimator_history) = nn_kfold_train(train_X, train_Y, parametrized_NN, params_train=param_training,
+    (net, estimator_history) = nn_kfold_train(train_X, train_Y, parametrized_NN, param_train=param_training,
                                               early_stoppers=early_stoppers, nb_split=5, shuffle_kfold=True,
                                               silent=False)
     history_plot = Plot_evol_history(estimator_history)
@@ -104,11 +101,10 @@ if __name__ == '__main__':
 
     nn_plot_prediction_vs_true(net=net, plot_xx=plot_xx, plot_yy=plot_yy, plot_yy_noisy=plot_yy_noisy, device=device)
     nn_print_errors(net=net, train_X=train_X, train_Y=train_Y, testing_X=testing_X, testing_Y=testing_Y, device=device)
-    APlot.show_and_continue()
-
+    APlot.show_plot()
 
     # NO VALIDATION TRAINING
-    (net, estimator_history) = nn_kfold_train(train_X, train_Y, parametrized_NN, params_train=param_training,
+    (net, estimator_history) = nn_kfold_train(train_X, train_Y, parametrized_NN, param_train=param_training,
                                               early_stoppers=(early_stop_train,), nb_split=1, shuffle_kfold=True,
                                               percent_val_for_1_fold=0, silent=False)
     history_plot = Plot_evol_history(estimator_history)
@@ -120,13 +116,13 @@ if __name__ == '__main__':
 
     # intentional error percent in input:
     try:
-        (net, estimator_history) = nn_kfold_train(train_X, train_Y, parametrized_NN, params_train=param_training,
+        (net, estimator_history) = nn_kfold_train(train_X, train_Y, parametrized_NN, param_train=param_training,
                                                   early_stoppers=early_stoppers, nb_split=1, shuffle_kfold=True,
                                                   percent_val_for_1_fold=-0.5, silent=False)
     except AssertionError:
         pass
     try:
-        (net, estimator_history) = nn_kfold_train(train_X, train_Y, parametrized_NN, params_train=param_training,
+        (net, estimator_history) = nn_kfold_train(train_X, train_Y, parametrized_NN, param_train=param_training,
                                                   early_stoppers=early_stoppers, nb_split=1, shuffle_kfold=True,
                                                   percent_val_for_1_fold=1.5, silent=False)
     except AssertionError:

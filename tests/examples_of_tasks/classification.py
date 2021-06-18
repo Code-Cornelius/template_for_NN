@@ -88,7 +88,7 @@ if __name__ == '__main__':
                                                        param_dropout=dropout,
                                                        param_predict_fct=lambda out: torch.max(out, 1)[1])
 
-    (net, estimator_history) = nn_kfold_train(train_X, train_Y, Class_Parametrized_NN, params_train=param_training,
+    (net, estimator_history) = nn_kfold_train(train_X, train_Y, Class_Parametrized_NN, param_train=param_training,
                                               early_stoppers=early_stoppers, nb_split=1, shuffle_kfold=True,
                                               percent_val_for_1_fold=10, silent=False)
 
