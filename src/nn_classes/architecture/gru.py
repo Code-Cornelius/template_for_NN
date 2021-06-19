@@ -15,11 +15,11 @@ class GRU(Savable_net, metaclass=ABCMeta):
 
         self.nb_directions = int(self.bidirectional) + 1
 
-        self.stacked_GRU = nn.GRU(self.input_dim, self.hidden_size,
-                                  num_layers=self.num_layers,
-                                  dropout=self.dropout,
-                                  bidirectional=self.bidirectional,
-                                  batch_first=True)
+        self.stacked_GRU = self.nn_class(self.input_dim, self.hidden_size,
+                                         num_layers=self.num_layers,
+                                         dropout=self.dropout,
+                                         bidirectional=self.bidirectional,
+                                         batch_first=True)
 
         self.linear_layer = nn.Linear(self.hidden_size * self.nb_directions * self.nb_output_consider,
                                       self.hidden_FC)
@@ -40,9 +40,8 @@ class GRU(Savable_net, metaclass=ABCMeta):
         """
         batch_size = 1, time_series.shape[0], 1
         # WIP is backpropagation doing the right job?
-        h0 = self.hidden_state_0.repeat(batch_size)
+        h0 = self.get_stacked_in(batch_size)
         out, _ = self.stacked_GRU(time_series, h0)  # shape of out is  N,L,Hidden_size * nb_direction
-
         out = torch.cat((out[:,
                          -self.nb_output_consider:,
                          :self.hidden_size],
@@ -60,9 +59,13 @@ class GRU(Savable_net, metaclass=ABCMeta):
         return out.view(-1, self.output_time_series_len,
                         self.output_dim)  # batch size, dim time series output, dim output
 
+    # todo find a better name
+    def get_stacked_in(self, batch_size):
+        return self.hidden_state_0.repeat(batch_size)
     # section ######################################################################
     #  #############################################################################
     # SETTERS GETTERS
+
 
     @property
     @abstractmethod
@@ -115,8 +118,11 @@ def factory_parametrised_GRU(input_dim=1, output_dim=1,
                              input_time_series_len=1, output_time_series_len=1,
                              nb_output_consider=1,
                              hidden_size=150, dropout=0.,
-                             activation_fct=nn.CELU(), hidden_FC=64):
-    class Parametrised_GRU(GRU):
+                             activation_fct=nn.CELU(), hidden_FC=64,
+                             nn_class=nn.GRU,
+                             parent=GRU):
+
+    class Parametrised_GRU(parent):
         def __init__(self):
             self.input_dim = input_dim
             self.output_dim = output_dim
@@ -132,6 +138,7 @@ def factory_parametrised_GRU(input_dim=1, output_dim=1,
             self.dropout = dropout
             self.hidden_FC = hidden_FC
             super().__init__()
+            self.nn_class = nn_class
             self.activation_fct = activation_fct  # after init for this reason :
             # https://stackoverflow.com/questions/43080583/attributeerror-cannot-assign-module-before-module-init-call
 
@@ -243,5 +250,13 @@ def factory_parametrised_GRU(input_dim=1, output_dim=1,
                 self._nb_output_consider = new_nb_output_consider
             else:
                 raise Error_type_setter(f"Argument is not an {str(int)}.")
+
+        @property
+        def nn_class(self):
+            return self._nn_class
+
+        @nn_class.setter
+        def nn_class(self, new_nn_class):
+            self._nn_class = new_nn_class
 
     return Parametrised_GRU
