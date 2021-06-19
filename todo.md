@@ -1,15 +1,9 @@
 # Ideas for continuing the project:
 
-          
-# Bianca
-* Gru and lstm
-  
+# Niels
+* think of new tasks for Bianca
 
-      
-* Gru and lsdm
-* Can you check what happens when batch size is bigger than actual size of data? 
-  I think it is fine, that the metrics are not multiplied by something too big, 
-  neither are empty rows created but well...
+# Bianca
 
 
 # Todos:
