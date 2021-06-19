@@ -1,11 +1,7 @@
-import json
-
 import numpy as np
 import pandas as pd
-import numpy as np
 from priv_lib_error import Error_type_setter
 from priv_lib_estimator import Estimator
-from priv_lib_util.tools.src.function_json import unzip_json, zip_json
 
 
 class Estim_history(Estimator):
@@ -73,8 +69,7 @@ class Estim_history(Estimator):
         Returns:
             A list of strings representing the column names based on metric names and validation flag
         """
-        df_column_names = []
-        df_column_names.append(Estim_history._generate_column_name("loss"))
+        df_column_names = [Estim_history._generate_column_name("loss")]
 
         for metric_name in self.metric_names:
             df_column_names.append(Estim_history._generate_column_name(metric_name))
@@ -86,7 +81,6 @@ class Estim_history(Estimator):
                 df_column_names.append(Estim_history._generate_column_name(metric_name, validation=True))
 
         return df_column_names
-
 
     @staticmethod
     def _generate_column_name(base_name, validation=False):
@@ -140,7 +134,6 @@ class Estim_history(Estimator):
             The translated history
         """
         translated_history = {}
-
 
         # collect training information
         for key, value in history['training'].items():

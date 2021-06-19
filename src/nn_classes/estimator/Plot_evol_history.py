@@ -26,8 +26,6 @@ class Plot_evol_history(Plot_estim_history, Evolution_plot_estimator):
         return fig_dict
 
     def draw(self, key_for_second_axis_plot=None, log_axis_for_loss=True, log_axis_for_second_axis=False):
-        # TODO CHECK THE KEY FOR SECOND AXIS IS INDEED IN THE COLUMNS
-        # TODO list for best_epoch in case 1 element
         aplot = APlot()
 
         # colormaps
@@ -65,6 +63,8 @@ class Plot_evol_history(Plot_estim_history, Evolution_plot_estimator):
                                     'xscale': 'linear', 'yscale': yscale,
                                     'basey': 10})
             if key_for_second_axis_plot is not None:
+                assert self.estimator.contains(f"{key_for_second_axis_plot}_training"), \
+                    f"{key_for_second_axis_plot}_training does not exist in the df"
                 dict_plot_param_second_metric_training = {"color": color_plot_blue[i],
                                                           "linewidth": linewidth,
                                                           "label": f"{key_for_second_axis_plot} for Training nb {i + 1}"
@@ -92,6 +92,8 @@ class Plot_evol_history(Plot_estim_history, Evolution_plot_estimator):
                 aplot.uni_plot(nb_ax=0, xx=evolution_xx, yy=self.get_data2evolution(coloured_data, 'loss_validation'),
                                dict_plot_param=dict_plot_param_loss_validation)
                 if key_for_second_axis_plot is not None:
+                    assert self.estimator.contains(f"{key_for_second_axis_plot}_validation"), \
+                        f"{key_for_second_axis_plot}_training does not exist in the df"
                     dict_plot_param_second_metric_validation = {"color": color_plot_red[i],
                                                                 "linewidth": linewidth,
                                                                 "label": f"{key_for_second_axis_plot} for Validation nb {i + 1}"
@@ -102,10 +104,8 @@ class Plot_evol_history(Plot_estim_history, Evolution_plot_estimator):
                                           dict_plot_param=dict_plot_param_second_metric_validation, dict_ax=dict_ax)
 
         # plot lines of best NN:
-        # TODO LIST
-        if len(list(self.estimator.best_epoch)) > 0:
-            # TODO LIST
-            _plot_best_epoch_NN(aplot, list(self.estimator.best_epoch))
+        if len(self.estimator.best_epoch) > 0:
+            _plot_best_epoch_NN(aplot, self.estimator.best_epoch)
 
         aplot.show_legend()
         aplot._axs[0].grid(True)
