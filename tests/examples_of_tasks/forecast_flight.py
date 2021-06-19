@@ -4,10 +4,10 @@ import torch.nn as nn
 import seaborn as sns
 from sklearn.preprocessing import MinMaxScaler
 
+from nn_classes.architecture.factory_parametrised_rnn import factory_parametrised_RNN
 from src.data_processing_fct import add_column_cyclical_features
 from src.nn_classes.architecture.windowcreator import Windowcreator
 from src.nn_classes.estimator.estim_history import Estim_history
-from src.nn_classes.architecture.gru import factory_parametrised_GRU
 from src.plot.nn_plot_history import nn_plot_train_loss_acc
 from src.nn_classes.optim_wrapper import Optim_wrapper
 from src.nn_train.nntrainparameters import NNTrainParameters
@@ -15,7 +15,8 @@ from src.util_training import pytorch_device_setting, set_seeds
 from src.nn_classes.training_stopper.Early_stopper_training import Early_stopper_training
 from src.nn_classes.training_stopper.Early_stopper_validation import Early_stopper_validation
 from src.nn_train.kfold_training import train_kfold_a_fold_after_split
-
+from src.nn_classes.architecture.lstm import LSTM
+from src.nn_classes.architecture.gru import GRU
 
 from priv_lib_plot import APlot
 
@@ -60,13 +61,20 @@ if __name__ == '__main__':
                                        criterion=criterion, optim_wrapper=optim_wrapper,
                                        metrics=metrics)
 
-    parametrized_NN = factory_parametrised_GRU(input_dim=input_size, output_dim=output_size,
-                                               num_layers=num_layers, bidirectional=bidirectional,
-                                               input_time_series_len=lookback_window,
-                                               output_time_series_len=lookforward_window,
-                                               nb_output_consider=lookforward_window,
-                                               hidden_size=hidden_size, dropout=dropout,
-                                               activation_fct=nn.CELU(), hidden_FC=128)
+    Parent = GRU
+    rnn_class = nn.GRU
+
+    # Parent = LSTM
+    # rnn_class = nn.LSTM
+
+    parametrized_NN = factory_parametrised_RNN(input_dim=input_size, output_dim=output_size,
+                                                num_layers=num_layers, bidirectional=bidirectional,
+                                                input_time_series_len=lookback_window,
+                                                output_time_series_len=lookforward_window,
+                                                nb_output_consider=lookforward_window,
+                                                hidden_size=hidden_size, dropout=dropout,
+                                                activation_fct=nn.CELU(), hidden_FC=128,
+                                                Parent = Parent, rnn_class = rnn_class)
 
     ########################################## DATA
     print(flight_data.head())
