@@ -127,7 +127,6 @@ def nn_plot_prediction_vs_true(net, plot_xx, plot_yy=None, plot_yy_noisy=None):
 
 @decorator_on_cpu_during_fct
 def nn_errors_compute_mean(net, train_X, train_Y, testing_X=None, testing_Y=None, device = 'cpu'):
-    # todo works on cpu and gpu?
     diff_train = (net.nn_predict(train_X) - train_Y)
 
     # Compute the scaled relative L1,L2, Linf validation error
