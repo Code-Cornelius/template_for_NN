@@ -1,11 +1,5 @@
 # Ideas for continuing the project:
 
-# Niels
-* think of new tasks for Bianca
-
-# Bianca
-
-
 # Todos:
 * aplot. The 3D plot have a different logic, due to the fact that axis are 3D axis.
   How to deal with it ? 3DAPlot?
@@ -22,4 +16,4 @@
       
 
   
-* running some examples for checking that the functions are okay
+estim hyper param, see how it works, plots...
