@@ -126,18 +126,28 @@ def nn_plot_prediction_vs_true(net, plot_xx, plot_yy=None, plot_yy_noisy=None):
 
 
 @decorator_on_cpu_during_fct
-def nn_print_errors(net, train_X, train_Y, testing_X, testing_Y):
-    # Compute the relative validation error
-    diff_train = (net.nn_predict_ans2cpu(train_X) - train_Y)
-    relative_error_train = torch.mean(diff_train * diff_train) / torch.mean(train_Y * train_Y)
-    print("Relative Training Error: ", math.sqrt(relative_error_train.numpy()) * 100, "%")
+def nn_errors_compute_mean(net, train_X, train_Y, testing_X=None, testing_Y=None):
+    # todo works on cpu and gpu?
+    diff_train = (net.nn_predict(train_X) - train_Y)
 
-    # Compute the relative validation error
-    # relative_error_val = torch.mean((net.nn_predict(validation_X) - validation_Y) ** 2) / torch.mean(validation_Y ** 2)
-    # print("Relative Validation Error: ", relative_error_val.numpy() ** 0.5 * 100, "%")
+    # Compute the scaled relative L1,L2, Linf validation error
 
-    # Compute the relative L2 error norm (generalization error)
-    diff_test = (net.nn_predict_ans2cpu(testing_X) - testing_Y)
-    relative_error_test = torch.mean(diff_test * diff_test) / torch.mean(testing_Y * testing_Y)
-    print("Relative Testing Error: ", math.sqrt(relative_error_test.numpy()) * 100, "%")
-    return
+    mean_relative_train_error_L1 = (torch.abs(torch.mean(diff_train) / torch.mean(train_Y))).numpy()
+    mean_relative_train_error_L2 = math.sqrt(
+        (torch.mean(diff_train * diff_train) / torch.mean(train_Y * train_Y)).numpy())
+    mean_relative_train_error_Linf = (torch.max(torch.abs(diff_train)) / abs(torch.mean(train_Y))).numpy()
+
+    # Compute the scaled relative L2 generalisation error
+
+    diff_test = (net.nn_predict(testing_X) - testing_Y)
+    mean_relative_test_error_L1 = 0  # for return
+    mean_relative_test_error_L2 = 0  # for return
+    mean_relative_test_error_Linf = 0  # for return
+    if testing_X is not None and testing_Y is not None:
+        mean_relative_test_error_L1 = (torch.abs(torch.mean(diff_test) / torch.mean(testing_Y))).numpy()
+        mean_relative_test_error_L2 = (torch.abs(torch.mean(diff_test * diff_test) /
+                                                 torch.mean(testing_Y * testing_Y))).numpy()
+        mean_relative_test_error_Linf = (torch.max(torch.abs(diff_test)) / abs(torch.mean(testing_Y))).numpy()
+
+    return (mean_relative_train_error_L1, mean_relative_train_error_L2, mean_relative_train_error_Linf,
+            mean_relative_test_error_L1, mean_relative_test_error_L2, mean_relative_test_error_Linf)

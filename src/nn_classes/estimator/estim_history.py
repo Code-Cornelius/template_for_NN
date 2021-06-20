@@ -3,6 +3,8 @@ import pandas as pd
 from priv_lib_error import Error_type_setter
 from priv_lib_estimator import Estimator
 
+from plot.nn_plots import nn_errors_compute_mean
+
 
 class Estim_history(Estimator):
     NAMES_COLUMNS = {'fold', 'epoch'}
@@ -13,7 +15,9 @@ class Estim_history(Estimator):
         self.validation = validation
         self.best_epoch = []
         self.hyper_params = hyper_params
-        self.best_fold = -1
+        self.best_fold = -1  # negative strictly number means no best_fold found yet.
+
+        self.err_computed = False  # flag that indicates whether all losses are stored.
 
         df_column_names = self._generate_all_column_names()
         super().__init__(pd.DataFrame(columns=df_column_names))
@@ -36,8 +40,18 @@ class Estim_history(Estimator):
             'validation': self.validation,
             'best_epoch': self.best_epoch,
             'hyper_params': self.hyper_params,
-            'best_fold': self.best_fold
+            'best_fold': self.best_fold,
+            'err_computed': self.err_computed
         }
+
+        if self.err_computed:
+            add = {'train_mean_loss_L1': self.train_mean_loss_L1,
+                   'train_mean_loss_L2': self.train_mean_loss_L2,
+                   'train_mean_loss_Linf': self.train_mean_loss_Linf,
+                   'test_mean_loss_L1': self.test_mean_loss_L1,
+                   'test_mean_loss_L2': self.test_mean_loss_L2,
+                   'test_mean_loss_Linf': self.test_mean_loss_Linf}
+            attrs.update(add)
 
         super().to_json(path, compress, attrs)
 
@@ -59,6 +73,15 @@ class Estim_history(Estimator):
         estimator.best_epoch = attrs['best_epoch']
         estimator.hyper_params = attrs['hyper_params']
         estimator.best_fold = attrs['best_fold']
+
+        if estimator.err_computed:  # flag that indicates whether all losses are stored.
+            estimator.train_mean_loss_L1 = attrs['train_mean_loss_L1']
+            estimator.train_mean_loss_L2 = attrs['train_mean_loss_L2']
+            estimator.train_mean_loss_Linf = attrs['train_mean_loss_Linf']
+            estimator.test_mean_loss_L1 = attrs['test_mean_loss_L1']
+            estimator.test_mean_loss_L2 = attrs['test_mean_loss_L2']
+            estimator.test_mean_loss_Linf = attrs['test_mean_loss_Linf']
+
         return estimator
 
     def get_col_metric_names(self):
@@ -122,6 +145,7 @@ class Estim_history(Estimator):
         adapted_history = self._translate_history_to_dataframe(history, fold_number)
         adapted_history = pd.DataFrame(adapted_history)
         self.append(adapted_history)
+        return
 
     def _translate_history_to_dataframe(self, history, fold_number):
         """
@@ -217,3 +241,18 @@ class Estim_history(Estimator):
             self._best_fold = new_best_fold
         else:
             raise Error_type_setter(f"Argument is not an {str(int)}.")
+
+    def err_compute_best_net(self, net, train_X, train_Y, testing_X=None, testing_Y=None):
+        self.err_computed = True  # flag that indicates whether all losses are stored.
+
+        (trainL1, trainL2, trainLinf, testL1,
+         testL2, testLinf) = nn_errors_compute_mean(net, train_X, train_Y, testing_X, testing_Y)
+
+        self.train_mean_loss_L1 = trainL1
+        self.train_mean_loss_L2 = trainL2
+        self.train_mean_loss_Linf = trainLinf
+        self.test_mean_loss_L1 = testL1
+        self.test_mean_loss_L2 = testL2
+        self.test_mean_loss_Linf = testLinf
+        return (trainL1, trainL2, trainLinf, testL1,
+                testL2, testLinf)

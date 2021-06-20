@@ -11,7 +11,7 @@ import torch.nn.functional as F
 import pandas as pd
 
 from plot.nn_plot_history import nn_plot_train_loss_acc
-from plot.nn_plots import nn_plot_prediction_vs_true, nn_print_errors
+from plot.nn_plots import nn_plot_prediction_vs_true, nn_errors_compute_mean
 from src.nn_classes.architecture.fully_connected import factory_parametrised_FC_NN
 from src.nn_train.nntrainparameters import NNTrainParameters
 from src.util_training import set_seeds, pytorch_device_setting
