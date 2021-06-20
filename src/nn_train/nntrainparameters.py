@@ -10,7 +10,7 @@ class NNTrainParameters:
         """
 
         Args:
-            batch_size:
+            batch_size: batch size can be too big, will not have an impact in kfold_training.
             epochs:
             device:
             criterion:

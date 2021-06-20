@@ -168,8 +168,8 @@ def _new_best_model(best_net, i, net, value_metric_for_best_NN, estimator_histor
     rookie_perf = -estimator_history.get_values_fold_epoch_col(i, estimator_history.best_epoch[i], "loss_training")
 
     if not silent:  # -1 * ... bc we want to keep order below :
-        print("New best model updated: rookie perf : {}"
-              " and old best perf : {}.".format(-rookie_perf, -value_metric_for_best_NN))
+        print("New best model updated: rookie perf : {:e}"
+              " and old best perf : {:e}.".format(-rookie_perf, -value_metric_for_best_NN))
     if value_metric_for_best_NN < rookie_perf:
         best_net = net
         value_metric_for_best_NN = rookie_perf

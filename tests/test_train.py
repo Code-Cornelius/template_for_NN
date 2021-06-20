@@ -81,38 +81,49 @@ if __name__ == '__main__':
                                                  param_activation_functions=activation_functions, param_dropout=dropout,
                                                  param_predict_fct=None)
 
-    # NORMAL TRAINING
+    print("Normal Training")
     (net, estimator_history) = nn_kfold_train(train_X, train_Y, parametrized_NN, param_train=param_training,
                                               early_stoppers=early_stoppers, nb_split=1, shuffle_kfold=True,
                                               percent_val_for_1_fold=10, silent=False)
     history_plot = Plot_evol_history(estimator_history)
     history_plot.draw(key_for_second_axis_plot='L4', log_axis_for_loss=True, log_axis_for_second_axis=True)
-
     nn_plot_prediction_vs_true(net=net, plot_xx=plot_xx, plot_yy=plot_yy, plot_yy_noisy=plot_yy_noisy, device=device)
-    nn_errors_compute_mean(net=net, train_X=train_X, train_Y=train_Y, testing_X=testing_X, testing_Y=testing_Y)
+    estimator_history.err_compute_best_net(net=net, device=device, train_X=train_X, train_Y=train_Y,
+                                           testing_X=testing_X, testing_Y=testing_Y)
+    estimator_history.print_err()
     APlot.show_and_continue()
+    print("\n")
 
-    # MULTIPLE FOLD TRAINING
+    print("Multiple Fold Training")
     (net, estimator_history) = nn_kfold_train(train_X, train_Y, parametrized_NN, param_train=param_training,
                                               early_stoppers=early_stoppers, nb_split=5, shuffle_kfold=True,
                                               silent=False)
     history_plot = Plot_evol_history(estimator_history)
     history_plot.draw(key_for_second_axis_plot='L4', log_axis_for_loss=True, log_axis_for_second_axis=True)
-
     nn_plot_prediction_vs_true(net=net, plot_xx=plot_xx, plot_yy=plot_yy, plot_yy_noisy=plot_yy_noisy, device=device)
-    nn_errors_compute_mean(net=net, train_X=train_X, train_Y=train_Y, testing_X=testing_X, testing_Y=testing_Y)
-    APlot.show_plot()
+    nn_errors_compute_mean(net=net, device=device, train_X=train_X, train_Y=train_Y,
+                           testing_X=testing_X, testing_Y=testing_Y)
+    estimator_history.err_compute_best_net(net=net, device=device, train_X=train_X, train_Y=train_Y,
+                                           testing_X=testing_X, testing_Y=testing_Y)
+    estimator_history.print_err()
+    APlot.show_and_continue()
+    print("\n")
 
-    # NO VALIDATION TRAINING
+    print("No Validation Training")
     (net, estimator_history) = nn_kfold_train(train_X, train_Y, parametrized_NN, param_train=param_training,
                                               early_stoppers=(early_stop_train,), nb_split=1, shuffle_kfold=True,
                                               percent_val_for_1_fold=0, silent=False)
     history_plot = Plot_evol_history(estimator_history)
     history_plot.draw(key_for_second_axis_plot='L4', log_axis_for_loss=True, log_axis_for_second_axis=True)
-
     nn_plot_prediction_vs_true(net=net, plot_xx=plot_xx, plot_yy=plot_yy, plot_yy_noisy=plot_yy_noisy, device=device)
-    nn_errors_compute_mean(net=net, train_X=train_X, train_Y=train_Y, testing_X=testing_X, testing_Y=testing_Y)
+    nn_errors_compute_mean(net=net, device=device, train_X=train_X, train_Y=train_Y,
+                           testing_X=testing_X, testing_Y=testing_Y)
+    estimator_history.err_compute_best_net(net=net, device=device, train_X=train_X, train_Y=train_Y,
+                                           testing_X=testing_X, testing_Y=testing_Y)
+    estimator_history.print_err()
+
     APlot.show_and_continue()
+    print("\n")
 
     # intentional error percent in input:
     try:

@@ -28,6 +28,7 @@ def decorator_train_disable_no_grad(func):
 
 
 def decorator_on_cpu_during_fct(func):
+    """ the func needs to have net and device in its definition."""
     @functools.wraps(func)
     def wrapper_decorator_on_cpu_during_fct(*, net, device, **kwargs):
         # key words only.
