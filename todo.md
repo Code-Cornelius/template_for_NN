@@ -17,3 +17,13 @@
 
   
 estim hyper param, see how it works, plots...
+
+
+* Evolution plot there is a todo. in draw.
+  
+  * plot evol hawkes mseerrors todo for unique MSE
+    
+* evolution plot estimator _plot_finalisation
+* Name of column in evolution plot drawing.
+  
+* for hawkes estim, not mandatory to have true values. in init

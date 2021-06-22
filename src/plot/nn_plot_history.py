@@ -8,8 +8,6 @@ def nn_plot_train_loss_acc(estimator_history, key_for_second_axis_plot=None, fla
                            log_axis_for_loss=True,
                            log_axis_for_second_axis=False, title='', step_history=1):
     assert step_history > 0, "step_history must be strictly positive."
-
-    # TODO make sure that the labels are in different places.
     # if there is another key, we create a plot with two y-axis but only one x-axis.
     if key_for_second_axis_plot is not None:
         aplot = APlot(how=(1, 1))
