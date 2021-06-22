@@ -28,7 +28,7 @@ def nn_fit(net, X_train_on_device, Y_train_on_device,
            *, silent=False):
     """
     Args:
-        net: model
+        net (Savable_net): model.
         X_train_on_device:
         Y_train_on_device:
         params_training: type NNTrainParameters, the parameters used in training
@@ -89,13 +89,18 @@ def nn_fit(net, X_train_on_device, Y_train_on_device,
         ######################
         #   Early Stopping   #
         ######################
-        # Check if NN has not improved with respect to one of the two criteria.
+        # check if any improvement and update early.has_improved_last_epoch.
+        if _do_early_stop(net, early_stoppers, history, epoch, silent):
+            # does not break first epoch_iter because
+            # _early_stopped = False,
+            # has_improved_last_epoch = True
+            break # stop epoch
+
+        # Check if NN has not improved with respect to the early stoppers.
         # If has not, we do not improve the best_weights of the NN
         if all(early_stopper.has_improved_last_epoch for early_stopper in early_stoppers):
             net.update_best_weights(epoch)
 
-        if _do_early_stop(net, early_stoppers, history, epoch, silent):
-            break
 
         if PLOT_WHILE_TRAIN:
             if epoch % FREQ_NEW_IMAGE == 0:
@@ -107,7 +112,7 @@ def nn_fit(net, X_train_on_device, Y_train_on_device,
 
 def _do_early_stop(net, early_stoppers, history, epoch, silent):
     for early_stopper in early_stoppers:
-        if early_stopper(net, history, epoch):
+        if early_stopper(net, history, epoch): # if any earlly stops, then we return true.
             if not silent: print("Terminated epochs, with early stopper training at epoch {}.".format(epoch))
             return True
     return False

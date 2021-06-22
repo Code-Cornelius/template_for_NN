@@ -124,7 +124,7 @@ def train_kfold_a_fold_after_split(data_train_X, data_train_Y, index_training, i
         data_train_Y:
         index_training: format such that it is possible to slice data like: data[index]
         index_validation:
-        Model_NN:
+        Model_NN (Class extended from Savable_net):
         param_train:
         early_stoppers: a list of early_stoppers
         value_metric_for_best_NN:

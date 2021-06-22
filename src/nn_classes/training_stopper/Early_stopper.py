@@ -48,20 +48,21 @@ class Early_stopper(metaclass=ABCMeta):
     def __init__(self, tipee, metric_name, patience=50, silent=True, delta=0.1):
         """
         Args:
-            tipee (str): the type of early stopper, used for accessing history in NN training. 'training', 'validation'
+            tipee (str): the type of early stopper, used for accessing history in NN training.
+            'training', 'validation' are supported.
             metric_name (str): the named used to identify the results of the metric in history
             patience (int): How long the stopper waits for improvement of the criterion.
-            silent (bool):
+            silent (bool): verbose
             delta (float): Minimum change in the monitored quantity to qualify as an improvement. In percent.
                             Default: 0.1
         """
         self._patience = patience
         self._silent = silent
-        self._counter = 0
+        self._counter = 0 # private counter that is compared to patience
         self._lowest_loss = np.Inf
         self._delta = delta
 
-        # for retrieving the best result
+        # status of the early stopper
         self._early_stopped = False
         self.has_improved_last_epoch = True
 
@@ -70,6 +71,22 @@ class Early_stopper(metaclass=ABCMeta):
         self._metric_name = metric_name
 
     def __call__(self, net, history, epoch):
+        """
+        Semantics:
+            Check if the condition for early stopping are satisfied.
+            Condition is _is_early_stop. The history should be given as a dict of dict (validation/training; metric type).
+            If _is_early_stop == true, then has_improved_last_epoch = False.
+            If _is_early_stop == false, then has_improved_last_epoch = True.
+        Args:
+            net:
+            history:
+            epoch:
+
+        Returns:
+            self._counter >= self._patience:
+
+        """
+        # method implemented child specific class, case should stop.
         if self._is_early_stop(history[self._tipee][self._metric_name], epoch):
             self._counter += 1
             self.has_improved_last_epoch = False  # : flag giving information about the performance of the NN
@@ -80,6 +97,7 @@ class Early_stopper(metaclass=ABCMeta):
             if self._counter >= self._patience:
                 self._early_stopped = True
                 return True
+        # should not stop / has improved.
         else:
             self.has_improved_last_epoch = True  # : flag giving information about the performance of the NN
             self._lowest_loss = min(history[self._tipee][self._metric_name][epoch], self._lowest_loss)
@@ -89,14 +107,15 @@ class Early_stopper(metaclass=ABCMeta):
     @abstractmethod
     def _is_early_stop(self, losses, epoch):
         """
-        should be a const method
-        The requirements are:
+        Test for earling stopping regarding some criteria.
+        Const method
 
         Args:
-            losses: data for criteria
-            epoch:
+            losses: data for criteria, list, needs to be iterable.
+            epoch: current epoch.
 
-        Returns: boolean answering the question should we stop early.
+        Returns:
+             boolean answering the question should we stop early at the current epoch.
 
         """
         pass
@@ -108,15 +127,16 @@ class Early_stopper(metaclass=ABCMeta):
         return self._tipee == 'validation'
 
     def reset(self):
-        """ Allows to reset the log of the early stopper between kfold for example."""
+        """ Allows to reset the log of the early stopper, for multiple usage.
+         For example, in kfold."""
         self._early_stopped = False  # if we train again, then we reset early_stopped.
         self.has_improved_last_epoch = True
         self._lowest_loss = np.Inf
         self._counter = 0
 
     @property
-    def _tipee(self):  # un-mangling
-        return self.__tipee
+    def _tipee(self):
+        return self.__tipee  # un-mangling
 
     @_tipee.setter
     def _tipee(self, new__tipee):

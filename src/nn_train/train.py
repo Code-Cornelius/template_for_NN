@@ -12,7 +12,7 @@ def nn_train(net, data_X, data_Y, params_training, indic_train_X, indic_train_Y,
     Semantics : Given the net, we train it upon data.
     For optimisation reasons, we pass the indices.
     Args:
-        net:
+        net (Savable_net):
         data_X: tensor
         data_Y: tensor
         params_training: NNTrainParameters. parameters used for training
