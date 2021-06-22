@@ -3,7 +3,7 @@ import torch
 from priv_lib_plot import APlot
 from torch import nn
 
-from nn_classes.estimator.Plot_evol_history import Plot_evol_history
+from nn_classes.estimator.plot_evol_history import Plot_evol_history
 from nn_train.kfold_training import nn_kfold_train
 from plot.nn_plots import nn_plot_prediction_vs_true, nn_errors_compute_mean
 from src.nn_classes.architecture.fully_connected import factory_parametrised_FC_NN

@@ -40,7 +40,7 @@ def decorator_on_cpu_during_fct(func):
     return wrapper_decorator_on_cpu_during_fct
 
 
-def pytorch_device_setting(type=''):
+def pytorch_device_setting(type='', silent = False):
     """
     Semantics : sets the device for NeuralNetwork computations.
     Put nothing for automatic choice.
@@ -54,7 +54,8 @@ def pytorch_device_setting(type=''):
 
     """
     device = torch.device('cpu') if type == 'cpu' else torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-    print("Script running on device : ", device)
+    if not silent:
+        print("Script running on device : ", device)
     return device
 
 
