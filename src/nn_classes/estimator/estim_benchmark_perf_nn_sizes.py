@@ -13,7 +13,7 @@ from priv_lib_estimator.src.estimator.estim_time import Estim_time
 
 class Estim_benchmark_perf_nn_sizes(Estim_time):
     CORE_COL = Estim_time.CORE_COL.copy()
-    CORE_COL.update(("Input Size", "Processing Unit", "Model Size"))  # add to the name_columns the specific columns.
+    CORE_COL.update(("Input Size", "Processing Unit", "Model Size", "Depth"))  # add to the name_columns the specific columns.
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
