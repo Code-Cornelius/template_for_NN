@@ -26,17 +26,19 @@ def exact_solution(x):
 
 # 80% is taken for training
 # batch is 1/4 of total training size.
-sizes_samples = [50, 100, 200, 400, 1600, 2800, 3600,
+sizes_samples = [50, 100, 400, 1600, 2800, 3600,
                  6400, 12800, 16000, 25600, 40000,
-                 51200, 75000, 100000]
+                 51200, 100000]
+sizes_samples = [50, 100, 3600, 6400, 16000, 51200]
 # only divisble by 5 number in order to be ok for splitting sizes.
 
-sizes_model = [10, 20, 40, 64, 80, 120, 160, 200, 320, 640, 1024]
+sizes_model = [10, 20, 64, 128, 160, 256, 320, 640, 1024, 2048, 4096, 8192]
+sizes_model = [10, 160, 320, 1024]
 
-depths = [3,6]
+depths = [3, 6]
 processing_units = ['gpu', 'cpu']
 
-epochs = 200
+epochs = 20
 
 
 def benchmark_and_save(estim, input_size, type_pu, size_model, depth, **kwargs):
@@ -44,7 +46,7 @@ def benchmark_and_save(estim, input_size, type_pu, size_model, depth, **kwargs):
     time_dict = {"Input Size": input_size,
                  "Processing Unit": type_pu,
                  "Model Size": size_model,
-                 'Depth':depth,
+                 'Depth': depth,
                  "Comput. Time": [time]}
     estim.append(pd.DataFrame(time_dict))
     return
@@ -56,8 +58,9 @@ for size_sample in tqdm(sizes_samples):
     for PU in processing_units:
         for size_model in sizes_model:
             for depth in depths:
-                if PU == 'cpu' and size_model > 300:
-                    break # too long
+                if PU == 'cpu' and size_sample > 12800:
+                    break  # too long
+                    # did not work!
 
                 sigma = 0.0  # Noise level
                 device = pytorch_device_setting(PU, True)
