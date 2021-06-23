@@ -13,7 +13,7 @@ class NNTrainParameters:
             batch_size: batch size can be too big, will not have an impact in kfold_training.
             epochs:
             device:
-            criterion:
+            criterion: should be not normalised. All metrics and losses are rescaled inside by batch size.
             optimiser_wrapper: contains the optimiser object with the parameters to initialise it.
                 It can also contain a scheduler for updating the learning rate
             metrics:  iterable containing objects of type Metric.

@@ -48,7 +48,8 @@ class RNN(Savable_net, metaclass=ABCMeta):
         else:
             out = out[:, -self.nb_output_consider:, :self.hidden_size]
 
-        out = out.view(-1, self.hidden_size * self.nb_directions * self.nb_output_consider)
+        out = out.reshape(-1, self.hidden_size * self.nb_directions * self.nb_output_consider)
+        # reshape might be a view, but could also be a copy... since we are slicing in a non contiguous way.
         # squeezing the two last dimensions into one, for input to FC layer.
 
         out = self.linear_layer(out)

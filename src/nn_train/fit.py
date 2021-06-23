@@ -6,18 +6,15 @@ from src.nn_classes.fast_tensor_dataloader import FastTensorDataLoader
 from src.nn_classes.training_stopper.Early_stopper_vanilla import Early_stopper_vanilla
 from src.util_training import decorator_train_disable_no_grad
 
-PLOT_WHILE_TRAIN = False
-if PLOT_WHILE_TRAIN:
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
-    FREQ_NEW_IMAGE = 40
+PLOT_WHILE_TRAIN = True
+FREQ_NEW_IMAGE = 40
 
 
-def plot_while_training(params_training, history):
+def plot_while_training(params_training, history, ax):
     ax.clear()
-    plt.semilogy(range(params_training.epochs), history['training']['loss'], 'b', label='Train Loss')
-    plt.semilogy(range(params_training.epochs), history['validation']['loss'], 'r', label='Validation Loss')
-    plt.legend(loc="best")
+    ax.semilogy(range(params_training.epochs), history['training']['loss'], 'b', label='Train Loss')
+    ax.semilogy(range(params_training.epochs), history['validation']['loss'], 'r', label='Validation Loss')
+    ax.legend(loc="best")
     plt.pause(0.0001)
 
 
@@ -44,6 +41,9 @@ def nn_fit(net, X_train_on_device, Y_train_on_device,
     Post-condition :
         early_stoppers not changed.
     """
+    if PLOT_WHILE_TRAIN:
+        fig = plt.figure('plot while training')
+        ax = fig.add_subplot(111)
 
     # condition if we use validation set.
     (criterion, is_validat_included, total_number_data,
@@ -104,7 +104,7 @@ def nn_fit(net, X_train_on_device, Y_train_on_device,
 
         if PLOT_WHILE_TRAIN:
             if epoch % FREQ_NEW_IMAGE == 0:
-                plot_while_training(params_training, history)
+                plot_while_training(params_training, history, ax)
 
     # ~~~~~~~~ end of the for in epoch. Training
     return _return_the_stop(net, epoch, early_stoppers)

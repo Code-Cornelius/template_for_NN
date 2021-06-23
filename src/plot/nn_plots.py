@@ -6,7 +6,6 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import torch
-from IPython.core.display import display
 # my libraries
 from priv_lib_plot import APlot
 from sklearn import metrics
@@ -77,7 +76,7 @@ def result_function(title, data_train_Y, y_pred1, no_classes, data_test_Y=None, 
 
     conclusion = pd.DataFrame({"Set": conclusion_set,
                                "Accuracy": conclusion_accuracy})
-    display(conclusion)
+    print(conclusion)
 
     print("Confusion matrix for the train data set with " + title + ".")
     confusion_matrix_creator(data_train_Y, y_pred1, range(no_classes))

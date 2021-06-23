@@ -3,11 +3,12 @@ import torch
 import torch.nn as nn
 import seaborn as sns
 from sklearn.preprocessing import MinMaxScaler
+import pandas as pd
 
+from data_processing_fct import add_column_cyclical_features
 from nn_classes.architecture.factory_parametrised_rnn import factory_parametrised_RNN
-from src.data_processing_fct import add_column_cyclical_features
-from src.nn_classes.architecture.windowcreator import Windowcreator
-from src.nn_classes.estimator.estim_history import Estim_history
+from nn_classes.architecture.windowcreator import Windowcreator
+from nn_classes.estimator.estim_history import Estim_history
 from src.plot.nn_plot_history import nn_plot_train_loss_acc
 from src.nn_classes.optim_wrapper import Optim_wrapper
 from src.nn_train.nntrainparameters import NNTrainParameters
@@ -15,6 +16,7 @@ from src.util_training import pytorch_device_setting, set_seeds
 from src.nn_classes.training_stopper.Early_stopper_training import Early_stopper_training
 from src.nn_classes.training_stopper.Early_stopper_validation import Early_stopper_validation
 from src.nn_train.kfold_training import train_kfold_a_fold_after_split
+from src.nn_classes.architecture.lstm import LSTM
 from src.nn_classes.architecture.gru import GRU
 
 from priv_lib_plot import APlot
@@ -23,9 +25,9 @@ from priv_lib_plot import APlot
 set_seeds(42)
 
 # Import Data
-flight_data = sns.load_dataset("flights")
+TEMP_DATA = pd.read_csv("../../research_on_time_series_forecasting/daily_min_temperatures.csv")
 
-##########################################  GLOBAL PARAMETERS
+############################## GLOBAL PARAMETERS
 device = pytorch_device_setting('gpu')
 SILENT = False
 early_stop_train = Early_stopper_training(patience=400, silent=SILENT, delta=-int(1E-2))
@@ -33,27 +35,26 @@ early_stop_valid = Early_stopper_validation(patience=400, silent=SILENT, delta=-
 early_stoppers = (early_stop_train, early_stop_valid)
 metrics = ()
 ##########################################  DATA PARAMETERS:
-time_series_len = lookback_window = 18
-# time_series_len = lookback_window = 12
-lookforward_window = 12
+time_series_len = lookback_window = 365
+lookforward_window = 365
 nb_test_prediction = lookback_window // lookforward_window + 1
-nb_unknown_prediction = 36 // lookforward_window
+nb_unknown_prediction = 365 // lookforward_window
 ##########################################  main
 if __name__ == '__main__':
     # config of the architecture:
     input_size = 3
-    num_layers = 4
-    bidirectional = True
-    hidden_size = 256
+    num_layers = 3
+    bidirectional = False
+    hidden_size = 36
     output_size = 1
-    dropout = 0.01
+    dropout = 0.02
     epochs = 80000
-    batch_size = 120
+    batch_size = 1500
     hidden_FC = 128
 
     optimiser = torch.optim.Adam
     criterion = nn.MSELoss(reduction='sum')
-    dict_optimiser = {"lr": 0.00005, "weight_decay": 1E-6}
+    dict_optimiser = {"lr": 0.005, "weight_decay": 1E-6}
     optim_wrapper = Optim_wrapper(optimiser, dict_optimiser)
 
     param_training = NNTrainParameters(batch_size=batch_size, epochs=epochs, device=device,
@@ -75,18 +76,29 @@ if __name__ == '__main__':
                                                activation_fct=nn.CELU(), hidden_FC=hidden_FC,
                                                Parent=Parent, rnn_class=rnn_class)
 
+    # date = TEMP_DATA["Date"]
+    # time_of_year = [0] * len(date)
+    # for i,date in enumerate(date):
+    #     year = date[:4]
+    #     month = date[5:7]
+    #     day = date[9:]
+    #     time = day + 31 * month
+    #     time_of_year[i] = time
+    #     # wip season?
+
     ########################################## DATA
-    print(flight_data.head())
-    flight_data['time_month'] = range(len(flight_data))
-    flight_data = flight_data.drop(columns=["year", "month"])
+    print(TEMP_DATA.head())
+    TEMP_DATA['day'] = range(len(TEMP_DATA))
+    TEMP_DATA = TEMP_DATA.drop(columns=["Date"])
     # add cyclicity
-    flight_data = add_column_cyclical_features(flight_data, 'time_month', 12)
-    print(flight_data.head())
+    PERIOD_CYCLE = 364.25
+    TEMP_DATA = add_column_cyclical_features(TEMP_DATA, 'day', PERIOD_CYCLE)
+    print(TEMP_DATA.head())
 
     if input_size == 1:
-        data = flight_data['passengers'].values.astype(float).reshape(-1, 1)
+        data = TEMP_DATA['Temperature'].values.astype(float).reshape(-1, 1)
     else:
-        data = flight_data.values.astype(float)
+        data = TEMP_DATA.values.astype(float)
 
     train_data = data[:-lookback_window].reshape(-1, input_size)
     testing_data = data[-lookback_window:].reshape(-1, input_size)
@@ -99,12 +111,13 @@ if __name__ == '__main__':
     window = Windowcreator(input_dim=input_size, output_dim=1, lookback_window=lookback_window,
                            lag_last_pred_fut=lookforward_window,
                            lookforward_window=lookforward_window, type_window="Moving")
-    (data_training_X, data_training_Y) = window.create_input_sequences(train_data_normalized,
-                                                                       train_data_normalized[:, 0].unsqueeze(1))
+    (data_training_X,
+     data_training_Y) = window.create_input_sequences(train_data_normalized, train_data_normalized[:, 0].unsqueeze(1))
 
     indices_train = torch.arange(len(data_training_X) - lookback_window)
     indices_valid = torch.arange(len(data_training_X) - lookback_window, len(data_training_X))
     print("shape of training : ", data_training_Y.shape)
+    print("data training : ", data_training_X)
 
 
     ##########################################
@@ -112,6 +125,24 @@ if __name__ == '__main__':
     def inverse_transform(arr):
         return minimax.inverse_transform(np.array(arr).reshape(-1, input_size))
 
+    # x-axis data for plotting
+    months_total = np.arange(0, len(data), 1)  # data for testing
+    months_train = np.arange(0, len(train_data), 1)  # data for training
+    length_training = len(data_training_Y) + lookback_window + lookforward_window - 1
+    months_test = np.arange(length_training,
+                            length_training + nb_test_prediction * lookforward_window, 1)
+
+
+    presentation_data = APlot()
+    xlabel = 'Day'
+    ylabel = 'temperature in Celcius'
+    dict_ax = {'title': 'Data and Prediction during Training and over Non Observed Data.', 'xlabel': xlabel,
+               'ylabel': ylabel}
+    dict_plot_param = {'label': 'Data for Testing', 'color': 'black', 'linestyle': '-', 'linewidth': 0.3, 'markersize' : 0}
+    presentation_data.uni_plot(0, months_total, data[:, 0], dict_ax=dict_ax, dict_plot_param=dict_plot_param)
+    dict_plot_param = {'label': 'Data Known at Training Time', 'color': 'gray', 'linestyle': '-', 'linewidth': 0.3, 'markersize' : 0}
+    presentation_data.uni_plot(0, months_train, train_data[:, 0], dict_ax=dict_ax, dict_plot_param=dict_plot_param)
+    APlot.show_and_continue()
 
     ##########################################  TRAINING
 
@@ -121,8 +152,7 @@ if __name__ == '__main__':
                                                early_stoppers=early_stoppers)
     net.to(torch.device('cpu'))
     nn_plot_train_loss_acc(estimator_history, flag_valid=True, log_axis_for_loss=True,
-                           key_for_second_axis_plot=None,
-                           log_axis_for_second_axis=True)
+                           key_for_second_axis_plot=None, log_axis_for_second_axis=True)
 
 
     class Adaptor_output(object):
@@ -143,15 +173,15 @@ if __name__ == '__main__':
     ##########################################  prediction TESTING :
     # prediction by looking at the data we know about
     if input_size > 1:
-        increase_data_for_pred = Adaptor_output(0, 0, 12)  # 0 initial and 12 month for a period.
+        increase_data_for_pred = Adaptor_output(0, 0, PERIOD_CYCLE)  # 0 initial and 12 month for a period.
     else:
         increase_data_for_pred = None
     train_prediction = window.prediction_over_training_data(net, train_data_normalized, increase_data_for_pred,
                                                             device=device)
 
     if input_size > 1:
-        increase_data_for_pred = Adaptor_output(train_data_normalized.shape[0],
-                                                0, 12)  # 0 initial and 12 month for a period.
+        increase_data_for_pred = Adaptor_output(train_data_normalized.shape[0], 0, PERIOD_CYCLE)
+        # 0 initial and 12 month for a period.
     else:
         increase_data_for_pred = None
     ##########################################  prediction unknown set. Corresponds to predicting the black line.
@@ -161,7 +191,7 @@ if __name__ == '__main__':
     ##########################################  prediction of TESTING unknown data by starting with black line.
     if input_size > 1:
         increase_data_for_pred = Adaptor_output(train_data_normalized.shape[0] + testing_data_normalised.shape[0],
-                                                0, 12)  # 0 initial and 12 month for a period.
+                                                0, PERIOD_CYCLE)          # 0 initial and 12 month for a period.
     else:
         increase_data_for_pred = None
     unknwon_prediction = window.prediction_recurrent(net, testing_data_normalised[-lookback_window:, :],
@@ -179,8 +209,10 @@ if __name__ == '__main__':
                                 1)
 
     aplot = APlot()
-    dict_ax = {'title': 'Data and Prediction during Training and over Non Observed Data.', 'xlabel': 'month',
-               'ylabel': 'passenger'}
+    xlabel = 'Day'
+    ylabel = 'temperature in Celcius'
+    dict_ax = {'title': 'Data and Prediction during Training and over Non Observed Data.', 'xlabel': xlabel,
+               'ylabel': ylabel}
     dict_plot_param = {'label': 'Data for Testing', 'color': 'black', 'linestyle': '-', 'linewidth': 3}
     aplot.uni_plot(0, months_total, data[:, 0], dict_ax=dict_ax, dict_plot_param=dict_plot_param)
     dict_plot_param = {'label': 'Data Known at Training Time', 'color': 'gray', 'linestyle': '-', 'linewidth': 3}

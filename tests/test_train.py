@@ -26,7 +26,7 @@ def exact_solution(x):
 ############################## GLOBAL PARAMETERS
 n_samples = 2000  # Number of training samples
 sigma = 0.01  # Noise level
-device = pytorch_device_setting('cpu')
+device = pytorch_device_setting('cpu', silent = False)
 SILENT = False
 early_stop_train = Early_stopper_training(patience=20, silent=SILENT, delta=-int(1E-6))
 early_stop_valid = Early_stopper_validation(patience=20, silent=SILENT, delta=-int(1E-6))

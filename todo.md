@@ -27,3 +27,9 @@ estim hyper param, see how it works, plots...
 * Name of column in evolution plot drawing.
   
 * for hawkes estim, not mandatory to have true values. in init
+
+
+* take care of dependencies BETWEEN libraries.
+  Ideally, create different folders ? 
+  one big folder with the library
+  and then put things together perhaps.
