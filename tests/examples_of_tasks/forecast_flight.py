@@ -28,7 +28,7 @@ flight_data = sns.load_dataset("flights")
 
 
 ##########################################  GLOBAL PARAMETERS
-device = pytorch_device_setting('cpu')
+device = pytorch_device_setting('gpu')
 SILENT = False
 early_stop_train = Early_stopper_training(patience=400, silent=SILENT, delta=-int(1E-2))
 early_stop_valid = Early_stopper_validation(patience=400, silent=SILENT, delta=-int(1E-2))
