@@ -33,3 +33,5 @@ estim hyper param, see how it works, plots...
   Ideally, create different folders ? 
   one big folder with the library
   and then put things together perhaps.
+  
+* precise in inheritance, if you use the super method, then do not forget args and kwargs;

@@ -35,7 +35,7 @@ class Savable_net(nn.Module):
         Constructor for Neural Network.
         """
         super().__init__()
-        self.predict_fct = predict_fct
+        self.predict_fct = predict_fct # put None if you want to keep default
         # best parameters, keeps track in case of early stopping.
         self.best_weights = None  # init the field best weights.
         self.best_epoch = 0

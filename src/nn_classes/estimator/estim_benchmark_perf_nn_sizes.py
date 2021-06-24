@@ -10,13 +10,15 @@ from priv_lib_estimator.src.estimator.estim_time import Estim_time
 # section ######################################################################
 #  #############################################################################
 # Classes
+from priv_lib_plot import AColorsetContinuous
+
 
 class Estim_benchmark_perf_nn_sizes(Estim_time):
     CORE_COL = Estim_time.CORE_COL.copy()
     CORE_COL.update(("Input Size", "Processing Unit", "Model Size", "Depth"))  # add to the name_columns the specific columns.
-
-    def __init__(self, *args, **kwargs):
+    def __init__(self, epochs_bench = 1, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.epochs_bench = epochs_bench
 
 
 class Plot_estim_benchmark_perf_nn_sizes(Plot_estimator):
@@ -28,6 +30,7 @@ class Plot_estim_benchmark_perf_nn_sizes(Plot_estimator):
 
 class Plot_evol_benchmark_perf_nn_sizes(Plot_estim_benchmark_perf_nn_sizes, Evolution_plot_estimator):
     EVOLUTION_COLUMN = "Input Size"
+    COLORMAP = AColorsetContinuous('brg', 14)  # colormap for all plots.
 
     def __init__(self, estimator, *args, **kwargs):
         super().__init__(estimator, *args, **kwargs)
