@@ -1,14 +1,9 @@
-from abc import ABCMeta, abstractmethod
-
-import torch
-import torch.nn as nn
 from priv_lib_error import Error_type_setter
 
-from src.nn_classes.architecture.savable_net import Savable_net
 
 def factory_parametrised_RNN(input_dim=1, output_dim=1, num_layers=1, bidirectional=False, input_time_series_len=1,
                              output_time_series_len=1, nb_output_consider=1, hidden_size=150, dropout=0.,
-                             activation_fct=nn.CELU(), hidden_FC=64, * , rnn_class, Parent):
+                             * , rnn_class, Parent):
     """
 
     Args:
@@ -44,10 +39,8 @@ def factory_parametrised_RNN(input_dim=1, output_dim=1, num_layers=1, bidirectio
             self.bidirectional = bidirectional
             self.hidden_size = hidden_size
             self.dropout = dropout
-            self.hidden_FC = hidden_FC
             self.rnn_class = rnn_class
             super().__init__()
-            self.activation_fct = activation_fct  # after init for this reason :
             # https://stackoverflow.com/questions/43080583/attributeerror-cannot-assign-module-before-module-init-call
 
         # section ######################################################################

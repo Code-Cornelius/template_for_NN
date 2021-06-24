@@ -1,13 +1,14 @@
 import numpy as np
 import torch
 import torch.nn as nn
-import seaborn as sns
 from sklearn.preprocessing import MinMaxScaler
 import pandas as pd
 
 from data_processing_fct import add_column_cyclical_features
-from nn_classes.architecture.factory_parametrised_rnn import factory_parametrised_RNN
-from nn_classes.architecture.windowcreator import Windowcreator
+from nn_classes.architecture.free_nn import factory_parametrised_Free_NN
+from nn_classes.architecture.reshape import Reshape
+from nn_classes.factory_parametrised_rnn import factory_parametrised_RNN
+from nn_classes.windowcreator import Windowcreator
 from nn_classes.estimator.estim_history import Estim_history
 from src.plot.nn_plot_history import nn_plot_train_loss_acc
 from src.nn_classes.optim_wrapper import Optim_wrapper
@@ -42,49 +43,41 @@ nb_unknown_prediction = 365 // lookforward_window
 ##########################################  main
 if __name__ == '__main__':
     # config of the architecture:
-    input_size = 3
+    input_dim = 3
     num_layers = 3
     bidirectional = False
-    hidden_size = 36
+    hidden_size = 64
     output_size = 1
-    dropout = 0.02
+    dropout = 0.2
     epochs = 80000
-    batch_size = 1500
-    hidden_FC = 128
+    batch_size = 1000
+    hidden_FC = 256
 
     optimiser = torch.optim.Adam
     criterion = nn.MSELoss(reduction='sum')
-    dict_optimiser = {"lr": 0.005, "weight_decay": 1E-6}
+    dict_optimiser = {"lr": 0.001, "weight_decay": 1E-6}
     optim_wrapper = Optim_wrapper(optimiser, dict_optimiser)
 
     param_training = NNTrainParameters(batch_size=batch_size, epochs=epochs, device=device,
                                        criterion=criterion, optim_wrapper=optim_wrapper,
                                        metrics=metrics)
 
-    Parent = GRU
-    rnn_class = nn.GRU
+    seq_nn = [
+        (model := factory_parametrised_RNN(input_dim=input_dim, output_dim=output_size,
+                                           num_layers=num_layers, bidirectional=bidirectional,
+                                           input_time_series_len=lookback_window,
+                                           output_time_series_len=lookforward_window,
+                                           nb_output_consider=lookforward_window,
+                                           hidden_size=hidden_size, dropout=dropout,
+                                           Parent=LSTM, rnn_class=nn.LSTM)()),  # walrus operator
+        Reshape([-1, model.output_len]),
+        nn.Linear(model.output_len, hidden_FC, bias=True),
+        nn.CELU(),
+        nn.Linear(hidden_FC, lookforward_window * output_size, bias=True),
+        Reshape([-1, lookforward_window, output_size]),
+    ]
 
-    # Parent = LSTM
-    # rnn_class = nn.LSTM
-
-    parametrized_NN = factory_parametrised_RNN(input_dim=input_size, output_dim=output_size,
-                                               num_layers=num_layers, bidirectional=bidirectional,
-                                               input_time_series_len=lookback_window,
-                                               output_time_series_len=lookforward_window,
-                                               nb_output_consider=lookforward_window,
-                                               hidden_size=hidden_size, dropout=dropout,
-                                               activation_fct=nn.CELU(), hidden_FC=hidden_FC,
-                                               Parent=Parent, rnn_class=rnn_class)
-
-    # date = TEMP_DATA["Date"]
-    # time_of_year = [0] * len(date)
-    # for i,date in enumerate(date):
-    #     year = date[:4]
-    #     month = date[5:7]
-    #     day = date[9:]
-    #     time = day + 31 * month
-    #     time_of_year[i] = time
-    #     # wip season?
+    parametrized_NN = factory_parametrised_Free_NN(seq_nn)
 
     ########################################## DATA
     print(TEMP_DATA.head())
@@ -95,20 +88,20 @@ if __name__ == '__main__':
     TEMP_DATA = add_column_cyclical_features(TEMP_DATA, 'day', PERIOD_CYCLE)
     print(TEMP_DATA.head())
 
-    if input_size == 1:
+    if input_dim == 1:
         data = TEMP_DATA['Temperature'].values.astype(float).reshape(-1, 1)
     else:
         data = TEMP_DATA.values.astype(float)
 
-    train_data = data[:-lookback_window].reshape(-1, input_size)
-    testing_data = data[-lookback_window:].reshape(-1, input_size)
+    train_data = data[:-lookback_window].reshape(-1, input_dim)
+    testing_data = data[-lookback_window:].reshape(-1, input_dim)
 
     minimax = MinMaxScaler(feature_range=(-1., 1.))
     train_data_normalized = torch.FloatTensor(minimax.fit_transform(train_data))
     testing_data_normalised = torch.FloatTensor(minimax.transform(testing_data))
     testing_data = torch.FloatTensor(testing_data)
 
-    window = Windowcreator(input_dim=input_size, output_dim=1, lookback_window=lookback_window,
+    window = Windowcreator(input_dim=input_dim, output_dim=1, lookback_window=lookback_window,
                            lag_last_pred_fut=lookforward_window,
                            lookforward_window=lookforward_window, type_window="Moving")
     (data_training_X,
@@ -123,26 +116,8 @@ if __name__ == '__main__':
     ##########################################
 
     def inverse_transform(arr):
-        return minimax.inverse_transform(np.array(arr).reshape(-1, input_size))
+        return minimax.inverse_transform(np.array(arr).reshape(-1, input_dim))
 
-    # x-axis data for plotting
-    months_total = np.arange(0, len(data), 1)  # data for testing
-    months_train = np.arange(0, len(train_data), 1)  # data for training
-    length_training = len(data_training_Y) + lookback_window + lookforward_window - 1
-    months_test = np.arange(length_training,
-                            length_training + nb_test_prediction * lookforward_window, 1)
-
-
-    presentation_data = APlot()
-    xlabel = 'Day'
-    ylabel = 'temperature in Celcius'
-    dict_ax = {'title': 'Data and Prediction during Training and over Non Observed Data.', 'xlabel': xlabel,
-               'ylabel': ylabel}
-    dict_plot_param = {'label': 'Data for Testing', 'color': 'black', 'linestyle': '-', 'linewidth': 0.3, 'markersize' : 0}
-    presentation_data.uni_plot(0, months_total, data[:, 0], dict_ax=dict_ax, dict_plot_param=dict_plot_param)
-    dict_plot_param = {'label': 'Data Known at Training Time', 'color': 'gray', 'linestyle': '-', 'linewidth': 0.3, 'markersize' : 0}
-    presentation_data.uni_plot(0, months_train, train_data[:, 0], dict_ax=dict_ax, dict_plot_param=dict_plot_param)
-    APlot.show_and_continue()
 
     ##########################################  TRAINING
 
@@ -172,14 +147,14 @@ if __name__ == '__main__':
 
     ##########################################  prediction TESTING :
     # prediction by looking at the data we know about
-    if input_size > 1:
+    if input_dim > 1:
         increase_data_for_pred = Adaptor_output(0, 0, PERIOD_CYCLE)  # 0 initial and 12 month for a period.
     else:
         increase_data_for_pred = None
     train_prediction = window.prediction_over_training_data(net, train_data_normalized, increase_data_for_pred,
                                                             device=device)
 
-    if input_size > 1:
+    if input_dim > 1:
         increase_data_for_pred = Adaptor_output(train_data_normalized.shape[0], 0, PERIOD_CYCLE)
         # 0 initial and 12 month for a period.
     else:
@@ -189,9 +164,9 @@ if __name__ == '__main__':
                                                   nb_test_prediction, increase_data_for_pred, device='cpu')
 
     ##########################################  prediction of TESTING unknown data by starting with black line.
-    if input_size > 1:
+    if input_dim > 1:
         increase_data_for_pred = Adaptor_output(train_data_normalized.shape[0] + testing_data_normalised.shape[0],
-                                                0, PERIOD_CYCLE)          # 0 initial and 12 month for a period.
+                                                0, PERIOD_CYCLE)  # 0 initial and 12 month for a period.
     else:
         increase_data_for_pred = None
     unknwon_prediction = window.prediction_recurrent(net, testing_data_normalised[-lookback_window:, :],

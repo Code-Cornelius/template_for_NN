@@ -8,7 +8,7 @@ KERNEL_SIZE = 3
 PADDING = KERNEL_SIZE // 2
 
 
-class ConvLSTMCell(nn.Module):
+class Conv2dLSTMCell(nn.Module):
     """
     Generate a convolutional LSTM cell
 

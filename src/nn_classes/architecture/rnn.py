@@ -10,7 +10,7 @@ from src.nn_classes.architecture.savable_net import Savable_net
 class RNN(Savable_net, metaclass=ABCMeta):
     def __init__(self):
         assert self.nb_output_consider <= self.input_time_series_len, \
-            "The nb of output to consider (h_n, h_n-1...) needs to be smaller than the sequence length."
+            "The nb of output to consider {h_n} needs to be smaller than the sequence length."
         super().__init__(predict_fct=None)  # predict is identity
 
         self.nb_directions = int(self.bidirectional) + 1
@@ -21,9 +21,7 @@ class RNN(Savable_net, metaclass=ABCMeta):
                                           bidirectional=self.bidirectional,
                                           batch_first=True)
 
-        self.linear_layer = nn.Linear(self.hidden_size * self.nb_directions * self.nb_output_consider,
-                                      self.hidden_FC)
-        self.linear_layer_2 = nn.Linear(self.hidden_FC, self.output_dim * self.output_time_series_len)
+        self.output_len = self.hidden_size * self.nb_directions * self.nb_output_consider # dim of output of forward.
 
     def forward(self, time_series):
         """
@@ -47,16 +45,7 @@ class RNN(Savable_net, metaclass=ABCMeta):
             # the first item is the uni direct, on top of it is stacked the other dirctn, whose first elmnts are taken.
         else:
             out = out[:, -self.nb_output_consider:, :self.hidden_size]
-
-        out = out.reshape(-1, self.hidden_size * self.nb_directions * self.nb_output_consider)
-        # reshape might be a view, but could also be a copy... since we are slicing in a non contiguous way.
-        # squeezing the two last dimensions into one, for input to FC layer.
-
-        out = self.linear_layer(out)
-        out = self.activation_fct(out)
-        out = self.linear_layer_2(out)
-        return out.view(-1, self.output_time_series_len, self.output_dim)
-        # batch size, dim time series output, dim output
+        return out  # shape is (batch size, nb_output_consider, hidden_size)
 
     # section ######################################################################
     #  #############################################################################

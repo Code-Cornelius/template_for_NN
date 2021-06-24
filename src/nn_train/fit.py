@@ -6,7 +6,7 @@ from src.nn_classes.fast_tensor_dataloader import FastTensorDataLoader
 from src.nn_classes.training_stopper.Early_stopper_vanilla import Early_stopper_vanilla
 from src.util_training import decorator_train_disable_no_grad
 
-PLOT_WHILE_TRAIN = True
+PLOT_WHILE_TRAIN = False
 FREQ_NEW_IMAGE = 40
 
 
