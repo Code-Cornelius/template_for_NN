@@ -66,8 +66,8 @@ class Estim_history(Estimator):
         Returns:
             Void
         """
-        estimator = super().from_json(path)
         attrs = super().from_json_attributes(path, compressed)
+        estimator = super().from_json(path)
 
         estimator.validation = attrs['validation']
         estimator.best_epoch = attrs['best_epoch']
