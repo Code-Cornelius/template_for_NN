@@ -92,5 +92,5 @@ if __name__ == '__main__':
     nn_plot_prediction_vs_true(net=net, plot_xx=plot_xx,
                                plot_yy=plot_yy, plot_yy_noisy=plot_yy_noisy,
                                device=device)
-    nn_errors_compute_mean(net=net, train_X=train_X, train_Y=train_Y, testing_X=testing_X, testing_Y=testing_Y)
+    nn_errors_compute_mean(net=net, train_X=train_X, train_Y=train_Y, testing_X=testing_X, testing_Y=testing_Y, device=device)
     APlot.show_plot()
