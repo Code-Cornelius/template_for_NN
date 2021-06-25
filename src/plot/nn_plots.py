@@ -64,36 +64,6 @@ def confusion_matrix_creator(Y, Y_predict_result, labels, title=""):
     ax.set_xlim(-0.1, n_cols + 0.1)
 
 
-def result_function(title, data_train_Y, y_pred1, no_classes, data_test_Y=None, y_pred2=None):
-    # TODO to write
-    # initialise the parameters for the dataframe
-    conclusion_set = ["Training"]
-    conclusion_accuracy = [metrics.accuracy_score(data_train_Y, y_pred1)]
-
-    if data_test_Y is not None:
-        conclusion_set.append("Test")
-        conclusion_accuracy.append(metrics.accuracy_score(data_test_Y, y_pred2))
-
-    conclusion = pd.DataFrame({"Set": conclusion_set,
-                               "Accuracy": conclusion_accuracy})
-    print(conclusion)
-
-    print("Confusion matrix for the train data set with " + title + ".")
-    confusion_matrix_creator(data_train_Y, y_pred1, range(no_classes))
-
-    if data_test_Y is not None:
-        print("Confusion matrix for the test data set with " + title + ".")
-        confusion_matrix_creator(data_test_Y, y_pred2, range(no_classes))
-
-    target_names = [str(i) for i in range(no_classes)]
-    print("report table for train :")
-    print(metrics.classification_report(data_train_Y, y_pred1, target_names=target_names))
-
-    if data_test_Y is not None:
-        print("report table for test :")
-        print(metrics.classification_report(data_test_Y, y_pred2, target_names=target_names))
-
-
 @decorator_on_cpu_during_fct
 def nn_plot_prediction_vs_true(net, plot_xx, plot_yy=None, plot_yy_noisy=None):
     aplot = APlot(how=(1, 1))
