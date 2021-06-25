@@ -3,7 +3,7 @@ import os
 import pandas as pd
 from priv_lib_estimator import Estimator
 
-from nn_classes.estimator.estim_history import Estim_history
+from nn_classes.estimator.history.estim_history import Estim_history
 
 
 class Estim_hyper_param(Estimator):

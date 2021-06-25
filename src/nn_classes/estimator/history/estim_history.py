@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+
 from priv_lib_error import Error_type_setter
 from priv_lib_estimator import Estimator
 
@@ -242,11 +243,11 @@ class Estim_history(Estimator):
         else:
             raise Error_type_setter(f"Argument is not an {str(int)}.")
 
-    def err_compute_best_net(self, net, train_X, train_Y, testing_X=None, testing_Y=None, device = 'cpu'):
+    def err_compute_best_net(self, net, train_X, train_Y, testing_X=None, testing_Y=None, device='cpu'):
         self.err_computed = True  # flag that indicates whether all losses are stored.
 
         (trainL1, trainL2, trainLinf, testL1,
-         testL2, testLinf) = nn_errors_compute_mean(net = net, device = device,
+         testL2, testLinf) = nn_errors_compute_mean(net=net, device=device,
                                                     train_X=train_X, train_Y=train_Y,
                                                     testing_X=testing_X, testing_Y=testing_Y)
 
@@ -263,7 +264,7 @@ class Estim_history(Estimator):
         print("Relative Mean Training L1 Error: {:e}%.".format(self.train_mean_loss_L1 * 100))
         print("Relative Mean Training L2 Error: {:e}%.".format(self.train_mean_loss_L2 * 100))
         print("Relative Mean Training Linf Error: {:e}%.".format(self.train_mean_loss_Linf * 100))
-        if self.test_mean_loss_L1: #  != 0
+        if self.test_mean_loss_L1:  # != 0
             print("Relative Mean Testing L1 Error: {:e}%.".format(self.test_mean_loss_L1 * 100))
             print("Relative Mean Testing L2 Error: {:e}%.".format(self.test_mean_loss_L2 * 100))
             print("Relative Mean Testing Linf Error: {:e}%.".format(self.test_mean_loss_Linf * 100))
