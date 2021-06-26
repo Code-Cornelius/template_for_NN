@@ -104,7 +104,10 @@ else:
 
 plot_evol_estim = Plot_evol_benchmark_perf_nn_sizes(estim_bench)
 plot_evol_estim.draw(column_name_draw='Comput. Time', envelope_flag=False,
-                     separators_plot=["Processing Unit"], separator_colour=["Model Size"],
-                     save_plot=False, dict_plot_for_main_line={})
+                     separators_plot=["Processing Unit"], separator_colour="Model Size",
+                     dict_plot_for_main_line={})
+plot_evol_estim.new_draw(column_name_draw='Comput. Time', envelope_flag=False,
+                         separators_plot=["Processing Unit"], hue="Model Size",
+                         dict_plot_for_main_line={})
 APlot.show_plot()
 

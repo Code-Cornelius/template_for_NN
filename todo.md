@@ -58,3 +58,7 @@
 
   
 * precise in inheritance for estimator and plotters, if you use the super method, then do not forget args and kwargs;
+
+
+# refactor groupped_data by group_diff_plot; les plotters deviennent des: data_drawer_name. Check it must be cat and disp...
+what is hue?
