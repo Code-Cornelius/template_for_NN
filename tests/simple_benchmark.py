@@ -49,7 +49,7 @@ def benchmark_and_save(estim, input_size, type_pu, size_model, depth, **kwargs):
     return
 
 READ_FROM_SAVED = True
-if READ_FROM_SAVED:
+if not READ_FROM_SAVED:
     estim_bench = Estim_benchmark_perf_nn_sizes(epochs)
 
     for size_sample in tqdm(sizes_samples):
@@ -100,10 +100,11 @@ if READ_FROM_SAVED:
                         break
     estim_bench.to_csv("benchmark_new_computer.csv")
 else:
-    estim_bench = Estim_benchmark_perf_nn_sizes.from_path_csv("benchmark_new_computer.csv")
+    estim_bench = Estim_benchmark_perf_nn_sizes.from_csv("benchmark_new_computer.csv")
 
 plot_evol_estim = Plot_evol_benchmark_perf_nn_sizes(estim_bench)
 plot_evol_estim.draw(column_name_draw='Comput. Time', envelope_flag=False,
                      separators_plot=["Processing Unit"], separator_colour=["Model Size"],
                      save_plot=False, dict_plot_for_main_line={})
 APlot.show_plot()
+

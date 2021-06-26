@@ -4,7 +4,7 @@ import numpy as np
 import sklearn.model_selection
 import torch
 
-from nn_classes.estimator.estim_history import Estim_history
+from nn_classes.estimator.history.estim_history import Estim_history
 from src.nn_classes.training_stopper.Early_stopper_vanilla import Early_stopper_vanilla
 from src.nn_train.train import nn_train
 
