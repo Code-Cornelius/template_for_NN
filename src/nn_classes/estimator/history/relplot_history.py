@@ -1,11 +1,11 @@
 import numpy as np
-from priv_lib_estimator import Evolution_plot_estimator
+from priv_lib_estimator import Relplot_estimator
 from priv_lib_plot import AColorsetContinuous, APlot
 
 from nn_classes.estimator.history.plot_estim_history import Plot_estim_history
 
 
-class Plot_evol_history(Plot_estim_history, Evolution_plot_estimator):
+class Relplot_history(Plot_estim_history, Relplot_estimator):
     EVOLUTION_COLUMN = 'epoch'
 
     def __init__(self, estimator, *args, **kwargs):

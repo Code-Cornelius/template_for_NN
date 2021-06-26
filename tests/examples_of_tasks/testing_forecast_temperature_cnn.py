@@ -11,7 +11,7 @@ from nn_classes.architecture.free_nn import factory_parametrised_Free_NN
 from nn_classes.architecture.reshape import Reshape
 from nn_classes.factory_parametrised_rnn import factory_parametrised_RNN
 from nn_classes.windowcreator import Windowcreator
-from nn_classes.estimator.estim_history import Estim_history
+from nn_classes.estimator.history.estim_history import Estim_history
 from src.plot.nn_plot_history import nn_plot_train_loss_acc
 from src.nn_classes.optim_wrapper import Optim_wrapper
 from src.nn_train.nntrainparameters import NNTrainParameters

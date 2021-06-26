@@ -9,7 +9,7 @@ from nn_classes.architecture.reshape import Reshape
 from nn_classes.factory_parametrised_rnn import factory_parametrised_RNN
 from src.data_processing_fct import add_column_cyclical_features
 from nn_classes.windowcreator import Windowcreator
-from src.nn_classes.estimator.estim_history import Estim_history
+from src.nn_classes.estimator.history.estim_history import Estim_history
 from src.plot.nn_plot_history import nn_plot_train_loss_acc
 from src.nn_classes.optim_wrapper import Optim_wrapper
 from src.nn_train.nntrainparameters import NNTrainParameters

@@ -75,7 +75,7 @@ def _main():
     torch.manual_seed(0)
 
     print('Instantiate model')
-    model = ConvLSTMCell(c, d)
+    model = Conv2dLSTMCell(c, d)
     print(repr(model))
 
     print('Create input and target Variables')

@@ -4,7 +4,6 @@ from priv_lib_plot import APlot
 import torch
 from torch import nn
 import numpy as np
-import pandas as pd
 
 from plot.nn_plot_history import nn_plot_train_loss_acc
 from plot.nn_plots import nn_plot_prediction_vs_true, nn_errors_compute_mean

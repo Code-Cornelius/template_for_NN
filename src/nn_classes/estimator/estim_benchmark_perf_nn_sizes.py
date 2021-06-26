@@ -3,7 +3,7 @@
 
 # priv libraries
 from priv_lib_error import Error_type_setter
-from priv_lib_estimator import Plot_estimator, Evolution_plot_estimator
+from priv_lib_estimator import Plot_estimator, Relplot_estimator
 from priv_lib_estimator.src.estimator.estim_time import Estim_time
 
 
@@ -28,7 +28,7 @@ class Plot_estim_benchmark_perf_nn_sizes(Plot_estimator):
         super().__init__(estimator_bench, *args, **kwargs)
 
 
-class Plot_evol_benchmark_perf_nn_sizes(Plot_estim_benchmark_perf_nn_sizes, Evolution_plot_estimator):
+class Plot_evol_benchmark_perf_nn_sizes(Plot_estim_benchmark_perf_nn_sizes, Relplot_estimator):
     EVOLUTION_COLUMN = "Input Size"
     COLORMAP = AColorsetContinuous('brg', 14)  # colormap for all plots.
 

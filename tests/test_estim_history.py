@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from nn_classes.estimator.estim_history import Estim_history
+from nn_classes.estimator.history.estim_history import Estim_history
 import numpy as np
 import os
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))

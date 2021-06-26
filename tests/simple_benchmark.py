@@ -48,6 +48,7 @@ def benchmark_and_save(estim, input_size, type_pu, size_model, depth, **kwargs):
     estim.append(pd.DataFrame(time_dict))
     return
 
+
 READ_FROM_SAVED = True
 if not READ_FROM_SAVED:
     estim_bench = Estim_benchmark_perf_nn_sizes(epochs)
@@ -103,11 +104,7 @@ else:
     estim_bench = Estim_benchmark_perf_nn_sizes.from_csv("benchmark_new_computer.csv")
 
 plot_evol_estim = Plot_evol_benchmark_perf_nn_sizes(estim_bench)
-plot_evol_estim.draw(column_name_draw='Comput. Time', envelope_flag=False,
-                     separators_plot=["Processing Unit"], separator_colour="Model Size",
-                     dict_plot_for_main_line={})
-plot_evol_estim.new_draw(column_name_draw='Comput. Time', envelope_flag=False,
+plot_evol_estim.lineplot(column_name_draw='Comput. Time', envelope_flag=False,
                          separators_plot=["Processing Unit"], hue="Model Size",
-                         dict_plot_for_main_line={})
+                         dict_plot_for_main_line={}, markers=True, style="Model Size")
 APlot.show_plot()
-

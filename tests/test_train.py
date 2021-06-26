@@ -3,7 +3,7 @@ import torch
 from priv_lib_plot import APlot
 from torch import nn
 
-from nn_classes.estimator.history.plot_evol_history import Plot_evol_history
+from nn_classes.estimator.history.relplot_history import Relplot_history
 from nn_train.kfold_training import nn_kfold_train
 from plot.nn_plots import nn_plot_prediction_vs_true, nn_errors_compute_mean
 from src.nn_classes.architecture.fully_connected import factory_parametrised_FC_NN
@@ -85,7 +85,7 @@ if __name__ == '__main__':
     (net, estimator_history) = nn_kfold_train(train_X, train_Y, parametrized_NN, param_train=param_training,
                                               early_stoppers=early_stoppers, nb_split=1, shuffle_kfold=True,
                                               percent_val_for_1_fold=10, silent=False)
-    history_plot = Plot_evol_history(estimator_history)
+    history_plot = Relplot_history(estimator_history)
     history_plot.draw(key_for_second_axis_plot='L4', log_axis_for_loss=True, log_axis_for_second_axis=True)
     nn_plot_prediction_vs_true(net=net, plot_xx=plot_xx, plot_yy=plot_yy, plot_yy_noisy=plot_yy_noisy, device=device)
     estimator_history.err_compute_best_net(net=net, device=device, train_X=train_X, train_Y=train_Y,
@@ -98,7 +98,7 @@ if __name__ == '__main__':
     (net, estimator_history) = nn_kfold_train(train_X, train_Y, parametrized_NN, param_train=param_training,
                                               early_stoppers=early_stoppers, nb_split=5, shuffle_kfold=True,
                                               silent=False)
-    history_plot = Plot_evol_history(estimator_history)
+    history_plot = Relplot_history(estimator_history)
     history_plot.draw(key_for_second_axis_plot='L4', log_axis_for_loss=True, log_axis_for_second_axis=True)
     nn_plot_prediction_vs_true(net=net, plot_xx=plot_xx, plot_yy=plot_yy, plot_yy_noisy=plot_yy_noisy, device=device)
     nn_errors_compute_mean(net=net, device=device, train_X=train_X, train_Y=train_Y,
@@ -113,7 +113,7 @@ if __name__ == '__main__':
     (net, estimator_history) = nn_kfold_train(train_X, train_Y, parametrized_NN, param_train=param_training,
                                               early_stoppers=(early_stop_train,), nb_split=1, shuffle_kfold=True,
                                               percent_val_for_1_fold=0, silent=False)
-    history_plot = Plot_evol_history(estimator_history)
+    history_plot = Relplot_history(estimator_history)
     history_plot.draw(key_for_second_axis_plot='L4', log_axis_for_loss=True, log_axis_for_second_axis=True)
     nn_plot_prediction_vs_true(net=net, plot_xx=plot_xx, plot_yy=plot_yy, plot_yy_noisy=plot_yy_noisy, device=device)
     nn_errors_compute_mean(net=net, device=device, train_X=train_X, train_Y=train_Y,
