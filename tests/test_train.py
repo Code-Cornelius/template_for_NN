@@ -26,7 +26,7 @@ def exact_solution(x):
 ############################## GLOBAL PARAMETERS
 n_samples = 2000  # Number of training samples
 sigma = 0.01  # Noise level
-device = pytorch_device_setting('cpu', silent = False)
+device = pytorch_device_setting('cpu', silent=False)
 SILENT = False
 early_stop_train = Early_stopper_training(patience=20, silent=SILENT, delta=-int(1E-6))
 early_stop_valid = Early_stopper_validation(patience=20, silent=SILENT, delta=-int(1E-6))
@@ -99,7 +99,7 @@ if __name__ == '__main__':
                                               early_stoppers=early_stoppers, nb_split=5, shuffle_kfold=True,
                                               silent=False)
     history_plot = Relplot_history(estimator_history)
-    history_plot.draw(key_for_second_axis_plot='L4', log_axis_for_loss=True, log_axis_for_second_axis=True)
+    history_plot.lineplot(log_axis_for_loss=True)
     nn_plot_prediction_vs_true(net=net, plot_xx=plot_xx, plot_yy=plot_yy, plot_yy_noisy=plot_yy_noisy, device=device)
     nn_errors_compute_mean(net=net, device=device, train_X=train_X, train_Y=train_Y,
                            testing_X=testing_X, testing_Y=testing_Y)
@@ -114,7 +114,8 @@ if __name__ == '__main__':
                                               early_stoppers=(early_stop_train,), nb_split=1, shuffle_kfold=True,
                                               percent_val_for_1_fold=0, silent=False)
     history_plot = Relplot_history(estimator_history)
-    history_plot.draw(key_for_second_axis_plot='L4', log_axis_for_loss=True, log_axis_for_second_axis=True)
+    history_plot.lineplot(log_axis_for_loss=True)
+
     nn_plot_prediction_vs_true(net=net, plot_xx=plot_xx, plot_yy=plot_yy, plot_yy_noisy=plot_yy_noisy, device=device)
     nn_errors_compute_mean(net=net, device=device, train_X=train_X, train_Y=train_Y,
                            testing_X=testing_X, testing_Y=testing_Y)

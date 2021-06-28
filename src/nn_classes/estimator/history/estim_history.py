@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-
 from priv_lib_error import Error_type_setter
 from priv_lib_estimator import Estimator
 
@@ -11,7 +10,7 @@ class Estim_history(Estimator):
     NAMES_COLUMNS = {'fold', 'epoch'}
 
     def __init__(self, metric_names=None, validation=True, hyper_params=None):
-        # not possible anymore to init with a df.
+        # metric names contain all ["L1","L4"...] but not the loss used for back prop.
         self.metric_names = metric_names
         self.validation = validation
         self.best_epoch = []
@@ -88,17 +87,23 @@ class Estim_history(Estimator):
     def get_col_metric_names(self):
         """
         Semantics:
-            Generate the names for the columns which hold information about the metrics
+            Generate the names for the columns which hold information about the metrics.
 
         Returns:
             A list of strings representing the column names based on metric names and validation flag
+
+        Dependency:
+            self.metric_names
+            self.validation
+            The order of the list is important, and is used in relplot history
+            (first the training losses, then validation losses).
         """
         df_column_names = [Estim_history._generate_column_name("loss")]
 
         for metric_name in self.metric_names:
             df_column_names.append(Estim_history._generate_column_name(metric_name))
 
-        if self.validation:
+        if self.validation:  # validation columns
             df_column_names.append(Estim_history._generate_column_name("loss", validation=True))
 
             for metric_name in self.metric_names:
@@ -126,6 +131,11 @@ class Estim_history(Estimator):
         Generate all the column names for the dataframe
         Returns:
             A list of all the column names for the dataframe (Including the base columns)
+
+        Dependency:
+            self.get_col_metric_names
+            self.metric_names
+            self.validation
         """
         df_column_names = list(Estim_history.NAMES_COLUMNS.copy()) + self.get_col_metric_names()
 

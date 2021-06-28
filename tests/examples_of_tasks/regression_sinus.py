@@ -1,3 +1,4 @@
+from nn_classes.estimator.history.relplot_history import Relplot_history
 from src.nn_classes.optim_wrapper import Optim_wrapper
 from priv_lib_plot import APlot
 
@@ -5,7 +6,6 @@ import torch
 from torch import nn
 import numpy as np
 
-from plot.nn_plot_history import nn_plot_train_loss_acc
 from plot.nn_plots import nn_plot_prediction_vs_true, nn_errors_compute_mean
 from src.nn_classes.architecture.fully_connected import factory_parametrised_FC_NN
 from src.nn_train.nntrainparameters import NNTrainParameters
@@ -27,7 +27,7 @@ def exact_solution(x):
 ############################## GLOBAL PARAMETERS
 n_samples = 2000  # Number of training samples
 sigma = 0.01  # Noise level
-device = pytorch_device_setting('not_cpu_please')
+device = pytorch_device_setting('cpu')
 SILENT = False
 early_stop_train = Early_stopper_training(patience=20, silent=SILENT, delta=-int(1E-6))
 early_stop_valid = Early_stopper_validation(patience=20, silent=SILENT, delta=-int(1E-6))
@@ -83,11 +83,14 @@ if __name__ == '__main__':
                                                  param_predict_fct=None)
 
     (net, estimator_history) = nn_kfold_train(train_X, train_Y, parametrized_NN, param_train=param_training,
-                                              early_stoppers=early_stoppers, nb_split=1, shuffle_kfold=True,
+                                              early_stoppers=early_stoppers, nb_split=9, shuffle_kfold=True,
                                               percent_val_for_1_fold=10, silent=False)
 
-    nn_plot_train_loss_acc(estimator_history, flag_valid=True, log_axis_for_loss=True,
-                           key_for_second_axis_plot='L4', log_axis_for_second_axis=True)
+    history_plot = Relplot_history(estimator_history)
+    history_plot.draw_two_metrics_same_plot(key_for_second_axis_plot = 'L4', log_axis_for_loss=True,
+                                            log_axis_for_second_axis = True)
+    history_plot.lineplot(log_axis_for_loss=True)
+
     nn_plot_prediction_vs_true(net=net, plot_xx=plot_xx,
                                plot_yy=plot_yy, plot_yy_noisy=plot_yy_noisy,
                                device=device)
