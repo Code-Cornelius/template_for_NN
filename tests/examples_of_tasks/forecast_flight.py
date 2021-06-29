@@ -6,11 +6,11 @@ from sklearn.preprocessing import MinMaxScaler
 
 from nn_classes.architecture.free_nn import factory_parametrised_Free_NN
 from nn_classes.architecture.reshape import Reshape
+from nn_classes.estimator.history.relplot_history import Relplot_history
 from nn_classes.factory_parametrised_rnn import factory_parametrised_RNN
 from src.data_processing_fct import add_column_cyclical_features
 from nn_classes.windowcreator import Windowcreator
 from src.nn_classes.estimator.history.estim_history import Estim_history
-from src.plot.nn_plot_history import nn_plot_train_loss_acc
 from src.nn_classes.optim_wrapper import Optim_wrapper
 from src.nn_train.nntrainparameters import NNTrainParameters
 from src.util_training import pytorch_device_setting, set_seeds
@@ -127,9 +127,9 @@ if __name__ == '__main__':
                                                parametrized_NN, param_training, estimator_history,
                                                early_stoppers=early_stoppers)
     net.to(torch.device('cpu'))
-    nn_plot_train_loss_acc(estimator_history, flag_valid=True, log_axis_for_loss=True,
-                           key_for_second_axis_plot=None,
-                           log_axis_for_second_axis=True)
+
+    history_plot = Relplot_history(estimator_history)
+    history_plot.lineplot(log_axis_for_loss=True)
 
 
     class Adaptor_output(object):

@@ -13,19 +13,27 @@ def nn_train(net, data_X, data_Y, params_training, indic_train_X, indic_train_Y,
     For optimisation reasons, we pass the indices.
     Args:
         net (Savable_net):
-        data_X: tensor
-        data_Y: tensor
-        params_training: NNTrainParameters. parameters used for training
+        data_X (tensor):
+        data_Y (tensor):
+        params_training (NNTrainParameters): parameters used for training
         indic_train_X: indices of values from data_X to be used for training
         indic_train_Y: indices of values from data_Y to be used for training
-        early_stoppers: iterable of Early_stopper. Used for deciding if the training should stop early.
-            Preferably immutable to insure no changes.
+        early_stoppers (iter Early_stopper): Used for deciding if the training should stop early.
+                        Preferably immutable to insure no changes.
         indic_val_X: indices of values from data_X to be used for validation, None if validation is not performed
         indic_val_Y: indices of values from data_Y to be used for validation, None if validation is not performed
         silent (bool): verbose.
 
     Returns: history of training and all other metrics, in a dictionary.
              best epoch for training (int).
+                    history_kfold has the form:
+                    history = {'training': {},'validation': {}}
+                    history['training']['loss'] = np.zeros((nb_split, parameters_training.epochs))
+                    history['validation']['loss'] = np.zeros((nb_split, parameters_training.epochs))
+                    for metric in parameters_training.metrics:
+                        history['training'][metric.name] = np.zeros((nb_split, parameters_training.epochs))
+                        history['validation'][metric.name] = np.zeros((nb_split, parameters_training.epochs))
+            best_epoch_for_model looks like: [10,200,5]
 
     Post-condition :
         early_stoppers not changed.

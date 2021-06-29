@@ -7,10 +7,10 @@ import pandas as pd
 from data_processing_fct import add_column_cyclical_features
 from nn_classes.architecture.free_nn import factory_parametrised_Free_NN
 from nn_classes.architecture.reshape import Reshape
+from nn_classes.estimator.history.relplot_history import Relplot_history
 from nn_classes.factory_parametrised_rnn import factory_parametrised_RNN
 from nn_classes.windowcreator import Windowcreator
 from nn_classes.estimator.history.estim_history import Estim_history
-from src.plot.nn_plot_history import nn_plot_train_loss_acc
 from src.nn_classes.optim_wrapper import Optim_wrapper
 from src.nn_train.nntrainparameters import NNTrainParameters
 from src.util_training import pytorch_device_setting, set_seeds
@@ -49,7 +49,7 @@ if __name__ == '__main__':
     hidden_size = 64
     output_size = 1
     dropout = 0.2
-    epochs = 80000
+    epochs = 80
     batch_size = 1000
     hidden_FC = 256
 
@@ -122,12 +122,12 @@ if __name__ == '__main__':
     ##########################################  TRAINING
 
     estimator_history = Estim_history(metric_names=[], validation=True)
-    net, _, _ = train_kfold_a_fold_after_split(data_training_X, data_training_Y, indices_train, indices_valid,
+    net, _ = train_kfold_a_fold_after_split(data_training_X, data_training_Y, indices_train, indices_valid,
                                                parametrized_NN, param_training, estimator_history,
                                                early_stoppers=early_stoppers)
     net.to(torch.device('cpu'))
-    nn_plot_train_loss_acc(estimator_history, flag_valid=True, log_axis_for_loss=True,
-                           key_for_second_axis_plot=None, log_axis_for_second_axis=True)
+    history_plot = Relplot_history(estimator_history)
+    history_plot.lineplot(log_axis_for_loss=True)
 
 
     class Adaptor_output(object):

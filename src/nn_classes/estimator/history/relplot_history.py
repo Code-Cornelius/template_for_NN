@@ -18,7 +18,7 @@ class Relplot_history(Plot_estim_history, Relplot_estimator):
     def get_data2evolution(self, data, feature_to_draw):
         return self.get_data2group_sliced(data, feature_to_draw).mean().to_numpy()
 
-    def get_default_dict_fig(self, grouped_data_by, key=None, yscale='linear', **kwargs):
+    def get_dict_fig(self, grouped_data_by, key=None, yscale='linear', **kwargs):
         title = self.generate_title(parameters=grouped_data_by, parameters_value=key,
                                     before_text="")
         fig_dict = {'title': title,
@@ -32,11 +32,10 @@ class Relplot_history(Plot_estim_history, Relplot_estimator):
                                    log_axis_for_second_axis=False):
         aplot = APlot()
 
-        # colormaps
         # adjusting the linewidth depending on nb of plots:
         if self.estimator.nb_folds < 3:
             linewidth = 2
-            interval_colors = (0.5, 0.9)
+            interval_colors = (0.5, 0.9)  # colormaps
         else:
             linewidth = 1
             interval_colors = (0.3, 1.)

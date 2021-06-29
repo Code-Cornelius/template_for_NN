@@ -36,4 +36,7 @@
 * for hawkes estim, not mandatory to have true values. in init
 
 
-  
+* plot_estim misses some function like from/to json. There is only the csv version...
+
+* modularity issue in estim_history through _translate_history_to_dataframe. 
+  Method in estim history though the input depends on the training.

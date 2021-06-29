@@ -104,7 +104,6 @@ def _nn_multiplefold_train(data_train_X, data_train_Y,
     # :Recall, the two criterea are either accuracy (so any accuracy is better than a neg. number)
     # : and minus loss, and a loss is always closer to zero than - infinity.
     best_net = None
-    # Todo: put this in the estimator instead
     estimator_history.best_fold = 0  # to keep track of best net
 
     # : random_state is the seed of StratifiedKFold.
@@ -139,7 +138,6 @@ def train_kfold_a_fold_after_split(data_train_X, data_train_Y, index_training, i
         Train one fold.
     Note:
         Can be used for training if the indices are already generated.
-        !make sure to save the best_fold in the estimator after this function returns
     Args:
         data_train_X (tensor): Input data.
         data_train_Y (tensor): Target data.
@@ -157,7 +155,7 @@ def train_kfold_a_fold_after_split(data_train_X, data_train_Y, index_training, i
         silent (bool): Verbose.
 
     Returns:
-        best_net, value_metric_for_best_NN, number_kfold_best_net
+        best_net, value_metric_for_best_net, number_kfold_best_net
 
     Post-conditions:
         estimator_history is updated to contain the training and the best fold so far.

@@ -7,7 +7,7 @@ from torch import nn
 from tqdm import tqdm
 
 from nn_classes.estimator.estim_benchmark_perf_nn_sizes import Estim_benchmark_perf_nn_sizes, \
-    Plot_evol_benchmark_perf_nn_sizes
+    Relplot_benchmark_perf_nn_sizes
 from nn_train.kfold_training import nn_kfold_train
 from src.nn_classes.architecture.fully_connected import factory_parametrised_FC_NN
 from src.nn_classes.optim_wrapper import Optim_wrapper
@@ -99,11 +99,11 @@ if not READ_FROM_SAVED:
                         print(e)
                         print(f"error for model {size_model}, sample {size_sample}, under {PU}.")
                         break
-    estim_bench.to_csv("benchmark_new_computer.csv")
+    estim_bench.to_csv("simple_benchmark_cpu_gpu_size_input.csv")
 else:
-    estim_bench = Estim_benchmark_perf_nn_sizes.from_csv("benchmark_new_computer.csv")
+    estim_bench = Estim_benchmark_perf_nn_sizes.from_csv("simple_benchmark_cpu_gpu_size_input.csv")
 
-plot_evol_estim = Plot_evol_benchmark_perf_nn_sizes(estim_bench)
+plot_evol_estim = Relplot_benchmark_perf_nn_sizes(estim_bench)
 plot_evol_estim.lineplot(column_name_draw='Comput. Time', envelope_flag=False,
                          separators_plot=["Processing Unit"], hue="Model Size",
                          dict_plot_for_main_line={}, markers=True, style="Model Size")

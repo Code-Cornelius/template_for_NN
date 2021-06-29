@@ -32,7 +32,6 @@ SILENT = False
 early_stop_train = Early_stopper_training(patience=20, silent=SILENT, delta=-int(1E-6))
 early_stop_valid = Early_stopper_validation(patience=20, silent=SILENT, delta=-int(1E-6))
 early_stoppers = (early_stop_train, early_stop_valid)
-metrics = ()
 ############################# DATA CREATION
 # exact grid
 plot_xx = torch.linspace(0, 2 * np.pi, 1000).reshape(-1, 1)
@@ -77,12 +76,12 @@ if __name__ == '__main__':
     param_training = NNTrainParameters(batch_size=batch_size, epochs=epochs, device=device,
                                        criterion=criterion, optim_wrapper=optim_wrapper,
                                        metrics=metrics)
-    parametrized_NN = factory_parametrised_FC_NN(param_input_size=input_size, param_list_hidden_sizes=hidden_sizes,
+    Class_Parametrized_NN = factory_parametrised_FC_NN(param_input_size=input_size, param_list_hidden_sizes=hidden_sizes,
                                                  param_output_size=output_size, param_list_biases=biases,
                                                  param_activation_functions=activation_functions, param_dropout=dropout,
                                                  param_predict_fct=None)
 
-    (net, estimator_history) = nn_kfold_train(train_X, train_Y, parametrized_NN, param_train=param_training,
+    (net, estimator_history) = nn_kfold_train(train_X, train_Y, Class_Parametrized_NN, param_train=param_training,
                                               early_stoppers=early_stoppers, nb_split=9, shuffle_kfold=True,
                                               percent_val_for_1_fold=10, silent=False)
 

@@ -236,11 +236,8 @@ class Estim_history(Estimator):
         return self.df.loc[:, column].values
 
     def get_best_value_for(self, column):
-        if len(self.best_epoch) > 1:
-            epoch = self.best_epoch[self.best_fold]
-        else:
-            epoch = self.best_epoch[0]
-
+        epoch = self.best_epoch[self.best_fold]
+        # best_fold and best_epoch is correctly set as soon as one calls train_kfold_a_fold_after_split.
         return self.get_values_fold_epoch_col(self.best_fold, epoch, column)
 
     @property

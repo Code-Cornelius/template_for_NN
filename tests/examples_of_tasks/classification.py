@@ -1,6 +1,7 @@
 import sklearn
 from priv_lib_plot import APlot
 
+from nn_classes.estimator.history.relplot_history import Relplot_history
 from src.nn_classes.optim_wrapper import Optim_wrapper
 from src.nn_classes.metric.metric import Metric
 
@@ -9,9 +10,9 @@ from torch import nn
 import numpy as np
 import torch.nn.functional as F
 import pandas as pd
+from keras.datasets import mnist
 
-from plot.nn_plot_history import nn_plot_train_loss_acc
-from plot.nn_plots import nn_plot_prediction_vs_true, nn_errors_compute_mean
+from plot.nn_plots import nn_plot_prediction_vs_true, nn_errors_compute_mean, confusion_matrix_creator
 from src.nn_classes.architecture.fully_connected import factory_parametrised_FC_NN
 from src.nn_train.nntrainparameters import NNTrainParameters
 from src.util_training import set_seeds, pytorch_device_setting
@@ -25,14 +26,10 @@ set_seeds(42)
 ############################## GLOBAL PARAMETERS
 # Number of training samples
 n_samples = 10000
-# Noise level
-sigma = 0.01
 device = pytorch_device_setting('not_cpu_please')
 SILENT = False
 early_stop_train = Early_stopper_training(patience=200, silent=SILENT, delta=-0.05)
 early_stop_valid = Early_stopper_validation(patience=200, silent=SILENT, delta=-0.05)
-early_stoppers_train = (early_stop_train,)
-early_stoppers_valid = (early_stop_valid,)
 early_stoppers = (early_stop_train, early_stop_valid)
 
 accuracy_wrapper = lambda net, xx, yy: sklearn.metrics.accuracy_score(net.nn_predict_ans2cpu(xx),
@@ -42,10 +39,6 @@ accuracy_wrapper = lambda net, xx, yy: sklearn.metrics.accuracy_score(net.nn_pre
 accuracy_metric = Metric(name="accuracy", function=accuracy_wrapper)
 metrics = (accuracy_metric,)
 #############################
-
-
-from keras.datasets import mnist
-
 (train_X, train_y), (test_X, test_y) = mnist.load_data()
 train_X = pd.DataFrame(train_X.reshape(60000, 28 * 28))
 train_Y = pd.DataFrame(train_y)
@@ -92,6 +85,17 @@ if __name__ == '__main__':
                                               early_stoppers=early_stoppers, nb_split=1, shuffle_kfold=True,
                                               percent_val_for_1_fold=10, silent=False)
 
-    nn_plot_train_loss_acc(estimator_history, flag_valid=True, log_axis_for_loss=True,
-                           key_for_second_axis_plot="accuracy", log_axis_for_second_axis=False)
+    # fetch the best value and assert if accuracy > threshold.
+
+    history_plot = Relplot_history(estimator_history)
+    history_plot.draw_two_metrics_same_plot(key_for_second_axis_plot='accuracy', log_axis_for_loss=True,
+                                            log_axis_for_second_axis=False)
+
+    history_plot.lineplot(log_axis_for_loss=True)
+
+    net.to('cpu')
+    prediction = net.nn_predict(train_X)
+    # estimator_history.err_compute_best_net(net, train_X, train_Y, testing_X=test_X, testing_Y=test_Y, device='cpu')
+    confusion_matrix_creator(train_Y, prediction, range(10), title="")
+
     APlot.show_plot()
