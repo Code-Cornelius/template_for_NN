@@ -15,7 +15,8 @@ class Estim_history(Estimator):
         self.validation = validation
         self.best_epoch = []
         self.hyper_params = hyper_params
-        self.best_fold = -1  # negative strictly number means no best_fold found yet.
+        self.best_fold = -1  # negative strictly number means no best_fold found yet. Will be set in
+                             # train_kfold_a_fold_after_split
 
         self.err_computed = False  # flag that indicates whether all losses are stored.
 
