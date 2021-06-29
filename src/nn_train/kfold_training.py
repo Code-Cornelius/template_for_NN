@@ -15,42 +15,30 @@ def nn_kfold_train(data_train_X, data_train_Y, Model_NN, param_train,
                    hyper_param={}.copy(),
                    only_best_history=False, silent=False):
     """
-    # create main cross validation method
-    # it returns the score during training,
-    # but also the best out of the nb_split models, with respect to the loss over the whole set.
-
+        Prepares the indices for kfold and calls multiplefold train.
 
     Args:
-        data_train_X: tensor
-        data_train_Y: tensor
-        Model_NN: parametrised architecture,
-            type the Class with architecture we want to KFold over.
+        data_train_X (tensor): Input data.
+        data_train_Y (tensor): Target value.
+        Model_NN (Class Savable_net): Parametrised architecture.
             Requirements: call constructor over it to create a net.
-        param_train: NNTrainParameters. contains the parameters used for training
-        early_stoppers: iterable of Early_stopper. Used for deciding if the training should stop early.
+        param_train (NNTrainParameters): The parameters used for training.
+        early_stoppers (iterable of Early_stopper): Used for deciding if the training should stop early.
             Preferably immutable to insure no changes.
-        nb_split:
-        shuffle_kfold:
-        percent_val_for_1_fold:
-        hyper_param (dict): all the training parameters TODO FORMAT
-        only_best_history (bool):
-        silent (bool): verbose.
+        nb_split (int): The number of folds to split the data into.
+        shuffle_kfold (bool): Flag to specify if the data should be shuffled.
+        percent_val_for_1_fold (double): The percent of data that should be used for validation for the 1 fold case.
+            Requirements: [0,100[
+        hyper_param (dict): All the training parameters to be saved in the estimator.
+        only_best_history (bool): Flag to specify if only the history of the best fold should be saved.
+        silent (bool): Verbose.
 
-    Returns: net, history_kfold, best_epoch_for_model.
-
-        history_kfold has the form:
-            history = {'training': {},'validation': {}}
-            history['training']['loss'] = np.zeros((nb_split, parameters_training.epochs))
-            history['validation']['loss'] = np.zeros((nb_split, parameters_training.epochs))
-            for metric in parameters_training.metrics:
-                history['training'][metric.name] = np.zeros((nb_split, parameters_training.epochs))
-                history['validation'][metric.name] = np.zeros((nb_split, parameters_training.epochs))
-    best_epoch_for_model looks like: [10,200,5]
+    Returns:
+        best_net, estimator_history
 
     Post-condition :
         early_stoppers not changed.
     """
-
     # place where logs of trainings with respect to the metrics are stored.
     indices, compute_validation = _nn_kfold_indices_creation_random(data_train_X, data_train_Y,
                                                                     percent_val_for_1_fold, nb_split, shuffle_kfold)
@@ -67,6 +55,16 @@ def nn_kfold_train(data_train_X, data_train_Y, Model_NN, param_train,
 
 
 def _initialise_estimator(compute_validation, param_train, train_param_dict):
+    """
+        Initialise the history estimator.
+    Args:
+        compute_validation (bool): Flag to specify is validation is included.
+        param_train (NNTrainParameters): The parameters used for training.
+        train_param_dict (dict): The hyper-parameters to be saved.
+
+    Returns:
+        An Estim_history
+    """
     metric_names = [metric.name for metric in param_train.metrics]
     # initialise the estimator history.
     estimator_history = Estim_history(metric_names=metric_names, validation=compute_validation,
@@ -82,12 +80,32 @@ def _nn_multiplefold_train(data_train_X, data_train_Y,
                            early_stoppers, Model_NN, nb_split,
                            param_train, indices, silent,
                            estimator_history, only_best_history=False):
+    """
+        Perform training over all the folds.
+    Args:
+        data_train_X (tensor): Input data.
+        data_train_Y (tensor): Target value.
+        early_stoppers (iterable of Early_stopper): Used for deciding if the training should stop early.
+        Model_NN (Class Savable_net): Parametrised architecture.
+            Requirements: call constructor over it to create a net.
+        nb_split (int): The number of folds to split the data into.
+        param_train (NNTrainParameters): The parameters used for training.
+        indices (list of tuples): Each tuple contains the indices for training and for validation
+        silent (bool): Verbose.
+        estimator_history (Estim_history): The estimator in which the results will be saved.
+        only_best_history (bool): Flag to specify if only the history of the best fold should be saved.
+
+    Returns:
+        The best_net, and the estimator_history
+    """
+
     # for storing the network:
     value_metric_for_best_NN = - np.Inf  # :we set -\infty which can only be improved.
     # :Recall, the two criterea are either accuracy (so any accuracy is better than a neg. number)
     # : and minus loss, and a loss is always closer to zero than - infinity.
     best_net = None
-    number_kfold_best_net = 0  # to keep track of best net
+    # Todo: put this in the estimator instead
+    estimator_history.best_fold = 0  # to keep track of best net
 
     # : random_state is the seed of StratifiedKFold.
     for i, (index_training, index_validation) in enumerate(indices):
@@ -97,16 +115,15 @@ def _nn_multiplefold_train(data_train_X, data_train_Y,
             time.sleep(0.0001)  # for printing order
 
         # : one can use tensors as they are convertible to numpy.
-        (best_net, value_metric_for_best_NN,
-         number_kfold_best_net) = train_kfold_a_fold_after_split(data_train_X, data_train_Y, index_training,
-                                                                 index_validation, Model_NN, param_train,
-                                                                 estimator_history, early_stoppers,
-                                                                 value_metric_for_best_NN, number_kfold_best_net,
-                                                                 best_net, i, silent)
+        (best_net, value_metric_for_best_NN) = train_kfold_a_fold_after_split(data_train_X, data_train_Y,
+                                                                              index_training,
+                                                                              index_validation, Model_NN, param_train,
+                                                                              estimator_history, early_stoppers,
+                                                                              value_metric_for_best_NN,
+                                                                              best_net, i, silent)
 
-    estimator_history.best_fold = number_kfold_best_net
     if not silent:
-        print("Finished the K-Fold Training, the best NN is the number {}".format(number_kfold_best_net + 1))
+        print("Finished the K-Fold Training, the best NN is the number {}".format(estimator_history.best_fold + 1))
 
     if only_best_history:
         estimator_history.slice_best_fold()
@@ -116,36 +133,38 @@ def _nn_multiplefold_train(data_train_X, data_train_Y,
 
 def train_kfold_a_fold_after_split(data_train_X, data_train_Y, index_training, index_validation, Model_NN, param_train,
                                    estimator_history, early_stoppers=(Early_stopper_vanilla(),),
-                                   value_metric_for_best_NN=-np.Inf, number_kfold_best_net=1, best_net=None, i=0,
+                                   value_metric_for_best_NN=-np.Inf, best_net=None, i=0,
                                    silent=False):
     """
-
+        Train one fold.
+    Note:
+        Can be used for training if the indices are already generated.
+        !make sure to save the best_fold in the estimator after this function returns
     Args:
-        data_train_X:
-        data_train_Y:
-        index_training: format such that it is possible to slice data like: data[index]
-        index_validation:
-        Model_NN (Class extended from Savable_net):
-        param_train:
-        early_stoppers: a list of early_stoppers
-        value_metric_for_best_NN:
-        number_kfold_best_net:
-        best_net: can be pass None, is it for comparison. Otherwise, should be a net.
-        i (unsigned int): number for positions in list. Should correspond to the iterable in range(nb_of_split)
-        silent:
+        data_train_X (tensor): Input data.
+        data_train_Y (tensor): Target data.
+        index_training (slice): Indices used to slice the data for training.
+        index_validation (slice): Indices used to slice the data for validation.
+        Model_NN (Class Savable_net): Parametrised architecture.
+            Requirements: call constructor over it to create a net.
+        param_train (NNTrainParameters): The parameters used for training.
+        estimator_history (Estim_history): The estimator in which the results will be saved.
+        early_stoppers (iterable of Early_stopper): Used for deciding if the training should stop early.
+        value_metric_for_best_NN: #todo Niels explain this
+        best_net (Savable_net): Best net so far, based on comparison.
+        i (int): Number of fold.
+            Requirements: 0 <= i < nb_of_split
+        silent (bool): Verbose.
 
     Returns:
-        best_net, number_kfold_best_net
+        best_net, value_metric_for_best_NN, number_kfold_best_net
 
     Post-conditions:
-        history_kfold is updated to contain the training.
+        estimator_history is updated to contain the training and the best fold so far.
         early stoppers are not modified.
         value_metric_for_best_NN is modified.
-        number_kfold_best_net is updated.
         best_net is modified for the new net.
-        best_epoch_of_NN is modified.
         i is not modified.
-
     """
     net = Model_NN().to(param_train.device)
 
@@ -161,11 +180,23 @@ def train_kfold_a_fold_after_split(data_train_X, data_train_Y, index_training, i
 
     estimator_history.append_history(kfold_history, kfold_best_epoch, i)
 
-    return _new_best_model(best_net, i, net, value_metric_for_best_NN, estimator_history, number_kfold_best_net, silent)
+    return _new_best_model(best_net, i, net, value_metric_for_best_NN, estimator_history, silent)
 
 
-def _new_best_model(best_net, i, net, value_metric_for_best_NN, estimator_history,
-                    number_kfold_best_net, silent):
+def _new_best_model(best_net, i, net, value_metric_for_best_NN, estimator_history, silent):
+    """
+        Compare the new results and save the best net.
+    Args:
+        best_net (Savable_net): Current best net.
+        i: The index of the current fold.
+        net: Current net.
+        value_metric_for_best_NN: #todo Niels, find explanation
+        estimator_history (Estim_history): The estimator in which the results will be saved.
+        silent (bool): Verbose.
+
+    Returns:
+        best_net, value_metric_for_best_NN, number_kfold_best_net
+    """
     rookie_perf = -estimator_history.get_values_fold_epoch_col(i, estimator_history.best_epoch[i], "loss_training")
 
     if not silent:  # -1 * ... bc we want to keep order below :
@@ -174,27 +205,8 @@ def _new_best_model(best_net, i, net, value_metric_for_best_NN, estimator_histor
     if value_metric_for_best_NN < rookie_perf:
         best_net = net
         value_metric_for_best_NN = rookie_perf
-        number_kfold_best_net = i
-    return best_net, value_metric_for_best_NN, number_kfold_best_net
-
-
-# section ######################################################################
-#  #############################################################################
-# HISTORY FUNCTION
-def _set_history_from_nn_train(res, best_epoch_of_NN, history, index):
-    kfold_history, kfold_best_epoch = res
-
-    # save the best epoch for the fold
-    best_epoch_of_NN[index] = kfold_best_epoch
-
-    # update the history with the results from the fold training
-    for metric_key in kfold_history['training']:
-        history['training'][metric_key][index, :] = kfold_history['training'][metric_key]
-
-    # if validation is performed, update the history with the results from the fold validation
-    if 'validation' in kfold_history:
-        for metric_key in kfold_history['validation']:
-            history['validation'][metric_key][index, :] = kfold_history['validation'][metric_key]
+        estimator_history.best_fold = i
+    return best_net, value_metric_for_best_NN
 
 
 # section ######################################################################
@@ -202,19 +214,31 @@ def _set_history_from_nn_train(res, best_epoch_of_NN, history, index):
 # INDICES
 
 def _nn_kfold_indices_creation_random(data_training_X, data_training_Y,
-                                      percent_validation_for_1_fold,
+                                      percent_valid_for_1_fold,
                                       nb_split, shuffle_kfold):
-    """ returns a list of tuples (a tuple per fold) and a bool = compute_validation"""
+    """
+        Computes the indices to be used to split the data into training and validation
+    Args:
+        data_training_X (tensor): Input data.
+        data_training_Y (tensor): Target data.
+        percent_valid_for_1_fold (double): The percent of data that should be used for validation for the 1 fold case.
+            Requirements: [0,100[
+        nb_split (int): The number of folds to split the data into.
+        shuffle_kfold (bool): Flag to specify if the data should be shuffled.
+
+    Returns:
+        A list of tuples (a tuple per fold) and a bool = compute_validation
+    """
     # Only one fold
     if nb_split == 1:
-        assert 0 <= percent_validation_for_1_fold < 100, "percent_validation_for_1_fold should be in [0,100[ !"
+        assert 0 <= percent_valid_for_1_fold < 100, "percent_validation_for_1_fold should be in [0,100[ !"
 
         # Without validation fold
-        if percent_validation_for_1_fold == 0:
+        if percent_valid_for_1_fold == 0:
             return [(torch.arange(data_training_X.shape[0]), None)], False
             # : kfold split hands back list of tuples. List container, a tuple for each fold.
 
-        training_size = int((100. - percent_validation_for_1_fold) / 100. * data_training_X.shape[0])
+        training_size = int((100. - percent_valid_for_1_fold) / 100. * data_training_X.shape[0])
         if shuffle_kfold:
             # for the permutation, one could look at https://discuss.pytorch.org/t/shuffling-a-tensor/25422/7:
             # we simplify the expression bc our tensors are in 2D only:
