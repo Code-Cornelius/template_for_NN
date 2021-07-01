@@ -15,6 +15,17 @@
   then one just needs to wrap all the function inside APlot. that is actually my main struggle: how to deal with
   function that can take any keyword argument and has a behavior depending on that? like colors, linewidth etc...
 
+# THINGS TODO:
+ - change the nb_ax by index_ax.
+ - homogeneous input, not nb_ax then xx then xx then nb_ax. It should always be the same order.
+ A possibility would be to put first the data, then the axis.
+ - change return to give an ax. such that one can continue drawing on an axis!
+ - what is happening with bis axis is a bit obscure. Let s clarify it. Not sure how.
+ - labels when both axis are on the same graph, see if there is any comment about it and change it to adapt the new behavior.
+ - verify that if I acces an nb_ax, I also check that the number is correct!
+ - put the test at the bottom into a right test.
+ - when dict of parameters given, mention if some are unused.
+
 * **ESTIM HYPER PARAM**, see how it works, plots... essentially there is no way for now to test. So, the best thing
   would be:
     1. simulate a simple model (like sinus) on euler. Get 100 different config's performance. Then, that s where this
