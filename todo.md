@@ -30,8 +30,6 @@
   would be:
     1. simulate a simple model (like sinus) on euler. Get 100 different config's performance. Then, that s where this
        estim kicks in.
-    2. How do you go from the simulations / performance (in other words history estim) to HP estim?
-    3. write a function that given a folder, read all the models / data / history and gives back a list of them.
 
 * **LIBRARIES**
     * take care of dependencies BETWEEN libraries. Ideally, create different folders ? one big folder with the library

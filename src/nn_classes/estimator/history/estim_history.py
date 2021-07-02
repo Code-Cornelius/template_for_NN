@@ -1,5 +1,7 @@
 import numpy as np
 import pandas as pd
+import os
+
 from priv_lib_error import Error_type_setter
 from priv_lib_estimator import Estimator
 
@@ -277,3 +279,23 @@ class Estim_history(Estimator):
             print("Relative Mean Testing L2 Error: {:e}%.".format(self.test_mean_loss_L2 * 100))
             print("Relative Mean Testing Linf Error: {:e}%.".format(self.test_mean_loss_Linf * 100))
         return
+
+    @staticmethod
+    def folder2list_estim(path):
+        """
+        Semantics:
+            Open a folder containing history_estimators saved to json and create a list of estimators.
+        Args:
+            path (str): The path to the folder.
+
+        Returns:
+            A list of estim_history.
+        """
+        estimators = []
+
+        # collect all the estimators from the folder
+        for file in os.listdir(path):
+            estimator = Estim_history.from_json(os.path.join(path, file))
+            estimators.append(estimator)
+
+        return estimators
