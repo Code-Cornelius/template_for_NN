@@ -22,7 +22,7 @@
  - change return to give an ax. such that one can continue drawing on an axis!
  - what is happening with bis axis is a bit obscure. Let s clarify it. Not sure how.
  - labels when both axis are on the same graph, see if there is any comment about it and change it to adapt the new behavior.
- - verify that if I acces an nb_ax, I also check that the number is correct!
+ - verify that if I access a nb_ax, I also check that the number is correct!
  - put the test at the bottom into a right test.
  - when dict of parameters given, mention if some are unused.
 
@@ -38,14 +38,24 @@
     * Merge the two NN_template and Lib. Merging once the nn template is satisfying:
       that implies the architectures are good (this is ok) but also having the hyper parameters estimator functional.
 
+
+* **Estimator**
+    * a function on line 345 to write, there is an example of how to do it.
+    * for hawkes estim, not mandatory to have true values. in init
+    * plot_estim misses some function like from/to json. There is only the csv version...
+    * relplot, in lineplot write dependencies.
+    * in lineplot save the plot image.
+    * scatter: write with ax and save
+    * actually, write the function for saving as a method ! in plot_estim.
+    
+
+
 # List of tasks to tackle:
 
 * plot relplot hawkes mseerrors todo for unique MSE ( Niels will do) in draw.
 
-* for hawkes estim, not mandatory to have true values. in init
 
 
-* plot_estim misses some function like from/to json. There is only the csv version...
 
 * modularity issue in estim_history through _translate_history_to_dataframe. 
   Method in estim history though the input depends on the training.
