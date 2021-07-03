@@ -61,8 +61,8 @@ class Test_estim_history(TestCase):
     def test_append_history_from_folds_to_estim(self):
         estimator = Estim_history(metric_names=metric_names, validation=True)
 
-        estimator.append_history(history, 2, 0)
-        estimator.append_history(history, 3, 1)
+        estimator.append(history, 2, 0)
+        estimator.append(history, 3, 1)
 
         df = estimator._df
 
@@ -75,8 +75,8 @@ class Test_estim_history(TestCase):
         path = os.path.join(ROOT_DIR, file_name)
         estimator = Estim_history(metric_names=metric_names, validation=True)
 
-        estimator.append_history(history, 2, 0)
-        estimator.append_history(history, 3, 1)
+        estimator.append(history, 2, 0)
+        estimator.append(history, 3, 1)
 
         estimator.to_json(path)
 

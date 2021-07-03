@@ -13,7 +13,7 @@ class Estim_history(Estimator):
         # metric names contain all ["L1","L4"...] but not the loss used for back prop.
         self.metric_names = metric_names
         self.validation = validation
-        self.best_epoch = []
+        self.best_epoch = [] # list each entry corresponds to a fold
         self.hyper_params = hyper_params
         self.best_fold = -1  # negative strictly number means no best_fold found yet. Will be set in
                              # train_kfold_a_fold_after_split
@@ -142,21 +142,21 @@ class Estim_history(Estimator):
 
         return df_column_names
 
-    def append_history(self, history, fold_best_epoch, fold_number):
+    def append(self, history, fold_best_epoch, fold_number, *args, **kwargs):
         """
             Append information from history to the estimator
         Args:
-            fold_best_epoch:
+            fold_best_epoch (int): best epoch for a model
             history: history of the training
             fold_number: the fold number the history corresponds to
 
         Returns:
             Void
         """
-        self.best_epoch.append(fold_best_epoch)
+        self.best_epoch.append(fold_best_epoch) # append to the best_epochs, the current folds' best epoch.
         adapted_history = self._translate_history_to_dataframe(history, fold_number)
         adapted_history = pd.DataFrame(adapted_history)
-        self.append(adapted_history)
+        super().append(adapted_history, *args, **kwargs)
         return
 
     def _translate_history_to_dataframe(self, history, fold_number):

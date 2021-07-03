@@ -176,7 +176,7 @@ def train_kfold_a_fold_after_split(data_train_X, data_train_Y, index_training, i
                                                indic_val_X=index_validation, indic_val_Y=index_validation,
                                                silent=silent)  # train network and save results
 
-    estimator_history.append_history(kfold_history, kfold_best_epoch, i)
+    estimator_history.append(kfold_history, kfold_best_epoch, i)
 
     return _new_best_model(best_net, i, net, value_metric_for_best_NN, estimator_history, silent)
 
