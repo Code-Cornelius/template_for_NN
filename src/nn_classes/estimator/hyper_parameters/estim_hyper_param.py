@@ -22,12 +22,7 @@ class Estim_hyper_param(Estimator):
         Returns:
 
         """
-        estimators = []
-
-        # collect all the estimators from the folder
-        for file in os.listdir(path):
-            estimator = Estim_history.from_json(os.path.join(path, file))
-            estimators.append(estimator)
+        estimators = Estim_history.folder2list_estim(path)
 
         # collect the data from the estimators
         dataframe_information = [Estim_hyper_param._get_dict_from_estimator(estimator, metric_name)
