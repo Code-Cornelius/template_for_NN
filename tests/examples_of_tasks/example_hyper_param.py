@@ -1,5 +1,8 @@
+from priv_lib_util.tools.src.function_dict import parameter_product
+
 from nn_classes.estimator.history.relplot_history import Relplot_history
 from nn_classes.estimator.hyper_parameters.estim_hyper_param import Estim_hyper_param
+from nn_classes.estimator.hyper_parameters.distplot_hyper_param import Distplot_hyper_param
 from src.nn_classes.optim_wrapper import Optim_wrapper
 from priv_lib_plot import APlot
 
@@ -57,40 +60,13 @@ testing_Y = yy[training_size:, :]
 
 ##### end data
 
+params_options = {
+    "seed": [1, 2, 3, 4, 5],
+    "lr": [0.001, 0.0001, 0.01],
+    "dropout": [0.]
+}
 
-
-hyper_params = [
-    {"seed": 12,
-     "lr": 0.001,
-     "dropout": 0.},
-    {"seed": 24,
-     "lr": 0.001,
-     "dropout": 0.},
-    {"seed": 35,
-     "lr": 0.001,
-     "dropout": 0.},
-    {"seed": 44,
-     "lr": 0.001,
-     "dropout": 0.},
-    {"seed": 56,
-     "lr": 0.001,
-     "dropout": 0.},
-    {"seed": 61,
-     "lr": 0.001,
-     "dropout": 0.},
-    {"seed": 74,
-     "lr": 0.001,
-     "dropout": 0.},
-    {"seed": 124,
-     "lr": 0.001,
-     "dropout": 0.},
-    {"seed": 420,
-     "lr": 0.001,
-     "dropout": 0.},
-    {"seed": 4200,
-     "lr": 0.001,
-     "dropout": 0.},
-]
+hyper_params = parameter_product(params_options)
 
 def config_architecture(params):
     # config of the architecture:
@@ -145,5 +121,11 @@ if __name__ == '__main__':
 
     generate_estims_history()
     estim = Estim_hyper_param.from_folder(path="sin_estim_history", metric_name="loss_validation")
-    estim.to_csv(path="hyper_param.csv")
+
+    plot_hist_estim = Distplot_hyper_param(estim)
+    plot_hist_estim.hist(column_name_draw='loss_validation', hue='seed',
+                         palette='PuOr', bins=5,
+                         binrange=None, stat='count', multiple="layer", kde=True, path_save_plot=None)
+
+    APlot.show_plot()
 
