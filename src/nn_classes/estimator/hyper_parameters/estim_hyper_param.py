@@ -12,7 +12,7 @@ class Estim_hyper_param(Estimator):
         super().__init__(df)
 
     @classmethod
-    def from_folder(cls, path, metric_name):
+    def from_folder(cls, path, metric_name, compressed=True):
         """
             Initialise an estim_training_parameters from a folder of estim_history
         Args:
@@ -22,7 +22,7 @@ class Estim_hyper_param(Estimator):
         Returns:
 
         """
-        estimators = Estim_history.folder2list_estim(path)
+        estimators = Estim_history.folder2list_estim(path, compressed)
 
         # collect the data from the estimators
         dataframe_information = [Estim_hyper_param._get_dict_from_estimator(estimator, metric_name)

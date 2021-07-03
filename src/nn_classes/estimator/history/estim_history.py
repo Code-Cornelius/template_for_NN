@@ -11,19 +11,23 @@ from plot.nn_plots import nn_errors_compute_mean
 class Estim_history(Estimator):
     NAMES_COLUMNS = {'fold', 'epoch'}
 
-    def __init__(self, metric_names=None, validation=True, hyper_params=None):
+    def __init__(self, df=None, metric_names=None, validation=True, hyper_params=None):
+        if df is not None:
+            super().__init__(df=df)
+            return
+
         # metric names contain all ["L1","L4"...] but not the loss used for back prop.
         self.metric_names = metric_names
         self.validation = validation
         self.best_epoch = [] # list each entry corresponds to a fold
         self.hyper_params = hyper_params
         self.best_fold = -1  # negative strictly number means no best_fold found yet. Will be set in
-                             # train_kfold_a_fold_after_split
+        # train_kfold_a_fold_after_split
 
         self.err_computed = False  # flag that indicates whether all losses are stored.
 
         df_column_names = self._generate_all_column_names()
-        super().__init__(pd.DataFrame(columns=df_column_names))
+        super().__init__(df=pd.DataFrame(columns=df_column_names))
 
     # section ######################################################################
     #  #############################################################################
@@ -34,7 +38,7 @@ class Estim_history(Estimator):
             Save an estimator to json as a compressed file.
         Args:
             compress: whether or not compression is applied
-            path: The path where to store the estimator
+            path: The path where to store the estimator, with extension.
 
         Returns:`
             Void
@@ -76,6 +80,7 @@ class Estim_history(Estimator):
         estimator.best_epoch = attrs['best_epoch']
         estimator.hyper_params = attrs['hyper_params']
         estimator.best_fold = attrs['best_fold']
+        estimator.err_computed = attrs['err_computed']
 
         if estimator.err_computed:  # flag that indicates whether all losses are stored.
             estimator.train_mean_loss_L1 = attrs['train_mean_loss_L1']
@@ -85,6 +90,7 @@ class Estim_history(Estimator):
             estimator.test_mean_loss_L2 = attrs['test_mean_loss_L2']
             estimator.test_mean_loss_Linf = attrs['test_mean_loss_Linf']
 
+        estimator.to_json(path=path, compress=compressed)
         return estimator
 
     def get_col_metric_names(self):
@@ -281,7 +287,7 @@ class Estim_history(Estimator):
         return
 
     @staticmethod
-    def folder2list_estim(path):
+    def folder2list_estim(path, compressed=True):
         """
         Semantics:
             Open a folder containing history_estimators saved to json and create a list of estimators.
@@ -295,7 +301,7 @@ class Estim_history(Estimator):
 
         # collect all the estimators from the folder
         for file in os.listdir(path):
-            estimator = Estim_history.from_json(os.path.join(path, file))
+            estimator = Estim_history.from_json(path=os.path.join(path, file), compressed=compressed)
             estimators.append(estimator)
 
         return estimators
