@@ -16,7 +16,6 @@
   function that can take any keyword argument and has a behavior depending on that? like colors, linewidth etc...
 
 # THINGS TODO:
- - create a directory path for to json if it doesn't exist
  - change the nb_ax by index_ax.
  - homogeneous input, not nb_ax then xx then xx then nb_ax. It should always be the same order.
  A possibility would be to put first the data, then the axis.
@@ -47,6 +46,3 @@
 
 
 * plot_estim misses some function like from/to json. There is only the csv version...
-
-* modularity issue in estim_history through _translate_history_to_dataframe. 
-  Method in estim history though the input depends on the training.

@@ -107,21 +107,21 @@ class Estim_history(Estimator):
             The order of the list is important, and is used in relplot history
             (first the training losses, then validation losses).
         """
-        df_column_names = [Estim_history._generate_column_name("loss")]
+        df_column_names = [Estim_history.generate_column_name("loss")]
 
         for metric_name in self.metric_names:
-            df_column_names.append(Estim_history._generate_column_name(metric_name))
+            df_column_names.append(Estim_history.generate_column_name(metric_name))
 
         if self.validation:  # validation columns
-            df_column_names.append(Estim_history._generate_column_name("loss", validation=True))
+            df_column_names.append(Estim_history.generate_column_name("loss", validation=True))
 
             for metric_name in self.metric_names:
-                df_column_names.append(Estim_history._generate_column_name(metric_name, validation=True))
+                df_column_names.append(Estim_history.generate_column_name(metric_name, validation=True))
 
         return df_column_names
 
     @staticmethod
-    def _generate_column_name(base_name, validation=False):
+    def generate_column_name(base_name, validation=False):
         """
         Semantics:
             Generate the column name based on a metric name and its use case (training or validation)
@@ -150,24 +150,23 @@ class Estim_history(Estimator):
 
         return df_column_names
 
-    def append(self, history, fold_best_epoch, fold_number, *args, **kwargs):
+    def append(self, history, fold_best_epoch, *args, **kwargs):
         """
             Append information from history to the estimator
         Args:
             fold_best_epoch (int): best epoch for a model
             history: history of the training
-            fold_number: the fold number the history corresponds to
 
         Returns:
             Void
         """
         self.best_epoch.append(fold_best_epoch) # append to the best_epochs, the current folds' best epoch.
-        adapted_history = self._translate_history_to_dataframe(history, fold_number)
-        adapted_history = pd.DataFrame(adapted_history)
-        super().append(adapted_history, *args, **kwargs)
+        history = pd.DataFrame(history)
+        super().append(history, *args, **kwargs)
         return
 
-    def _translate_history_to_dataframe(self, history, fold_number):
+    @staticmethod
+    def _translate_history_to_dataframe(history, fold_number, validation):
         """
             Translate from history structure to a flat structure that will be used to add the history to the dataframe
         Args:
@@ -181,16 +180,16 @@ class Estim_history(Estimator):
 
         # collect training information
         for key, value in history['training'].items():
-            new_key = self._generate_column_name(key)
+            new_key = Estim_history.generate_column_name(key)
             new_value = value[~np.isnan(value)]
             translated_history[new_key] = new_value.tolist()
 
-        assert ('validation' in history) == self.validation, "The information about validation in estimator " \
+        assert ('validation' in history) == validation, "The information about validation in estimator " \
                                                              "is not reflected in history"
         # collect validation information if present
         if 'validation' in history:
             for key, value in history['validation'].items():
-                new_key = self._generate_column_name(key, validation=True)
+                new_key = Estim_history.generate_column_name(key, validation=True)
                 new_value = value[~np.isnan(value)]
                 translated_history[new_key] = new_value.tolist()
 
