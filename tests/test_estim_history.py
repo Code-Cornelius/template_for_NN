@@ -3,6 +3,9 @@ from unittest import TestCase
 from nn_classes.estimator.history.estim_history import Estim_history
 import numpy as np
 import os
+
+from nn_classes.estimator.estim_hyper_param import Estim_hyper_param
+
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 history = {
     'training': {
@@ -83,3 +86,31 @@ class Test_estim_history(TestCase):
         new_estim = Estim_history.from_json(path)
 
         print(new_estim)
+
+    def test_test_Test(self):
+        folder_name = "param_train_test"
+        path = os.path.join(ROOT_DIR, folder_name)
+
+        estimator = Estim_history(metric_names=metric_names, validation=True,
+                                  hyper_params={'optim': 'adam',
+                                                       'lr': 0.7,
+                                                       'layers': [12, 10]})
+
+        estimator.append_history(history, 2, 0)
+        estimator.best_fold = 0
+
+        file_path1 = os.path.join(path, "estim_1")
+        estimator.to_json(file_path1)
+
+        estimator.append_history(history, 3, 1)
+
+        estimator.best_fold = 1
+        estimator.slice_best_fold()
+
+        file_path2 = os.path.join(path, "estim_2")
+        estimator.to_json(file_path2)
+
+        estimator_param = Estim_hyper_param.from_folder(path, "loss_validation")
+
+        print(estimator)
+        print(estimator_param)

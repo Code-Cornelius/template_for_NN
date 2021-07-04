@@ -9,9 +9,10 @@ class Distplot_hyper_param(Plot_estim_hyper_param, Distplot_estimator):
         super().__init__(estimator=estimator, *args, **kwargs)
 
     def get_dict_fig(self, separators, key):
-        title = "Histogram for the hyper params against loss_validation"
+        title = self.generate_title(parameters=separators, parameters_value=key,
+                                    before_text="Histogram for the hyper params")
         fig_dict = {'title': title,
                     'xlabel': "Loss",
-                    'ylabel': "Nb of "}
+                    'ylabel': "Nb of bins"}
         return fig_dict
 

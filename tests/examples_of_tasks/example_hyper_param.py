@@ -61,9 +61,10 @@ testing_Y = yy[training_size:, :]
 ##### end data
 
 params_options = {
-    "seed": [1, 2, 3, 4, 5],
-    "lr": [0.001, 0.0001, 0.01],
-    "dropout": [0.]
+    "seed": [42],
+    "lr": [0.001, 0.0001, 0.01, 0.0005, 0.005],
+    "dropout": [0., 0.1, 0.2, 0.25, 0.05],
+    "hidden_sizes": [[20, 50, 20], [30, 40, 30], [10, 10, 10], [20, 80, 20], [10, 30, 20]]
 }
 
 hyper_params = parameter_product(params_options)
@@ -71,7 +72,7 @@ hyper_params = parameter_product(params_options)
 def config_architecture(params):
     # config of the architecture:
     input_size = 1
-    hidden_sizes = [20, 50, 20]
+    hidden_sizes = params["hidden_sizes"]
     output_size = 1
     biases = [True, True, True, True]
     activation_functions = [torch.tanh, torch.tanh, torch.relu]
@@ -116,14 +117,19 @@ def generate_estims_history():
 
         estimator_history.to_json(path=f"sin_estim_history/estim_{i}.json")
 
+NEW_DATASET = False
 
 if __name__ == '__main__':
 
-    generate_estims_history()
-    estim = Estim_hyper_param.from_folder(path="sin_estim_history", metric_name="loss_validation")
+    if NEW_DATASET:
+        generate_estims_history()
+        estim = Estim_hyper_param.from_folder(path="sin_estim_history", metric_name="loss_validation")
+        estim.to_csv("test_estim_hyper_param.csv")
+    else:
+        estim = Estim_hyper_param.from_csv("test_estim_hyper_param.csv")
 
     plot_hist_estim = Distplot_hyper_param(estim)
-    plot_hist_estim.hist(column_name_draw='loss_validation', hue='seed',
+    plot_hist_estim.hist(column_name_draw='loss_validation', separators_plot=['dropout'], hue='lr',
                          palette='PuOr', bins=5,
                          binrange=None, stat='count', multiple="layer", kde=True, path_save_plot=None)
 
