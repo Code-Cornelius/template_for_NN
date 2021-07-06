@@ -3,8 +3,12 @@ from unittest import TestCase
 from nn_classes.estimator.history.estim_history import Estim_history
 import numpy as np
 import os
+
+from nn_classes.estimator.hyper_parameters.estim_hyper_param import Estim_hyper_param
+from nn_train.kfold_training import _translate_history_to_dataframe
+
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
-history = {
+train_history = {
     'training': {
         'loss': np.array(range(10)),
         'L1': np.array(range(10, 20)),
@@ -61,8 +65,11 @@ class Test_estim_history(TestCase):
     def test_append_history_from_folds_to_estim(self):
         estimator = Estim_history(metric_names=metric_names, validation=True)
 
-        estimator.append(history, 2, 0)
-        estimator.append(history, 3, 1)
+        history = _translate_history_to_dataframe(train_history, 0, True)
+        estimator.append(history, 2)
+
+        history = _translate_history_to_dataframe(train_history, 1, True)
+        estimator.append(history, 3)
 
         df = estimator._df
 
@@ -75,11 +82,44 @@ class Test_estim_history(TestCase):
         path = os.path.join(ROOT_DIR, file_name)
         estimator = Estim_history(metric_names=metric_names, validation=True)
 
-        estimator.append(history, 2, 0)
-        estimator.append(history, 3, 1)
+        history = _translate_history_to_dataframe(train_history, 0, True)
+        estimator.append(history, 2)
+
+        history = _translate_history_to_dataframe(train_history, 1, True)
+        estimator.append(history, 3)
 
         estimator.to_json(path)
 
         new_estim = Estim_history.from_json(path)
 
         print(new_estim)
+
+    def test_test_Test(self):
+        folder_name = "param_train_test"
+        path = os.path.join(ROOT_DIR, folder_name)
+
+        estimator = Estim_history(metric_names=metric_names, validation=True,
+                                  hyper_params={'optim': 'adam',
+                                                       'lr': 0.7,
+                                                       'layers': [12, 10]})
+
+        history = _translate_history_to_dataframe(train_history, 0, True)
+        estimator.append(history, 2)
+        estimator.best_fold = 0
+
+        file_path1 = os.path.join(path, "estim_1")
+        estimator.to_json(file_path1)
+
+        history = _translate_history_to_dataframe(train_history, 1, True)
+        estimator.append(history, 3)
+
+        estimator.best_fold = 1
+        estimator.slice_best_fold()
+
+        file_path2 = os.path.join(path, "estim_2")
+        estimator.to_json(file_path2)
+
+        estimator_param = Estim_hyper_param.from_folder(path, "loss_validation")
+
+        print(estimator)
+        print(estimator_param)

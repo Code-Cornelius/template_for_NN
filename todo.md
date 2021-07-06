@@ -56,6 +56,3 @@
 
 
 
-
-* modularity issue in estim_history through _translate_history_to_dataframe. 
-  Method in estim history though the input depends on the training.

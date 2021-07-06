@@ -176,7 +176,10 @@ def train_kfold_a_fold_after_split(data_train_X, data_train_Y, index_training, i
                                                indic_val_X=index_validation, indic_val_Y=index_validation,
                                                silent=silent)  # train network and save results
 
-    estimator_history.append(kfold_history, kfold_best_epoch, i)
+    history = _translate_history_to_dataframe(history=kfold_history,
+                                              fold_number=i,
+                                              validation=estimator_history.validation)
+    estimator_history.append(history=history, fold_best_epoch=kfold_best_epoch)
 
     return _new_best_model(best_net, i, net, value_metric_for_best_NN, estimator_history, silent)
 
@@ -268,3 +271,40 @@ def _nn_kfold_indices_creation_random(data_training_X, data_training_Y,
             # the seed is not fixed here but outside.
 
         return kfold.split(data_training_X, data_training_Y), True
+
+
+def _translate_history_to_dataframe(history, fold_number, validation):
+    """
+        Translate from history structure to a flat structure that will be used to add the history to the dataframe
+    Args:
+        history: the history of the training
+        fold_number: the fold number the history corresponds to
+
+    Returns:
+        The translated history
+    """
+    translated_history = {}
+
+    # collect training information
+    for key, value in history['training'].items():
+        new_key = Estim_history.generate_column_name(key)
+        new_value = value[~np.isnan(value)]
+        translated_history[new_key] = new_value.tolist()
+
+    assert ('validation' in history) == validation, "The information about validation in estimator " \
+                                                    "is not reflected in history"
+    # collect validation information if present
+    if 'validation' in history:
+        for key, value in history['validation'].items():
+            new_key = Estim_history.generate_column_name(key, validation=True)
+            new_value = value[~np.isnan(value)]
+            translated_history[new_key] = new_value.tolist()
+
+    # add the epoch number to the translated history
+    nb_epochs = len(translated_history['loss_training'])
+    translated_history['epoch'] = [*range(nb_epochs)]
+
+    # add the fold number to the history
+    translated_history['fold'] = [fold_number] * nb_epochs
+
+    return translated_history
