@@ -7,6 +7,7 @@ from priv_lib_util.tools.src.function_files import clean_folder
 from torch import nn
 from tqdm import tqdm
 
+from nn_classes.estimator.history.estim_history import Estim_history
 from nn_classes.estimator.hyper_parameters.distplot_hyper_param import Distplot_hyper_param
 from nn_classes.estimator.hyper_parameters.estim_hyper_param import Estim_hyper_param
 from nn_train.kfold_training import nn_kfold_train
@@ -95,8 +96,12 @@ def config_architecture(params):
 
     return param_training, Class_Parametrized_NN
 
-
+ROOTPATH = os.path.dirname(os.path.abspath(__file__))
+FOLDER_PATH = os.path.join(ROOTPATH, "sin_estim_history")
+NEW_DATASET = True
+SAVE_TO_FILE = False
 def generate_estims_history():
+    estims = []
     for i, params in enumerate(tqdm(hyper_params)):
         # set seed for pytorch.
         set_seeds(params["seed"])
@@ -113,12 +118,12 @@ def generate_estims_history():
                                                   percent_val_for_1_fold=20,
                                                   silent=True,
                                                   hyper_param=params)
+        estims.append(estimator_history)
+        if SAVE_TO_FILE:
+            estimator_history.to_json(path=os.path.join(FOLDER_PATH, f"estim_{i}"))
 
-        estimator_history.to_json(path=f"sin_estim_history/estim_{i}.json")
+    return estims
 
-
-NEW_DATASET = False
-ROOTPATH = os.path.dirname(os.path.abspath(__file__))
 
 def cleanup(folder_path):
     for file in os.listdir(folder_path):
@@ -127,13 +132,13 @@ def cleanup(folder_path):
             os.remove(file_path)
 
 if __name__ == '__main__':
-    FOLDER_PATH = os.path.join(ROOTPATH, "sin_estim_history")
+
     # todo make hyper param init for a list of estims
     if NEW_DATASET:
-        generate_estims_history()
-        estim = Estim_hyper_param.from_folder(path=FOLDER_PATH, metric_name="loss_validation")
-        clean_folder(FOLDER_PATH, file_start="estim", file_extension=".json")
-        estim.to_csv("test_estim_hyper_param.csv")
+        estims = generate_estims_history()
+        estim_hyper_param = Estim_hyper_param.from_list(estims, metric_name="loss_validation")
+
+        estim_hyper_param.to_csv("test_estim_hyper_param.csv")
     if not NEW_DATASET:
         estim = Estim_hyper_param.from_csv("test_estim_hyper_param.csv")
 

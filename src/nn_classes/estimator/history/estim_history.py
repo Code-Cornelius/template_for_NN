@@ -285,22 +285,3 @@ class Estim_history(Estimator):
             print("Relative Mean Testing Linf Error: {:e}%.".format(self.test_mean_loss_Linf * 100))
         return
 
-    @staticmethod
-    def folder2list_estim(path, compressed=True):
-        """
-        Semantics:
-            Open a folder containing history_estimators saved to json and create a list of estimators.
-        Args:
-            path (str): The path to the folder.
-
-        Returns:
-            A list of estim_history.
-        """
-        estimators = []
-
-        # collect all the estimators from the folder
-        for file in os.listdir(path):
-            estimator = Estim_history.from_json(path=os.path.join(path, file), compressed=compressed)
-            estimators.append(estimator)
-
-        return estimators

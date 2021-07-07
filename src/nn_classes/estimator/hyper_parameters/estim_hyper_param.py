@@ -14,16 +14,31 @@ class Estim_hyper_param(Estimator):
     @classmethod
     def from_folder(cls, path, metric_name, compressed=True):
         """
-            Initialise an estim_training_parameters from a folder of estim_history
+        Semantics:
+            Initialise an estim_hyper_param from a folder of estim_history.
         Args:
-            path: The path to the folder
-            metric_name: The metric used for comparison
+            path: The path to the folder.
+            metric_name: The metric used for comparison.
 
         Returns:
-
+            An Estim_hyper_param.
         """
-        estimators = Estim_history.folder2list_estim(path, compressed)
+        estimators = Estim_history.folder_json2list_estim(path, compressed)
 
+        return Estim_hyper_param.from_list(estimators, metric_name)
+
+    @classmethod
+    def from_list(cls, estimators, metric_name):
+        """
+        Semantics:
+            Initialise an estim_hyper_param from a list of estim_history.
+        Args:
+            estimators(list of Estim_history): The estimators to be used.
+            metric_name: The metric used for comparison.
+
+        Returns:
+            An Estim_hyper_param.
+        """
         # collect the data from the estimators
         dataframe_information = [Estim_hyper_param._get_dict_from_estimator(estimator, metric_name)
                                  for estimator in estimators]
