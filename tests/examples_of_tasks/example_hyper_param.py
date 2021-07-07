@@ -62,9 +62,9 @@ testing_Y = yy[training_size:, :]
 
 params_options = {
     "seed": [42, 124, 300],
-    "lr": [0.01, 0.001, 0.0001],
-    "dropout": [0., 0.05, 0.1, 0.25],
-    "hidden_sizes": [[2,4,2], [4, 8, 4], [8, 16, 8], [8, 32, 8], [16, 64, 32], [64, 128, 64]]
+    "lr": [0.01],
+    "dropout": [0.],
+    "hidden_sizes": [[2,4,2], [4, 8, 4]]
 }
 
 hyper_params = parameter_product(params_options)
@@ -133,11 +133,10 @@ def cleanup(folder_path):
 
 if __name__ == '__main__':
 
-    # todo make hyper param init for a list of estims
     if NEW_DATASET:
         estims = generate_estims_history()
         estim_hyper_param = Estim_hyper_param.from_list(estims, metric_name="loss_validation")
-
+        merged_estim = Estim_history.merge(estims)
         estim_hyper_param.to_csv("test_estim_hyper_param.csv")
     if not NEW_DATASET:
         estim = Estim_hyper_param.from_csv("test_estim_hyper_param.csv")

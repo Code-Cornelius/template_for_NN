@@ -26,11 +26,6 @@
  - put the test at the bottom into a right test.
  - when dict of parameters given, mention if some are unused.
 
-* **ESTIM HYPER PARAM**, see how it works, plots... essentially there is no way for now to test. So, the best thing
-  would be:
-    1. simulate a simple model (like sinus) on euler. Get 100 different config's performance. Then, that s where this
-       estim kicks in.
-
 * **LIBRARIES**
     * take care of dependencies BETWEEN libraries. Ideally, create different folders ? one big folder with the library
       and then put things together perhaps.
@@ -47,6 +42,12 @@
     * in lineplot save the plot image.
     * scatter: write with ax and save
     * actually, write the function for saving as a method ! in plot_estim.
+    * function applied to a column (and create a new column)
+    * change the hue to the number of prameters
+      
+* **NN**
+    * have a function to compute the parameters of a model
+  
     
 
 
