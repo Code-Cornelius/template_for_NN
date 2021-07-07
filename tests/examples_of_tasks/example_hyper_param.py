@@ -1,5 +1,6 @@
 import numpy as np
 import torch
+import os
 from priv_lib_plot import APlot
 from priv_lib_util.tools.src.function_dict import parameter_product
 from torch import nn
@@ -117,11 +118,19 @@ def generate_estims_history():
 
 NEW_DATASET = False
 
+def cleanup(folder_path):
+    for file in os.listdir(folder_path):
+        if file.startswith("estim") and file.endswith(".json"):
+            file_path = os.path.join(folder_path, file)
+            os.remove(file_path)
+
 if __name__ == '__main__':
+    FOLDER_PATH = "sin_estim_history"
+    # todo make hyper param init for a list of estims
     if NEW_DATASET:
         generate_estims_history()
-        estim = Estim_hyper_param.from_folder(path="sin_estim_history", metric_name="loss_validation")
-        # TODO REMOVE THE ESTIM_i.json !
+        estim = Estim_hyper_param.from_folder(path=FOLDER_PATH, metric_name="loss_validation")
+        cleanup(FOLDER_PATH)
         estim.to_csv("test_estim_hyper_param.csv")
     if not NEW_DATASET:
         estim = Estim_hyper_param.from_csv("test_estim_hyper_param.csv")
