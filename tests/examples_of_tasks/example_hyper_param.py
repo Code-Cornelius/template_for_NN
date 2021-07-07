@@ -3,6 +3,7 @@ import torch
 import os
 from priv_lib_plot import APlot
 from priv_lib_util.tools.src.function_dict import parameter_product
+from priv_lib_util.tools.src.function_files import clean_folder
 from torch import nn
 from tqdm import tqdm
 
@@ -117,6 +118,7 @@ def generate_estims_history():
 
 
 NEW_DATASET = False
+ROOTPATH = os.path.dirname(os.path.abspath(__file__))
 
 def cleanup(folder_path):
     for file in os.listdir(folder_path):
@@ -125,12 +127,12 @@ def cleanup(folder_path):
             os.remove(file_path)
 
 if __name__ == '__main__':
-    FOLDER_PATH = "sin_estim_history"
+    FOLDER_PATH = os.path.join(ROOTPATH, "sin_estim_history")
     # todo make hyper param init for a list of estims
     if NEW_DATASET:
         generate_estims_history()
         estim = Estim_hyper_param.from_folder(path=FOLDER_PATH, metric_name="loss_validation")
-        cleanup(FOLDER_PATH)
+        clean_folder(FOLDER_PATH, file_start="estim", file_extension=".json")
         estim.to_csv("test_estim_hyper_param.csv")
     if not NEW_DATASET:
         estim = Estim_hyper_param.from_csv("test_estim_hyper_param.csv")
