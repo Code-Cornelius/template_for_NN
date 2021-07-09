@@ -71,6 +71,7 @@ class Fully_connected_NN(Savable_net, metaclass=ABCMeta):
     def dropout(self):
         return self._dropout
 
+
     # section ######################################################################
     #  #############################################################################
     # rest of methods
@@ -107,13 +108,15 @@ class Fully_connected_NN(Savable_net, metaclass=ABCMeta):
         return out
 
 
+
+
 # section ######################################################################
 #  #############################################################################
 # CLASS FACTORY :  creates subclasses of FC NN
 
 def factory_parametrised_FC_NN(param_input_size, param_list_hidden_sizes, param_output_size,
                                param_list_biases, param_activation_functions,
-                               param_dropout=0, param_predict_fct=None):
+                               param_dropout=0., param_predict_fct=None):
     """
     Examples:
             input_size = 1
@@ -202,6 +205,8 @@ def factory_parametrised_FC_NN(param_input_size, param_list_hidden_sizes, param_
         @activation_functions.setter
         def activation_functions(self, new_activation_functions):
             if function_iterable.is_iterable(new_activation_functions):
+                assert len(new_activation_functions) == len(self.list_hidden_sizes), "wrong dimensions for " \
+                                                                                     "activation functions"
                 self._activation_functions = new_activation_functions
             else:
                 raise Error_type_setter(f"Argument is not an iterable.")
@@ -217,5 +222,15 @@ def factory_parametrised_FC_NN(param_input_size, param_list_hidden_sizes, param_
                 self._dropout = new_dropout
             else:
                 raise Error_type_setter(f"Argument is not an {str(float)}.")
+
+        @property
+        def nb_of_params(self):
+            self._nb_of_parameters = self.input_size * self.list_hidden_sizes[0]
+
+            for i in range(1, len(self.list_hidden_sizes)):
+                self._nb_of_parameters += self.list_hidden_sizes[i - 1] * self.list_hidden_sizes[i]
+
+            self._nb_of_parameters += self.list_hidden_sizes[-1] * self.output_size
+            return self._nb_of_parameters
 
     return Parametrised_FC_NN

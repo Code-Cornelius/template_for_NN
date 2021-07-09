@@ -46,7 +46,6 @@
     * change the hue to the number of prameters
       
 * **NN**
-    * have a function to compute the parameters of a model for FCNN
     * how to add this number to the column in an estimator ? (Niels)
     
     
