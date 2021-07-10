@@ -48,8 +48,6 @@
       
 * **NN**
     * how to add this number to the column in an estimator ? (Niels)
-    * if no in/out, add columns and make them 1, have a architecture column, make sure it's fcnn, otherwise NaN
-    * make sure, the architecture is present
     
     
 

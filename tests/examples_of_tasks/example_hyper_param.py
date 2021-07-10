@@ -60,12 +60,11 @@ testing_Y = yy[training_size:, :]
 ##### end data
 
 params_options = {
+    "architecture": ["fcnn"],
     "seed": [42, 124, 300],
     "lr": [0.01],
     "dropout": [0.],
-    "input_size": [1, 1],
-    "list_hidden_sizes": [[2,4,2], [4, 8, 4]],
-    "output_size": [1, 1]
+    "list_hidden_sizes": [[2,4,2], [4, 8, 4], [10, 20, 10], [2, 15, 2]],
 }
 
 hyper_params = parameter_product(params_options)
@@ -73,9 +72,9 @@ hyper_params = parameter_product(params_options)
 
 def config_architecture(params):
     # config of the architecture:
-    input_size = params["input_size"]
+    input_size = 1
     hidden_sizes = params["list_hidden_sizes"]
-    output_size = params["output_size"]
+    output_size = 1
     biases = [True, True, True, True]
     activation_functions = [torch.tanh, torch.tanh, torch.relu]
     dropout = params["dropout"]

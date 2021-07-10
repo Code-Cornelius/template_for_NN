@@ -1,6 +1,7 @@
 import os
 
 import pandas as pd
+import numpy as np
 from priv_lib_estimator import Estimator
 
 from nn_classes.architecture.fully_connected import Fully_connected_NN
@@ -60,23 +61,34 @@ class Estim_hyper_param(Estimator):
         Semantics:
             Computes the number of parameters for each entry and adds it to a new column.
         Requirements:
-            Works for a fully connected NN and the estimator must contain the input_sizes, the list of hidden sizes
-            and the output sizes.
+            Works for a fully connected NN, the estimator must contain the list of hidden sizes and the architecture.
+            When the architecture for a row is not 'fcnn', the result will be NaN.
+            If input size or output size are not present, they are assumed to be 1.
         Returns:
             Void.
         """
-        assert 'input_size' in self.df.columns, "Cannot compute the number of parameters without input_size"
+        assert 'architecture' in self.df.columns, "Cannot verify the architecture"
         assert 'list_hidden_sizes' in self.df.columns, "Cannot compute the number of parameters without" \
                                                        " list_hidden_sizes"
-        assert 'output_size' in self.df.columns, "Cannot compute the number of parameters without output_size"
+
+        if not 'input_size' in self.df.columns:
+            print("No input size provided. Assume input size is 1.")
+            self.df['input_size'] = [1] * self.df.shape[0]
+
+        if not 'output_size' in self.df.columns:
+            print("No output size provided. Assume output size is 1.")
+            self.df['output_size'] = [1] * self.df.shape[0]
 
         self.df['list_hidden_sizes'] = pd.eval(self.df['list_hidden_sizes'])
 
+        def compute_row(row):
+            if row.architecture != 'fcnn':
+                return np.nan
+            return Fully_connected_NN.compute_nb_of_params(input_size=row.input_size,
+                                                           list_hidden_sizes=row.list_hidden_sizes,
+                                                           output_size=row.output_size)
+
         self.df['nb_of_params'] = self.df.apply(
-            lambda row: Fully_connected_NN.compute_nb_of_params(input_size=row.input_size,
-                                                                list_hidden_sizes=row.list_hidden_sizes,
-                                                                output_size=row.output_size),
+            lambda row: compute_row(row),
             axis=1
         )
-
-
