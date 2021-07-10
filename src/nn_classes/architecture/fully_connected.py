@@ -71,6 +71,23 @@ class Fully_connected_NN(Savable_net, metaclass=ABCMeta):
     def dropout(self):
         return self._dropout
 
+    @property
+    def nb_of_params(self):
+        self._nb_of_parameters = Fully_connected_NN.compute_nb_of_params(input_size=self.input_size,
+                                                                         list_hidden_sizes=self.list_hidden_sizes,
+                                                                         output_size=self.output_size)
+        return self._nb_of_parameters
+
+    @staticmethod
+    def compute_nb_of_params(input_size, list_hidden_sizes, output_size):
+        size = input_size * list_hidden_sizes[0]
+
+        for i in range(1, len(list_hidden_sizes)):
+            size += list_hidden_sizes[i - 1] * list_hidden_sizes[i]
+
+        size += list_hidden_sizes[-1] * output_size
+        return size
+
 
     # section ######################################################################
     #  #############################################################################
@@ -223,14 +240,6 @@ def factory_parametrised_FC_NN(param_input_size, param_list_hidden_sizes, param_
             else:
                 raise Error_type_setter(f"Argument is not an {str(float)}.")
 
-        @property
-        def nb_of_params(self):
-            self._nb_of_parameters = self.input_size * self.list_hidden_sizes[0]
 
-            for i in range(1, len(self.list_hidden_sizes)):
-                self._nb_of_parameters += self.list_hidden_sizes[i - 1] * self.list_hidden_sizes[i]
-
-            self._nb_of_parameters += self.list_hidden_sizes[-1] * self.output_size
-            return self._nb_of_parameters
 
     return Parametrised_FC_NN

@@ -3,6 +3,7 @@ import os
 import pandas as pd
 from priv_lib_estimator import Estimator
 
+from nn_classes.architecture.fully_connected import Fully_connected_NN
 from nn_classes.estimator.history.estim_history import Estim_history
 
 
@@ -53,3 +54,29 @@ class Estim_hyper_param(Estimator):
         estimator_dict[metric_name] = estimator.get_best_value_for(metric_name)
 
         return estimator_dict
+
+    def compute_number_params_for_fcnn(self):
+        """
+        Semantics:
+            Computes the number of parameters for each entry and adds it to a new column.
+        Requirements:
+            Works for a fully connected NN and the estimator must contain the input_sizes, the list of hidden sizes
+            and the output sizes.
+        Returns:
+            Void.
+        """
+        assert 'input_size' in self.df.columns, "Cannot compute the number of parameters without input_size"
+        assert 'list_hidden_sizes' in self.df.columns, "Cannot compute the number of parameters without" \
+                                                       " list_hidden_sizes"
+        assert 'output_size' in self.df.columns, "Cannot compute the number of parameters without output_size"
+
+        self.df['list_hidden_sizes'] = pd.eval(self.df['list_hidden_sizes'])
+
+        self.df['nb_of_params'] = self.df.apply(
+            lambda row: Fully_connected_NN.compute_nb_of_params(input_size=row.input_size,
+                                                                list_hidden_sizes=row.list_hidden_sizes,
+                                                                output_size=row.output_size),
+            axis=1
+        )
+
+

@@ -3,7 +3,6 @@ import torch
 import os
 from priv_lib_plot import APlot
 from priv_lib_util.tools.src.function_dict import parameter_product
-from priv_lib_util.tools.src.function_files import clean_folder
 from torch import nn
 from tqdm import tqdm
 
@@ -64,7 +63,9 @@ params_options = {
     "seed": [42, 124, 300],
     "lr": [0.01],
     "dropout": [0.],
-    "hidden_sizes": [[2,4,2], [4, 8, 4]]
+    "input_size": [1, 1],
+    "list_hidden_sizes": [[2,4,2], [4, 8, 4]],
+    "output_size": [1, 1]
 }
 
 hyper_params = parameter_product(params_options)
@@ -72,9 +73,9 @@ hyper_params = parameter_product(params_options)
 
 def config_architecture(params):
     # config of the architecture:
-    input_size = 1
-    hidden_sizes = params["hidden_sizes"]
-    output_size = 1
+    input_size = params["input_size"]
+    hidden_sizes = params["list_hidden_sizes"]
+    output_size = params["output_size"]
     biases = [True, True, True, True]
     activation_functions = [torch.tanh, torch.tanh, torch.relu]
     dropout = params["dropout"]
@@ -98,7 +99,7 @@ def config_architecture(params):
 
 ROOTPATH = os.path.dirname(os.path.abspath(__file__))
 FOLDER_PATH = os.path.join(ROOTPATH, "sin_estim_history")
-NEW_DATASET = True
+NEW_DATASET = False
 SAVE_TO_FILE = False
 def generate_estims_history():
     estims = []
@@ -124,13 +125,6 @@ def generate_estims_history():
 
     return estims
 
-
-def cleanup(folder_path):
-    for file in os.listdir(folder_path):
-        if file.startswith("estim") and file.endswith(".json"):
-            file_path = os.path.join(folder_path, file)
-            os.remove(file_path)
-
 if __name__ == '__main__':
 
     if NEW_DATASET:
@@ -140,9 +134,10 @@ if __name__ == '__main__':
         estim_hyper_param.to_csv("test_estim_hyper_param.csv")
     if not NEW_DATASET:
         estim = Estim_hyper_param.from_csv("test_estim_hyper_param.csv")
+        estim.compute_number_params_for_fcnn()
 
         histplot_hyperparam = Distplot_hyper_param(estim)
-        histplot_hyperparam.hist(column_name_draw='loss_validation', separators_plot=None, hue='hidden_sizes',
+        histplot_hyperparam.hist(column_name_draw='loss_validation', separators_plot=None, hue='nb_of_params',
                                  palette='RdYlBu', bins=20,
                                  binrange=None, stat='count', multiple="stack", kde=False, path_save_plot=None)
 
